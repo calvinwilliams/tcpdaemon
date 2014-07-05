@@ -341,10 +341,9 @@ int tcpdaemon_IF( struct TcpdaemonEntryParam *pep , struct TcpdaemonServerEnv *p
 				{
 					DebugLog( __FILE__ , __LINE__ , "waitpid ok , pid[%ld]\n" , (long)pid );
 					pse->process_count--;
-					continue;
 				}
 			}
-			while(0);
+			while( pid > 0 );
 		}
 	}
 	
