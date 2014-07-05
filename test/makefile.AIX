@@ -1,0 +1,90 @@
+# 此文件由makelocal.sh自动生成
+# 此文件由makeobj.sh自动生成
+############################################################
+# 项目名 : 
+# 模块名 : 
+# 备  注 : 
+############################################################
+
+###### 源文件配置区
+# 编译宏
+AR		=	ar
+AFLAGS		=	rv
+SOFLAGS		=	-G -bnoentry
+ESOFLAGS	=	-bdynamic -brtl -qcpluscm
+
+# c源代码文件宏及推导规则
+CC		=	xlc -q64
+
+c_FILE_o	=	$(c_FILE:.c=.o)
+c_FILE2_o	=	$(c_FILE2:.c=.o)
+c_FILE3_o	=	$(c_FILE3:.c=.o)
+c_FILE4_o	=	$(c_FILE4:.c=.o)
+c_FILE5_o	=	$(c_FILE5:.c=.o)
+c_FILE_CLEAN	=	$(c_FILE_o) $(c_FILE2_o) $(c_FILE3_o) $(c_FILE4_o) $(c_FILE5_o)
+
+.SUFFIXES:.c
+.c.o	:
+	$(CC) $(CFLAGS) -c $<
+
+c_FILE		=	\
+			test.c \
+			testnomain.c \
+			testso.c \
+
+###### 目标文件、安装目录配置区
+NOINST_OBJ	=	testso.so test testnomain
+
+###### 编译选项
+CFLAGS		=	-I. \
+			-I$(HOME)/include \
+
+###### 链接选项
+LFLAGS		=	-L. \
+			-L$(HOME)/lib \
+
+###### 额外宏定义区
+CLEAN_ADDITION	=
+
+###### 加载mktpl模板库
+# 最终目标列表
+all	:	$(BIN) $(BIN2) $(LIB) $(LIB2) $(OBJ) $(OBJ2) $(NOCLEAN_OBJ) $(NOINST_OBJ)
+
+# 文件系统宏
+CD		=	cd
+RM		=	rm -f
+CP		=	cp -f
+MV		=	mv -f
+MKDIR		=	mkdir -p
+
+# 预定义源文件清理删除关联宏
+_FILE_CLEAN	=	$(c_FILE_CLEAN) $(cpp_FILE_CLEAN) $(SQC_FILE_CLEAN) $(csm_FILE_CLEAN) $(c_html_FILE_CLEAN) $(cui_FILE_CLEAN) $(dtd_FILE_CLEAN) $(prt_FILE_CLEAN) $(fmd_FILE_CLEAN) $(smd_FILE_CLEAN) $(def_FILE_CLEAN) $(act_FILE_CLEAN)
+
+# 清理删除规则
+clean		:
+	@for FILE in $(_FILE_CLEAN) $(BIN) $(BIN2) $(LIB) $(LIB2) $(OBJ) $(OBJ2) $(NOINST_OBJ) $(CLEAN_ADDITION) ; do \
+		echo $(RM) $$FILE ; \
+		$(RM) $$FILE ; \
+	done
+
+
+# 预定义源代码缺省头文件宏
+DFTHDER		=	$(csm_FILE_DFTHDER) $(cui_FILE_DFTHDER) $(dtd_FILE_DFTHDER) $(prt_FILE_DFTHDER) $(fmd_FILE_DFTHDER) $(smd_FILE_DFTHDER) $(def_FILE_DFTHDER) $(act_FILE_DFTHDER)
+
+# 提交安装规则
+install		:
+	@make -f makefile.AIX
+
+
+
+###### 目标文件依赖关系
+testso.so:	testso.o
+	$(CC) $(SOFLAGS) -o $@ testso.o $(LFLAGS)
+
+test	:	test.o
+	$(CC) $(ESOFLAGS) -o $@ test.o $(LFLAGS) -ltcpdaemon
+
+testnomain:	testnomain.o
+	$(CC) $(ESOFLAGS) -o $@ testnomain.o $(LFLAGS) -ltcpdaemonmain
+
+

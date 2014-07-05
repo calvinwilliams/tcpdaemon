@@ -1,0 +1,291 @@
+tcpdaemon - TCP连接管理守护
+
+1.概述
+
+tcpdaemon是类似于xinetd的TCP守护，负责特定进程模型下的TCP连接管理，与客户定制的通讯数据协议层和应用处理层模块的链接时或运行时对接，快速构造TCP服务端。
+
+xientd与tcpdaemon的功能比较
+* 应用亲和力 : xinetd主要面向系统服务层的TCP服务，tcpdaemon还面向应用层
+* TCP连接管理模型 : xinetd只支持即时派生进程模型，tcpdaemon还支持领导者-追随者进程池模型等其它高性能模型
+* 应用接口模式 : xinetd只支持主守护模式，tcpdaemon还支持函数调用模式和异构模式
+* 跨平台 : xinetd是UNIX独有软件，tcpdaemon是跨平台软件，支持类UNIX、Linux、WINDOWS等主流操作系统（有待实现）
+
+tcpdaemon提供了两种TCP连接管理模型:
+* 即时派生进程模型
+* 领导者-追随者进程池模型
+将来还将支持更多模型，如线程模型
+
+tcpdaemon提供了三种应用接口模式:
+* 主守护模式
+* 函数调用模式
+* 异构模式
+三种应用接口模式已经足够适应几乎所有应用场合
+
+2.编译安装
+
+以Linux操作系统为例，每个目录里的构造脚本均是makefile.Linux，外层目录makefile.Linux递归下级子目录
+[code]
+$ make -f makefile.Linux install
+make[1]: Entering directory `~/src/tcpdaemon-1.0.0/src'
+make[2]: Entering directory `~/src/tcpdaemon-1.0.0/src'
+gcc -g -fPIC -Wall -Werror -O2 -I.  -c util.c
+gcc -g -fPIC -Wall -Werror -O2 -I.  -c tcpdaemon.c
+gcc -g -fPIC -Wall -Werror -O2 -I.  -c worker.c
+gcc -g -fPIC -Wall -Werror -O2 -shared -o libtcpdaemon.so util.o tcpdaemon.o worker.o -L. -lpthread -ldl
+gcc -g -fPIC -Wall -Werror -O2 -I.  -c nomain.c
+gcc -g -fPIC -Wall -Werror -O2 -I.  -c _main.c
+gcc -g -fPIC -Wall -Werror -O2 -shared -o tcpdaemon.so util.o nomain.o _main.o tcpdaemon.o worker.o -L. -lpthread -ldl
+gcc -g -fPIC -Wall -Werror -O2 -I.  -c main.c
+gcc -g -fPIC -Wall -Werror -O2  -o tcpdaemon util.o main.o _main.o tcpdaemon.o worker.o -L. -lpthread -ldl
+make[2]: Leaving directory `~/src/tcpdaemon-1.0.0/src'
+cp -f tcpdaemon ~/bin/
+cp -f libtcpdaemon.so ~/lib/
+cp -f tcpdaemon.so ~/lib/
+cp -f tcpdaemon.h ~/include/
+make[1]: Leaving directory `~/src/tcpdaemon-1.0.0/src'
+make[1]: Entering directory `~/src/tcpdaemon-1.0.0/test'
+make[2]: Entering directory `~/src/tcpdaemon-1.0.0/test'
+gcc -Wall -Werror -O2 -fno-strict-aliasing -g -fPIC -I. -I~/include  -c testso.c
+gcc -Wall -Werror -O2 -fno-strict-aliasing -g -fPIC -shared -o testso.so testso.o -L.
+gcc -Wall -Werror -O2 -fno-strict-aliasing -g -fPIC -I. -I~/include  -c test.c
+gcc -Wall -Werror -O2 -fno-strict-aliasing -g -fPIC  -o test test.o ~/lib/libtcpdaemon.so -L.
+gcc -Wall -Werror -O2 -fno-strict-aliasing -g -fPIC -I. -I~/include  -c testnomain.c
+gcc -Wall -Werror -O2 -fno-strict-aliasing -g -fPIC  -o testnomain testnomain.o ~/lib/tcpdaemon.so -L.
+make[2]: Leaving directory `~/src/tcpdaemon-1.0.0/test'
+make[1]: Leaving directory `~/src/tcpdaemon-1.0.0/test'
+[/code]
+
+3.一个使用示例
+
+[code]
+$ cd test
+$ cat testso.c
+#include "tcpdaemon.h"
+int tcpmain( void *param_tcpmain , int sock , struct sockaddr *addr )
+{
+	write( sock , "hello tcpdaemon\n" , 16 );
+	return 0;
+}
+$ make -f makefile.Linux
+gcc -Wall -Werror -O2 -fno-strict-aliasing -g -fPIC -I. -I~/include  -c testso.c
+gcc -Wall -Werror -O2 -fno-strict-aliasing -g -fPIC -shared -o testso.so testso.o
+$ tcpdaemon -m LF -n 10 -l 127.0.0.1:7879 -s testso.so
+tcpdaemon守护启动
+$ ps -ef | grep tcpdaemon
+502      13692     1  0 12:12 ?        00:00:00 tcpdaemon -m LF -n 10 -l 127.0.0.1:7879 -s testso.so
+502      13693 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -n 10 -l 127.0.0.1:7879 -s testso.so
+502      13694 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -n 10 -l 127.0.0.1:7879 -s testso.so
+502      13695 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -n 10 -l 127.0.0.1:7879 -s testso.so
+502      13696 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -n 10 -l 127.0.0.1:7879 -s testso.so
+502      13697 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -n 10 -l 127.0.0.1:7879 -s testso.so
+502      13698 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -n 10 -l 127.0.0.1:7879 -s testso.so
+502      13699 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -n 10 -l 127.0.0.1:7879 -s testso.so
+502      13700 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -n 10 -l 127.0.0.1:7879 -s testso.so
+502      13701 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -n 10 -l 127.0.0.1:7879 -s testso.so
+502      13702 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -n 10 -l 127.0.0.1:7879 -s testso.so
+$ telnet 127.0.0.1 7879
+Trying 127.0.0.1...
+Connected to localhost.localdomain (127.0.0.1).
+Escape character is '^]'.
+hello tcpdaemon
+Connection closed by foreign host.
+$ kill 13692
+[/code]
+
+注意 :
+目录test里自带的测试案例为模拟HTTP协议响应
+[code]
+$ cat test.c
+#include "tcpdaemon.h"
+/* 主守护模式测试程序 */
+int tcpmain( void *param_tcpmain , int sock , struct sockaddr *addr )
+{
+#if 0
+	write( sock , "hello tcpdaemon\n" , 16 );
+	return 0;
+#endif
+#if 1
+	char	http_buffer[ 4096 + 1 ] ;
+	long	http_len ;
+	long	len ;
+	memset( http_buffer , 0x00 , sizeof(http_buffer) );
+	http_len = 0 ;
+	while( sizeof(http_buffer)-1 - http_len > 0 )
+	{
+		len = read( sock , http_buffer + http_len , sizeof(http_buffer)-1 - http_len ) ;
+		if( len == -1 || len == 0 )
+			return 0;
+		if( strstr( http_buffer , "\r\n\r\n" ) )
+			break;
+		http_len += len ;
+	}
+	if( sizeof(http_buffer)-1 - http_len <= 0 )
+	{
+		return -1;
+	}
+	memset( http_buffer , 0x00 , sizeof(http_buffer) );
+	http_len = 0 ;
+	http_len = sprintf( http_buffer , "HTTP/1.0 200 OK\r\n\r\n" ) ;
+	write( sock , http_buffer , http_len );
+	return 0;
+#endif
+}
+[/code]
+可以直接用apache自带性能测试工具
+[code]
+$ ab -c 10 -n 100000 http://localhost:7879/index.html
+[/code]
+测试其性能
+
+4.tcpdaemon主守护程序命令行参数说明
+
+[code]
+$ tcpdaemon
+USAGE : tcpdaemon -m LF -n process_count [ -r max_requests_per_process ] -l ip:port -s so_pathfilename
+                  -m IF [ -n max_process_count ] -l ip:port -s so_pathfilename
+        other options :
+                  [ --loglevel-(debug|info|warn|error|fatal) ] [ --tcp-nodelay ] [ --tcp-linger linger ]
+[/code]
+参数说明如下
+-m TCP连接管理模型
+	LF 领导者-追随者进程池模型
+	IF 即时派生进程模型
+-n 当为领导者-追随者进程池模型时为工作进程池进程数量
+   当为即时派生进程模型时为最大子进程数量
+-r 当为领导者-追随者进程池模型时为单个工作进程最大处理应用次数，然后自然结束，进程池新创建一个工作进程替代之
+-l 本地侦听IP和PORT，如"127.0.0.1:7879"
+-s 用绝对路径或相对路径表达的应用动态库文件名
+--loglevel-(debug|info|warn|error|fatal) 日志等级，日志文件名默认为"$HOME/log/tcpdaemon.log"
+--tcp-nodelay 启用TCP_NODELAY选项
+--tcp-linger 启用TCP_LINGER选项，实际设置值=参数值-1
+
+5.TCP连接管理模型
+
+5.1.即时派生进程模型
+
+tcpdaemon只运行一个侦听守护，每当一个新连接进来后，派生一个子进程负责转交给应用。
+
+5.2.领导者-追随者进程池模型
+
+tcpdaemon会启动一个管理进程和一个工作进程池，工作进程组竞争接受新连接，并同步转交给应用。
+
+6.应用接口模式
+
+为适应与各种各样的应用对接，tcpdaemon提供了三种模式。
+
+6.1.主守护模式
+
+也是最常用模式 , tcpdaemon提供了一个守护进程负责进程框架，运行时显式挂接应用提供的动态库来处理通讯数据协议和应用逻辑，文件和函数调用关系如下
+tcpdaemon.exe(main->tcpdaemon) -> xxx.so(tcpmain)
+
+编写用于处理通讯数据协议和应用逻辑的xxx.c
+[code]
+#include "tcpdaemon.h"
+int tcpmain( void *param_tcpmain , int sock , struct sockaddr *addr )
+{
+	/* ...处理通讯数据协议和应用逻辑... */
+	return 0;
+}
+[/code]
+返回值小于0会导致本次处理完后该进程自然结束，如果选用进程池或线程池的话。
+
+编译链接成xxx.so即可被守护进程显式挂接使用
+[code]
+$ gcc -Wall -Werror -O2 -fno-strict-aliasing -g -fPIC -I. -I~/include -c xxx.c
+$ gcc -Wall -Werror -O2 -fno-strict-aliasing -g -fPIC -shared -o xxx.so xxx.o
+[/code]
+
+运行
+[code]
+$ tcpdaemon -m LF -n 10 -l 127.0.0.1:7879 -s xxx.so
+[/code]
+
+本模式用于让tcpdaemon自带守护进程负责平台，应用只需要提供动态库挂入的场合。
+
+6.2.函数调用模式
+
+应用自己负责实现main函数，控制进程框架，准备好后调用函数tcpdaemon(链接时隐式链上libtcpdaemon.so库)实现TCP连接管理，文件和函数调用关系如下
+xxx.exe(main) -> libtcpdaemon.so(tcpdaemon) -> xxx.exe(tcpmain)
+在UNIX下可执行文件都没有扩展名，这里我写成xxx.exe便于说明
+
+编写用于处理通讯数据协议和应用逻辑的xxx.c
+[code]
+#include "tcpdaemon.h"
+int tcpmain( void *param_tcpmain , int sock , struct sockaddr *addr )
+{
+	/* ...处理通讯数据协议和应用逻辑... */
+	return 0;
+}
+int main()
+{
+       struct TcpdaemonEntryParam	ep ;
+
+       memset( & ep , 0x00 , sizeof(struct TcpdaemonEntryParam) );
+       ep.call_mode = TCPDAEMON_CALLMODE_MAIN ;
+       strcpy( ep.server_model , "LF" );
+       ep.max_process_count = 10 ;
+       ep.max_requests_per_process = -1 ; /* 可选选项也可以不赋值 */
+       strcpy( ep.ip , "127.0.0.1" );
+       ep.port = 7879 ;
+       strcpy( ep.so_pathfilename , "testso.so" );
+       ep.pfunc_tcpmain = & tcpmain ;
+       ep.param_tcpmain = NULL ;
+       ep.log_level = LOGLEVEL_DEBUG ;
+
+       return -tcpdaemon( & ep );
+}
+[/code]
+
+编译xxx.c并和libtcpdaemon.so一起链接成xxx.exe
+[code]
+$ gcc -Wall -Werror -O2 -fno-strict-aliasing -g -fPIC -I. -I~/include  -c xxx.c
+$ gcc -Wall -Werror -O2 -fno-strict-aliasing -g -fPIC  -o xxx xxx.o ~/lib/libtcpdaemon.so
+[/code]
+
+运行
+[code]
+$ ./xxx
+[/code]
+
+本模式用于应用希望自己主控守护而不使用tcpdaemon守护的场合。
+xxx.o去链接libtcpdaemon.a是否会使得xxx.exe执行更快呢？麻烦您自行编译libtcpdaemon.a
+
+6.3.异构模式
+
+与主守护模式类似，main函数在tcpdaemon.so里，只不过最后链接成完整可执行程序而非借用tcpdaemon做守护，文件和函数调用关系如下
+tcpdaemon.so(main->tcpdaemon) -> xxx.exe(tcpmain)
+
+编写用于处理通讯数据协议和应用逻辑的xxx.c
+[code]
+#include "tcpdaemon.h"
+int tcpmain( void *param_tcpmain , int sock , struct sockaddr *addr )
+{
+	/* ...处理通讯数据协议和应用逻辑... */
+	return 0;
+}
+func_tcpmain	*g_pfunc_tcpmain = & tcpmain ;
+void		*g_param_tcpmain = NULL ;
+[/code]
+
+编译xxx.c并和tcpdaemon.so一起链接成xxx.exe
+[code]
+$ gcc -Wall -Werror -O2 -fno-strict-aliasing -g -fPIC -I. -I~/include  -c xxx.c
+$ gcc -Wall -Werror -O2 -fno-strict-aliasing -g -fPIC  -o xxx xxx.o ~/lib/tcpdaemon.so
+[/code]
+
+运行
+[code]
+$ ./xxx
+[/code]
+
+本模式用于应用希望自己主控守护但又不想自己实现main函数解析命令行参数的场合。
+
+7.后续扩展计划
+
+* 实现其它TCP连接管理模型，如即时派生线程模型、领导者-追随者线程池模型，以便更好的运行在WINDOWS上
+
+8.总结
+
+软件首页 : http://www.oschina.net/p/tcpdaemon
+作者联系 : calvinwilliams.c@gmail.com
+
