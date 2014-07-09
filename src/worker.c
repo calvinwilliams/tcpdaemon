@@ -24,7 +24,7 @@ int worker( struct TcpdaemonEntryParam *pep , struct TcpdaemonServerEnv *pse )
 	
 	while(1)
 	{
-		DebugLog( __FILE__ , __LINE__ , "WORKER%ld | waiting for entering accept mutex\n" , pse->index );
+		DebugLog( __FILE__ , __LINE__ , "WORKER(%ld) | waiting for entering accept mutex\n" , pse->index );
 		
 		/* 进入临界区 */
 		memset( & sb , 0x00 , sizeof(struct sembuf) );
@@ -34,12 +34,12 @@ int worker( struct TcpdaemonEntryParam *pep , struct TcpdaemonServerEnv *pse )
 		nret = semop( pse->accept_mutex , & sb , 1 ) ;
 		if( nret == -1 )
 		{
-			InfoLog( __FILE__ , __LINE__ , "WORKER%ld | enter accept mutex failed , errno[%d]\n" , pse->index , errno );
+			ErrorLog( __FILE__ , __LINE__ , "WORKER(%ld) | enter accept mutex failed , errno[%d]\n" , pse->index , errno );
 			return -1;
 		}
 		else
 		{
-			DebugLog( __FILE__ , __LINE__ , "WORKER%ld | enter accept mutex ok\n" , pse->index );
+			DebugLog( __FILE__ , __LINE__ , "WORKER(%ld) | enter accept mutex ok\n" , pse->index );
 		}
 		
 		/* 监控侦听socket或存活管道事件 */
@@ -49,13 +49,13 @@ int worker( struct TcpdaemonEntryParam *pep , struct TcpdaemonServerEnv *pse )
 		nret = select( MAX_INT(pse->listen_sock,pse->alive_pipe->fd[0])+1 , & readfds , NULL , NULL , NULL ) ;
 		if( nret == -1 )
 		{	
-			InfoLog( __FILE__ , __LINE__ , "WORKER%ld | select failed , errno[%d]\n" , pse->index , errno );
+			ErrorLog( __FILE__ , __LINE__ , "WORKER(%ld) | select failed , errno[%d]\n" , pse->index , errno );
 			break;
 		}
 		
 		if( FD_ISSET( pse->alive_pipe->fd[0] , & readfds ) )
 		{
-			InfoLog( __FILE__ , __LINE__ , "WORKER%ld | alive_pipe received quit command\n" , pse->index );
+			DebugLog( __FILE__ , __LINE__ , "WORKER(%ld) | alive_pipe received quit command\n" , pse->index );
 			break;
 		}
 		
@@ -65,24 +65,25 @@ int worker( struct TcpdaemonEntryParam *pep , struct TcpdaemonServerEnv *pse )
 		accept_sock = accept( pse->listen_sock , & accept_addr , & accept_addrlen ) ;
 		if( accept_sock == -1 )
 		{
-			InfoLog( __FILE__ , __LINE__ , "WORKER%ld | accept failed , errno[%d]\n" , pse->index , errno );
+			ErrorLog( __FILE__ , __LINE__ , "WORKER(%ld) | accept failed , errno[%d]\n" , pse->index , errno );
 			break;
 		}
 		else
 		{
-			DebugLog( __FILE__ , __LINE__ , "WORKER%ld | accept ok , [%d]accept[%d]\n" , pse->index , pse->listen_sock , accept_sock );
+			DebugLog( __FILE__ , __LINE__ , "WORKER(%ld) | accept ok , [%d]accept[%d]\n" , pse->index , pse->listen_sock , accept_sock );
 		}
 		
-		setsockopt( accept_sock , IPPROTO_TCP , TCP_NODELAY , (void*) & (pep->tcp_nodelay) , sizeof(int) );
-		
+		if( pep->tcp_nodelay > 0 )
 		{
-		struct linger	lg ;
+			setsockopt( accept_sock , IPPROTO_TCP , TCP_NODELAY , (void*) & (pep->tcp_nodelay) , sizeof(int) );
+		}
+		
 		if( pep->tcp_linger > 0 )
 		{
+			struct linger	lg ;
 			lg.l_onoff = 1 ;
 			lg.l_linger = pep->tcp_linger - 1 ;
 			setsockopt( accept_sock , SOL_SOCKET , SO_LINGER , (void *) & lg , sizeof(struct linger) );
-		}
 		}
 		
 		/* 离开临界区 */
@@ -93,29 +94,29 @@ int worker( struct TcpdaemonEntryParam *pep , struct TcpdaemonServerEnv *pse )
 		nret = semop( pse->accept_mutex , & sb , 1 ) ;
 		if( nret == -1 )
 		{
-			InfoLog( __FILE__ , __LINE__ , "WORKER%ld | leave accept mutex failed , errno[%d]\n" , pse->index , errno );
+			ErrorLog( __FILE__ , __LINE__ , "WORKER(%ld) | leave accept mutex failed , errno[%d]\n" , pse->index , errno );
 			return -1;
 		}
 		else
 		{
-			DebugLog( __FILE__ , __LINE__ , "WORKER%ld | leave accept mutex ok\n" , pse->index );
+			DebugLog( __FILE__ , __LINE__ , "WORKER(%ld) | leave accept mutex ok\n" , pse->index );
 		}
 		
 		/* 调用通讯数据协议及应用处理回调函数 */
-		DebugLog( __FILE__ , __LINE__ , "WORKER%ld | 调用tcpmain\n" , pse->index );
+		DebugLog( __FILE__ , __LINE__ , "WORKER(%ld) | 调用tcpmain\n" , pse->index );
 		nret = pse->pfunc_tcpmain( pep->param_tcpmain , accept_sock , & accept_addr ) ;
 		if( nret < 0 )
 		{
-			InfoLog( __FILE__ , __LINE__ , "WORKER%ld | tcpmain return[%d]\n" , pse->index , nret );
-			break;
+			ErrorLog( __FILE__ , __LINE__ , "WORKER(%ld) | tcpmain return[%d]\n" , pse->index , nret );
+			return -1;
 		}
 		else if( nret > 0 )
 		{
-			InfoLog( __FILE__ , __LINE__ , "WORKER%ld | tcpmain return[%d]\n" , pse->index , nret );
+			WarnLog( __FILE__ , __LINE__ , "WORKER(%ld) | tcpmain return[%d]\n" , pse->index , nret );
 		}
 		else
 		{
-			DebugLog( __FILE__ , __LINE__ , "WORKER%ld | tcpmain return[%d]\n" , pse->index , nret );
+			DebugLog( __FILE__ , __LINE__ , "WORKER(%ld) | tcpmain return[%d]\n" , pse->index , nret );
 		}
 		
 		/* 关闭客户端连接 */
@@ -126,8 +127,8 @@ int worker( struct TcpdaemonEntryParam *pep , struct TcpdaemonServerEnv *pse )
 		pse->requests_per_process++;
 		if( pep->max_requests_per_process != 0 && pse->requests_per_process >= pep->max_requests_per_process )
 		{
-			InfoLog( __FILE__ , __LINE__ , "WORKER%ld | maximum number of processing[%ld][%ld] , ending\n" , pse->index , pse->requests_per_process , pep->max_requests_per_process );
-			break;
+			InfoLog( __FILE__ , __LINE__ , "WORKER(%ld) | maximum number of processing[%ld][%ld] , ending\n" , pse->index , pse->requests_per_process , pep->max_requests_per_process );
+			return -1;
 		}
 	}
 	
@@ -139,12 +140,12 @@ int worker( struct TcpdaemonEntryParam *pep , struct TcpdaemonServerEnv *pse )
 	nret = semop( pse->accept_mutex , & sb , 1 ) ;
 	if( nret == -1 )
 	{
-		InfoLog( __FILE__ , __LINE__ , "WORKER%ld | leave accept mutex finally failed , errno[%d]\n" , pse->index , errno );
+		InfoLog( __FILE__ , __LINE__ , "WORKER(%ld) | leave accept mutex finally failed , errno[%d]\n" , pse->index , errno );
 		return -1;
 	}
 	else
 	{
-		DebugLog( __FILE__ , __LINE__ , "WORKER%ld | leave accept mutex finally ok\n" , pse->index );
+		DebugLog( __FILE__ , __LINE__ , "WORKER(%ld) | leave accept mutex finally ok\n" , pse->index );
 	}
 	
 	return 0;

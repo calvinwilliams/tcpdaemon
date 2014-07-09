@@ -38,10 +38,7 @@ void SetLogLevel( int log_level )
 /*  ‰≥ˆ»’÷æ */
 int OutputLog( int log_level , char *c_filename , long c_fileline , char *format , va_list valist )
 {
-	struct timeval	tv ;
 	char		log_buffer[ 4096 + 1 ] ;
-	size_t		len ;
-	int		fd ;
 	
 	if( g_log_pathfilename[0] == '\0' )
 	{
@@ -52,6 +49,10 @@ int OutputLog( int log_level , char *c_filename , long c_fileline , char *format
 	}
 	else
 	{
+		struct timeval	tv ;
+		size_t		len ;
+		int		fd ;
+		
 		memset( log_buffer , 0x00 , sizeof(log_buffer) );
 		gettimeofday( & tv , NULL );
 		len = strftime( log_buffer , sizeof(log_buffer) , "%Y-%m-%d %H:%M:%S" , localtime(&(tv.tv_sec)) ) ;

@@ -1,5 +1,7 @@
-		* The model IF found a BUG, solve it in three days
+ver 1.0.1	2014-07-09	calvin
+		* Fixed BUG : non reentrant functions in signal event function lead to abnormal
+		* Reforming the code, to distinguish the log level
 
-ver 1.0.0	2014-06-29	calvin
+ver 1.0.0	2014-04-27	calvin
 		* Create
 
