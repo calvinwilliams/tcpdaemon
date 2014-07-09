@@ -4,7 +4,6 @@
  * tcpdaemon - TCP连接管理守护
  * author      : calvin
  * email       : calvinwilliams.c@gmail.com
- * LastVersion : 2014-06-29	v1.0.0		创建
  *
  * Licensed under the LGPL v2.1, see the file LICENSE in base directory.
  */
