@@ -12,7 +12,7 @@
 static void usage( char *program )
 {
 	printf( "USAGE : %s	-m LF -n process_count [ -r max_requests_per_process ] -l ip:port -s so_pathfilename\n" , program );
-	printf( "        	-m IF [ -n max_process_count ] -l ip:port -s so_pathfilename\n" );
+	printf( "        	 	-m IF [ -n max_process_count ] -l ip:port -s so_pathfilename\n" );
 	printf( "        other options :\n" );
 	printf( "        	[ --loglevel-(debug|info|warn|error|fatal) ] [ --tcp-nodelay ] [ --tcp-linger linger ]\n" );
 }
