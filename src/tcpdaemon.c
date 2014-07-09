@@ -4,13 +4,12 @@
  * tcpdaemon - TCP连接管理守护
  * author      : calvin
  * email       : calvinwilliams.c@gmail.com
- * LastVersion : 2014-06-29	v1.0.0		创建
  *
  * Licensed under the LGPL v2.1, see the file LICENSE in base directory.
  */
 
 /* 版本串 */
-char		__version_tcpdaemon[] = "1.0.0" ;
+char		__version_tcpdaemon[] = "1.0.1" ;
 
 int worker( struct TcpdaemonEntryParam *pep , struct TcpdaemonServerEnv *pse );
 
