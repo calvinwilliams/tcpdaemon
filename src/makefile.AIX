@@ -14,8 +14,8 @@ SOFLAGS		=	-G -bnoentry
 ESOFLAGS	=	-bdynamic -brtl -qcpluscm
 
 # c源代码文件宏及推导规则
-CC		=	xlc -q64 -Wall -O2
-CC_NOWARN	=	xlc -q64 -O2
+CC		=	xlc -q64 -O2 -qtls
+CC_NOWARN	=	xlc -q64 -O2 -qtls
 
 c_FILE_o	=	$(c_FILE:.c=.o)
 c_FILE2_o	=	$(c_FILE2:.c=.o)
@@ -122,7 +122,7 @@ install		:	all
 
 ###### 目标文件依赖关系
 tcpdaemon:	util.o main.o _main.o tcpdaemon.o worker.o
-	$(CC) $(ESOFLAGS) -o $@ util.o main.o tcpdaemon.o worker.o $(LFLAGS)
+	$(CC) $(ESOFLAGS) -o $@ util.o main.o _main.o tcpdaemon.o worker.o $(LFLAGS)
 
 libtcpdaemon.so:util.o tcpdaemon.o worker.o
 	$(CC) $(SOFLAGS) -o $@ util.o tcpdaemon.o worker.o $(LFLAGS)
