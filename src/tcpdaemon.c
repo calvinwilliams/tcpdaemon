@@ -60,7 +60,7 @@ static int InitDaemonEnv( struct TcpdaemonEntryParam *pep , struct TcpdaemonServ
 			return -1;
 		}
 		
-		pse->pfunc_tcpmain = dlsym( pse->so_handle , TCPMAIN ) ;
+		pse->pfunc_tcpmain = (func_tcpmain*)dlsym( pse->so_handle , TCPMAIN ) ;
 		if( pse->pfunc_tcpmain == NULL )
 		{
 			ErrorLog( __FILE__ , __LINE__ , "dlsym[%s]failed[%s]\n" , TCPMAIN , dlerror() );
@@ -249,7 +249,9 @@ int tcpdaemon_IF( struct TcpdaemonEntryParam *pep , struct TcpdaemonServerEnv *p
 	memset( & act , 0x00 , sizeof(struct sigaction) );
 	act.sa_handler = sigproc_SIGTERM ;
 	sigemptyset( & (act.sa_mask) );
+#ifdef SA_INTERRUPT
 	act.sa_flags = SA_INTERRUPT ;
+#endif
 	nret = sigaction( SIGTERM , & act , & oldact );
 	
 	memset( & act , 0x00 , sizeof(struct sigaction) );
@@ -572,7 +574,9 @@ int tcpdaemon_LF( struct TcpdaemonEntryParam *pep , struct TcpdaemonServerEnv *p
 	/* 监控工作进程池 */
 	memset( & act , 0x00 , sizeof(struct sigaction) );
 	act.sa_handler = & sigproc_SIGTERM ;
-	act.sa_flags = 0 ;
+#ifdef SA_INTERRUPT
+	act.sa_flags = SA_INTERRUPT ;
+#endif
 	sigaction( SIGTERM , & act , & oldact );
 	
 	signal( SIGCHLD , SIG_DFL );
