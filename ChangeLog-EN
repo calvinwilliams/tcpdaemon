@@ -1,6 +1,6 @@
 ver 1.0.2	2014-07-13	calvin
-		* Fixed a BUG : the cross-border hidden danger of strncpy
-		* Rewrite the summary of document content, so that more popularization
+		* Fixed a BUG : the cross-border hidden danger of strncpy . Thanks to hellioncu
+		* Rewrite the summary of document content, so that more popularization . Thanks to weishuo1999
 
 ver 1.0.1	2014-07-09	calvin
 		* Fixed a BUG : non reentrant functions in signal event function lead to abnormal
