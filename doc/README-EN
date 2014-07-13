@@ -2,24 +2,26 @@ tcpdaemon - TCP connection management daemon
 
 1.Overview
 
-Tcpdaemon is similar to the xinetd TCP daemon, which is under the particular process model of TCP connection management, docking with the customer communication data protocol layer and application processing module on runtime or compile linking, construct TCP server quickly. 
+Tcpdaemon is similar to the xinetd TCP daemon service, which provides a variety of packaging common TCP connection management model (instant derived, pre-derived process pool, etc.), users only need to write the TCP communications data exchange protocol and application processing code, can quickly completely construct their own TCP application server.
+Using tcpdaemon can make you avoid writing complex TCP connection management code and processes thread model, such as maintenance of connection pool, tcpdaemon provide rich encapsulate frame model is called by your application, you only need to use the model.
+Not only can use tcpdaemon like xinetd, interface pattern also provides a variety of other applications interface modes, such as to implement the 'main' function and processes the entrance, adapt to a variety of code structures.
 
 tcpdaemon compared with xientd
 * Application affinity : xinetd used to system services layer of the TCP services, mainly for tcpdaemon is oriented to application layer 
-* TCP connection management model : xinetd only support instant derived process model, tcpdaemon also support process pool model(leader-Followers) and other high-performance model.
+* TCP connection management model : xinetd only support instant derived process model, tcpdaemon also support pre-derived process pool model(leader-Followers) and other high-performance model.
 * Interface pattern : xinetd only supports the main guardian mode, tcpdaemon also support the function call mode and mixed mode.
 * Cross-platform : xinetd is a UNIX software, tcpdaemon is cross-platform software, support UNIX liked , Linux, WINDOWS and other mainstream operating system (waiting for realize).
 
 Tcpdaemon provides two TCP connection management model
-* Instant derived process model
-* Leader-Follower process pool model
-In the future will also support more models, such as thread model 
+* Instant derived process model : after accept a connection , and derived a process for processing
+* Leader-Follower process pool model : derived a process pool, adaptive to accept new connections 
+In the future will also support more models, such as thread model.
 
 tcpdaemon provides three application interface modes
-* Main guardian
-* Function call mode
-* Mixed model
-Three application interface pattern is enough to adapt to almost all applications
+* Main guardian : traditional mode like xinetd, initiate a TCP daemon and custom part in an executable program or dynamic library way to hook up on it 
+* Function call mode : the master framework to function invocation pattern called tcpdaemon, link into separate application 
+* Mixed model : tcpdaemon master framework, but link into separate application. 
+Three application interface pattern is enough to adapt to almost all applications interface.
 
 2.Compiling and installation
 

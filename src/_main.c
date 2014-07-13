@@ -76,6 +76,11 @@ int _main( int argc , char *argv[] , struct TcpdaemonEntryParam *pep , func_tcpm
 				InfoLog( __FILE__ , __LINE__ , "parameter --listen[%s]无效\n" , argv[c+1] );
 				return 1;
 			}
+			if( p - argv[c+1] > sizeof(pep->ip) - 1 )
+			{
+				InfoLog( __FILE__ , __LINE__ , "parameter -l[%s]中的ip过长\n" , argv[c+1] );
+				return 1;
+			}
 			strncpy( pep->ip , argv[c+1] , p - argv[c+1] );
 			pep->port = atol(p+1) ;
 			c++;

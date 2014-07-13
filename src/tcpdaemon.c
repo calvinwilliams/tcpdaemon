@@ -9,7 +9,7 @@
  */
 
 /* °æ±¾´® */
-char		__version_tcpdaemon[] = "1.0.1" ;
+char		__version_tcpdaemon[] = "1.0.2" ;
 
 int worker( struct TcpdaemonEntryParam *pep , struct TcpdaemonServerEnv *pse );
 
