@@ -3,7 +3,7 @@ tcpdaemon - TCP connection management daemon
 1.Overview
 
 Tcpdaemon is similar to the xinetd TCP daemon service, which provides a variety of packaging common TCP connection management model (instant derived, pre-derived process pool, etc.), users only need to write the TCP communications data exchange protocol and application processing code, can quickly completely construct their own TCP application server.
-Using tcpdaemon can make you avoid writing complex TCP connection management code and processes thread model, such as maintenance of connection pool, tcpdaemon provide rich encapsulate frame model is called by your application, you only need to use the model.
+Using tcpdaemon can make you avoid writing complex TCP connection management code and processes thread model, such as maintenance of connection pool, tcpdaemon provide rich model (classic models of server service in the UNP) is called by your application, you only need to use the model.
 Not only can use tcpdaemon like xinetd, interface pattern also provides a variety of other applications interface modes, such as to implement the 'main' function and processes the entrance, adapt to a variety of code structures.
 
 tcpdaemon compared with xientd
