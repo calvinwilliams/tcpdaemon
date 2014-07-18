@@ -1,16 +1,8 @@
-#include "inc.h"
-
-/*
- * tcpdaemon - TCP连接管理守护
- * author      : calvin
- * email       : calvinwilliams.c@gmail.com
- *
- * Licensed under the LGPL v2.1, see the file LICENSE in base directory.
- */
+#include "LOGC.h"
 
 /* 日志文件名 */
-__thread char	g_log_pathfilename[ MAXLEN_FILENAME + 1 ] = "" ;
-__thread int	g_log_level = LOGLEVEL_INFO ;
+TLS char	g_log_pathfilename[ MAXLEN_FILENAME + 1 ] = "" ;
+TLS int		g_log_level = LOGLEVEL_INFO ;
 
 const char log_level_itoa[][6] = { "DEBUG" , "INFO" , "WARN" , "ERROR" , "FATAL" } ;
 
@@ -20,7 +12,7 @@ void SetLogFile( char *format , ... )
 	va_list		valist ;
 	
 	va_start( valist , format );
-	vsnprintf( g_log_pathfilename , sizeof(g_log_pathfilename)-1 , format , valist );
+	VSNPRINTF( g_log_pathfilename , sizeof(g_log_pathfilename)-1 , format , valist );
 	va_end( valist );
 	
 	return;
@@ -37,36 +29,66 @@ void SetLogLevel( int log_level )
 /* 输出日志 */
 int OutputLog( int log_level , char *c_filename , long c_fileline , char *format , va_list valist )
 {
+	char		c_filename_copy[ MAXLEN_FILENAME + 1 ] ;
+	char		*p_c_filename = NULL ;
+	
+	struct timeval	tv ;
+	struct tm	stime ;
+	size_t		len ;
+	
 	char		log_buffer[ 4096 + 1 ] ;
+	
+	memset( c_filename_copy , 0x00 , sizeof(c_filename_copy) );
+	strncpy( c_filename_copy , c_filename , sizeof(c_filename_copy)-1 );
+	p_c_filename = strrchr( c_filename_copy , '\\' ) ;
+	if( p_c_filename )
+		p_c_filename++;
+	else
+		p_c_filename = c_filename_copy ;
+
+#if ( defined __linux__ ) || ( defined __unix )
+	gettimeofday( & tv , NULL );
+	localtime_r( &(tv.tv_sec) , & stime );
+#elif ( defined _WIN32 )
+	{
+	SYSTEMTIME	stNow ;
+	GetLocalTime( & stNow );
+	tv.tv_usec = stNow.wMilliseconds * 1000 ;
+	stime.tm_year = stNow.wYear - 1900 ;
+	stime.tm_mon = stNow.wMonth - 1 ;
+	stime.tm_mday = stNow.wDay ;
+	stime.tm_hour = stNow.wHour ;
+	stime.tm_min = stNow.wMinute ;
+	stime.tm_sec = stNow.wSecond ;
+	}
+#endif
+
+	memset( log_buffer , 0x00 , sizeof(log_buffer) );
+	len = strftime( log_buffer , sizeof(log_buffer) , "%Y-%m-%d %H:%M:%S" , & stime ) ;
+	len += SNPRINTF( log_buffer+len , sizeof(log_buffer)-1-len , ".%06ld" , (long)(tv.tv_usec) ) ;
+	len += SNPRINTF( log_buffer+len , sizeof(log_buffer)-1-len , " | %-5s" , log_level_itoa[log_level] ) ;
+	len += SNPRINTF( log_buffer+len , sizeof(log_buffer)-1-len , " | %ld:%ld:%s:%ld | ", PROCESSID , THREADID , p_c_filename , c_fileline ) ;
+	len += VSNPRINTF( log_buffer+len , sizeof(log_buffer)-1-len , format , valist );
 	
 	if( g_log_pathfilename[0] == '\0' )
 	{
-		memset( log_buffer , 0x00 , sizeof(log_buffer) );
-		vsnprintf( log_buffer , sizeof(log_buffer)-1 , format , valist );
-		
-		printf( "%s" , log_buffer );
+		WRITE( 1 , log_buffer , len );
 	}
 	else
 	{
-		struct timeval	tv ;
-		size_t		len ;
 		int		fd ;
 		
-		memset( log_buffer , 0x00 , sizeof(log_buffer) );
-		gettimeofday( & tv , NULL );
-		len = strftime( log_buffer , sizeof(log_buffer) , "%Y-%m-%d %H:%M:%S" , localtime(&(tv.tv_sec)) ) ;
-		len += snprintf( log_buffer+len , sizeof(log_buffer)-1-len , ".%06ld" , (long)(tv.tv_usec) ) ;
-		len += snprintf( log_buffer+len , sizeof(log_buffer)-1-len , " | %s" , log_level_itoa[log_level] ) ;
-		len += snprintf( log_buffer+len , sizeof(log_buffer)-1-len , " | %ld:%s:%ld | ", (long)getpid() , c_filename , c_fileline ) ;
-		len += vsnprintf( log_buffer+len , sizeof(log_buffer)-1-len , format , valist );
-		
-		fd = open( g_log_pathfilename , O_CREAT | O_WRONLY | O_APPEND , S_IRWXU | S_IRWXG | S_IRWXO ) ;
+#if ( defined __linux__ ) || ( defined __unix )
+		fd = OPEN( g_log_pathfilename , O_CREAT | O_WRONLY | O_APPEND , S_IRWXU | S_IRWXG | S_IRWXO ) ;
+#elif ( defined _WIN32 )
+		fd = OPEN( g_log_pathfilename , _O_CREAT | _O_WRONLY | _O_APPEND , _S_IREAD | _S_IWRITE ) ;
+#endif
 		if( fd == -1 )
 			return -1;
 		
-		write( fd , log_buffer , len );
+		WRITE( fd , log_buffer , len );
 		
-		close( fd );
+		CLOSE( fd );
 	}
 	
 	return 0;
@@ -141,3 +163,4 @@ int DebugLog( char *c_filename , long c_fileline , char *format , ... )
 	
 	return 0;
 }
+

@@ -2,6 +2,7 @@
 
 /* 主守护模式测试程序 */
 
+_WINDLL_FUNC func_tcpmain tcpmain ;
 int tcpmain( void *param_tcpmain , int sock , struct sockaddr *addr )
 {
 #if 0
@@ -18,7 +19,7 @@ int tcpmain( void *param_tcpmain , int sock , struct sockaddr *addr )
 	
 	while( sizeof(http_buffer)-1 - http_len > 0 )
 	{
-		len = read( sock , http_buffer + http_len , sizeof(http_buffer)-1 - http_len ) ;
+		len = RECV( sock , http_buffer + http_len , sizeof(http_buffer)-1 - http_len , 0 ) ;
 		if( len == -1 || len == 0 )
 			return 0;
 		if( strstr( http_buffer , "\r\n\r\n" ) )
@@ -34,7 +35,7 @@ int tcpmain( void *param_tcpmain , int sock , struct sockaddr *addr )
 	http_len = 0 ;
 	
 	http_len = sprintf( http_buffer , "HTTP/1.0 200 OK\r\n\r\n" ) ;
-	write( sock , http_buffer , http_len );
+	SEND( sock , http_buffer , http_len , 0 );
 	
 	return 0;
 #endif

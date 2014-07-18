@@ -30,16 +30,15 @@ c_FILE_CLEAN	=	$(c_FILE_o) $(c_FILE2_o) $(c_FILE3_o) $(c_FILE4_o) $(c_FILE5_o)
 
 c_FILE		=	\
 			main.c \
-			nomain.c \
-			_main.c \
 			tcpdaemon.c \
-			util.c \
 			worker.c \
+			LOGC.c \
+			service.c \
 
 ###### 目标文件、安装目录配置区
 BIN		=	tcpdaemon
 BININST		=	$(HOME)/bin
-LIB		=	libtcpdaemon.so libtcpdaemonmain.so
+LIB		=	libtcpdaemon.so
 LIBINST		=	$(HOME)/lib
 HDER		=	tcpdaemon.h
 HDERINST	=	$(HOME)/include
@@ -121,12 +120,9 @@ install		:	all
 
 
 ###### 目标文件依赖关系
-tcpdaemon:	util.o main.o _main.o tcpdaemon.o worker.o
-	$(CC) $(ESOFLAGS) -o $@ util.o main.o _main.o tcpdaemon.o worker.o $(LFLAGS)
+tcpdaemon:	main.o tcpdaemon.o worker.o LOGC.o service.o
+	$(CC) $(ESOFLAGS) -o $@ main.o tcpdaemon.o worker.o LOGC.o service.o $(LFLAGS)
 
-libtcpdaemon.so:util.o tcpdaemon.o worker.o
-	$(CC) $(SOFLAGS) -o $@ util.o tcpdaemon.o worker.o $(LFLAGS)
-
-libtcpdaemonmain.so:util.o nomain.o _main.o tcpdaemon.o worker.o
-	$(CC) $(SOFLAGS) -o $@ util.o nomain.o _main.o tcpdaemon.o worker.o $(LFLAGS)
+libtcpdaemon.so: tcpdaemon.o worker.o LOGC.o service.o
+	$(CC) $(SOFLAGS) -o $@ tcpdaemon.o worker.o LOGC.o service.o $(LFLAGS)
 

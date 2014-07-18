@@ -9,11 +9,10 @@
 #@ c_FILE
 c_FILE		=	\
 			test.c \
-			testnomain.c \
 			testso.c \
 
 ###### 目标文件、安装目录配置区
-NOINST_OBJ	=	testso.so test testnomain
+NOINST_OBJ	=	testso.so test
 
 ###### 编译选项
 CFLAGS		=	-I. \
@@ -41,8 +40,4 @@ testso.so:	testso.o
 
 test	:	test.o
 	$(CC) $(ESOFLAGS) -o $@ test.o $(LFLAGS) -ltcpdaemon
-
-testnomain:	testnomain.o
-	$(CC) $(ESOFLAGS) -o $@ testnomain.o $(LFLAGS) -ltcpdaemonmain
-
 

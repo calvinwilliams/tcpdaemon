@@ -9,18 +9,18 @@ Not only can use tcpdaemon like xinetd, interface pattern also provides a variet
 tcpdaemon compared with xientd
 * Application affinity : xinetd used to system services layer of the TCP services, mainly for tcpdaemon is oriented to application layer 
 * TCP connection management model : xinetd only support instant derived process model, tcpdaemon also support pre-derived process pool model(leader-Followers) and other high-performance model.
-* Interface pattern : xinetd only supports the main guardian mode, tcpdaemon also support the function call mode and mixed mode.
+* Interface pattern : xinetd only supports the main guardian mode, tcpdaemon also support the function call mode.
 * Cross-platform : xinetd is a UNIX software, tcpdaemon is cross-platform software, support UNIX liked , Linux, WINDOWS and other mainstream operating system (waiting for realize).
 
 Tcpdaemon provides two TCP connection management model
 * Instant derived process model : after accept a connection , and derived a process for processing
 * Leader-Follower process pool model : derived a process pool, adaptive to accept new connections 
+* Leader-Follower thread pool model ( for WINDOWS ) : derived a thread pool, adaptive to accept new connections 
 In the future will also support more models, such as thread model.
 
-tcpdaemon provides three application interface modes
-* Main guardian : traditional mode like xinetd, initiate a TCP daemon and custom part in an executable program or dynamic library way to hook up on it 
+tcpdaemon provides two application interface modes
+* Main guardian mode : traditional mode like xinetd, initiate a TCP daemon and custom part in an executable program or dynamic library way to hook up on it 
 * Function call mode : the master framework to function invocation pattern called tcpdaemon, link into separate application 
-* Mixed model : tcpdaemon master framework, but link into separate application. 
 Three application interface pattern is enough to adapt to almost all applications interface.
 
 2.Compiling and installation
@@ -28,33 +28,28 @@ Three application interface pattern is enough to adapt to almost all application
 for example, Linux
 [code]
 $ make -f makefile.Linux install
-make[1]: Entering directory `~/src/tcpdaemon-1.0.0/src'
-make[2]: Entering directory `~/src/tcpdaemon-1.0.0/src'
-gcc -g -fPIC -Wall -Werror -O2 -I.  -c util.c
+make[1]: Entering directory `~/src/tcpdaemon-1.1.0/src'
+make[2]: Entering directory `~/src/tcpdaemon-1.1.0/src'
 gcc -g -fPIC -Wall -Werror -O2 -I.  -c tcpdaemon.c
 gcc -g -fPIC -Wall -Werror -O2 -I.  -c worker.c
-gcc -g -fPIC -Wall -Werror -O2 -shared -o libtcpdaemon.so util.o tcpdaemon.o worker.o -L. -lpthread -ldl
-gcc -g -fPIC -Wall -Werror -O2 -I.  -c nomain.c
-gcc -g -fPIC -Wall -Werror -O2 -I.  -c _main.c
-gcc -g -fPIC -Wall -Werror -O2 -shared -o tcpdaemon.so util.o nomain.o _main.o tcpdaemon.o worker.o -L. -lpthread -ldl
+gcc -g -fPIC -Wall -Werror -O2 -I.  -c LOGC.c
+gcc -g -fPIC -Wall -Werror -O2 -I.  -c service.c
+gcc -g -fPIC -Wall -Werror -O2 -shared -o libtcpdaemon.so tcpdaemon.o worker.o LOGC.o service.o -L. -lpthread -ldl
 gcc -g -fPIC -Wall -Werror -O2 -I.  -c main.c
-gcc -g -fPIC -Wall -Werror -O2  -o tcpdaemon util.o main.o _main.o tcpdaemon.o worker.o -L. -lpthread -ldl
-make[2]: Leaving directory `~/src/tcpdaemon-1.0.0/src'
+gcc -g -fPIC -Wall -Werror -O2  -o tcpdaemon util.o main.o tcpdaemon.o worker.o LOGC.o service.o -L. -lpthread -ldl
+make[2]: Leaving directory `~/src/tcpdaemon-1.1.0/src'
 cp -f tcpdaemon ~/bin/
 cp -f libtcpdaemon.so ~/lib/
-cp -f tcpdaemon.so ~/lib/
 cp -f tcpdaemon.h ~/include/
-make[1]: Leaving directory `~/src/tcpdaemon-1.0.0/src'
-make[1]: Entering directory `~/src/tcpdaemon-1.0.0/test'
-make[2]: Entering directory `~/src/tcpdaemon-1.0.0/test'
+make[1]: Leaving directory `~/src/tcpdaemon-1.1.0/src'
+make[1]: Entering directory `~/src/tcpdaemon-1.1.0/test'
+make[2]: Entering directory `~/src/tcpdaemon-1.1.0/test'
 gcc -Wall -Werror -O2 -fno-strict-aliasing -g -fPIC -I. -I~/include  -c testso.c
 gcc -Wall -Werror -O2 -fno-strict-aliasing -g -fPIC -shared -o testso.so testso.o -L.
 gcc -Wall -Werror -O2 -fno-strict-aliasing -g -fPIC -I. -I~/include  -c test.c
 gcc -Wall -Werror -O2 -fno-strict-aliasing -g -fPIC  -o test test.o ~/lib/libtcpdaemon.so -L.
-gcc -Wall -Werror -O2 -fno-strict-aliasing -g -fPIC -I. -I~/include  -c testnomain.c
-gcc -Wall -Werror -O2 -fno-strict-aliasing -g -fPIC  -o testnomain testnomain.o ~/lib/tcpdaemon.so -L.
-make[2]: Leaving directory `~/src/tcpdaemon-1.0.0/test'
-make[1]: Leaving directory `~/src/tcpdaemon-1.0.0/test'
+make[2]: Leaving directory `~/src/tcpdaemon-1.1.0/test'
+make[1]: Leaving directory `~/src/tcpdaemon-1.1.0/test'
 [/code]
 
 3.A examples
@@ -70,20 +65,20 @@ int tcpmain( void *param_tcpmain , int sock , struct sockaddr *addr )
 $ make -f makefile.Linux
 gcc -Wall -Werror -O2 -fno-strict-aliasing -g -fPIC -I. -I~/include  -c testso.c
 gcc -Wall -Werror -O2 -fno-strict-aliasing -g -fPIC -shared -o testso.so testso.o
-$ tcpdaemon -m LF -n 10 -l 127.0.0.1:7879 -s testso.so
+$ tcpdaemon -m LF -c 10 -l 127.0.0.1:7879 -s testso.so
 tcpdaemon startup
 $ ps -ef | grep tcpdaemon
-502      13692     1  0 12:12 ?        00:00:00 tcpdaemon -m LF -n 10 -l 127.0.0.1:7879 -s testso.so
-502      13693 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -n 10 -l 127.0.0.1:7879 -s testso.so
-502      13694 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -n 10 -l 127.0.0.1:7879 -s testso.so
-502      13695 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -n 10 -l 127.0.0.1:7879 -s testso.so
-502      13696 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -n 10 -l 127.0.0.1:7879 -s testso.so
-502      13697 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -n 10 -l 127.0.0.1:7879 -s testso.so
-502      13698 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -n 10 -l 127.0.0.1:7879 -s testso.so
-502      13699 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -n 10 -l 127.0.0.1:7879 -s testso.so
-502      13700 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -n 10 -l 127.0.0.1:7879 -s testso.so
-502      13701 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -n 10 -l 127.0.0.1:7879 -s testso.so
-502      13702 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -n 10 -l 127.0.0.1:7879 -s testso.so
+502      13692     1  0 12:12 ?        00:00:00 tcpdaemon -m LF -c 10 -l 127.0.0.1:7879 -s testso.so
+502      13693 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -c 10 -l 127.0.0.1:7879 -s testso.so
+502      13694 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -c 10 -l 127.0.0.1:7879 -s testso.so
+502      13695 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -c 10 -l 127.0.0.1:7879 -s testso.so
+502      13696 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -c 10 -l 127.0.0.1:7879 -s testso.so
+502      13697 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -c 10 -l 127.0.0.1:7879 -s testso.so
+502      13698 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -c 10 -l 127.0.0.1:7879 -s testso.so
+502      13699 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -c 10 -l 127.0.0.1:7879 -s testso.so
+502      13700 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -c 10 -l 127.0.0.1:7879 -s testso.so
+502      13701 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -c 10 -l 127.0.0.1:7879 -s testso.so
+502      13702 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -c 10 -l 127.0.0.1:7879 -s testso.so
 $ telnet 127.0.0.1 7879
 Trying 127.0.0.1...
 Connected to localhost.localdomain (127.0.0.1).
@@ -148,15 +143,19 @@ USAGE : tcpdaemon -m LF -n process_count [ -r max_requests_per_process ] -l ip:p
 -m TCP connection management model 
 	LF : Leader-Follower process pool model
 	IF : Instant derived process model
--n work process amount on Leader-Follower process pool model
+-c work process amount on Leader-Follower process pool model
    
    maximum work process amount on instant derived process model
--r work process maximum application processing times on Leader-Follower process pool model , create a new process of alternative work process
+-n work process maximum application processing times on Leader-Follower process pool model , create a new process of alternative work process
 -l local listen IP and PORT, such as "127.0.0.1:7879"
 -s file name of dynamic link library
+-v show version
+--daemon-level convert a daemon on startup
 --loglevel-(debug|info|warn|error|fatal) log level, the log file name defaults to "$HOME/log/tcpdaemon log" 
 --tcp-nodelay Enable TCP_NODELAY option
 --tcp-linger Enable TCP_LINGER option , The actual setting value = parameter values - 1
+--install-winservice install a windows service
+--uninstall-winservice uninstall this service
 
 5.TCP connection management model
 
@@ -168,14 +167,19 @@ Tcpdaemon run only a listener, on a new connection came in, derived a child proc
 
 Tcpdaemon will start a management process and a work process pool, work process competition to accept new connections, and synchronization to application. 
 
+5.2.Leader-Follower thread pool model(for WINDOWS)
+
+Tcpdaemon will start a monitoring process and a working process, monitoring process monitoring and restart working process. Work process to create a monitoring thread and a group of worker threads, monitoring thread monitoring and restart workering thread. Working thread group competition to accept new connections and synchronous handed over to the application.
+
 6.Application interface pattern
 
-In order to adapt to dock with applications, tcpdaemon provides three modes.
+In order to adapt to dock with applications, tcpdaemon provides two modes.
 
 6.1.The main guardian 
 
 Which is the most commonly used mode , tcpdaemon framework provides a daemon responsible for process, runtime explicitly articulated application provides dynamic library to deal with data communication protocol and application logic.
 tcpdaemon.exe(main->tcpdaemon) -> xxx.so(tcpmain)
+Note: the application wants to convert daemon, must be deal with itself. 
 
 Write to handle data communications protocol and application logic of xxx.c
 [code]
@@ -196,7 +200,7 @@ $ gcc -Wall -Werror -O2 -fno-strict-aliasing -g -fPIC -shared -o xxx.so xxx.o
 
 running
 [code]
-$ tcpdaemon -m LF -n 10 -l 127.0.0.1:7879 -s xxx.so
+$ tcpdaemon -m LF -c 10 -l 127.0.0.1:7879 -s xxx.so
 [/code]
 
 This pattern is used to make tcpdaemon bring daemon responsible for platform, application only needs to provide the dynamic library into the occasion.
@@ -223,13 +227,22 @@ int main()
        ep.call_mode = TCPDAEMON_CALLMODE_MAIN ;
        strcpy( ep.server_model , "LF" );
        ep.max_process_count = 10 ;
+       ep.max_requests_per_process = 0 ; /* 可选选项也可以不赋值 */
        strcpy( ep.ip , "127.0.0.1" );
        ep.port = 7879 ;
        strcpy( ep.so_pathfilename , "testso.so" );
        ep.pfunc_tcpmain = & tcpmain ;
        ep.param_tcpmain = NULL ;
-       ep.log_level = LOGLEVEL_DEBUG ;
+       ep.log_level = LOGLEVEL_INFO ;
 
+#if ( defined _WIN32 )
+	{
+	WSADATA		wsd;
+	if( WSAStartup( MAKEWORD(2,2) , & wsd ) != 0 )
+		return 1;
+	}
+#endif
+	
        return -tcpdaemon( & ep );
 }
 [/code]
@@ -279,10 +292,11 @@ This model can be used for application wants to master guardian but don't want t
 
 7.Subsequent expansion plan
 
-* Implement other TCP connection management model, such as instant derived followers thread model, Leader-Follower thread pool model, in order to better run on WINDOWS.
+* Nothing.
 
 8.The last
 
+Welcome to use ^_^
 Homepage : https://github.com/calvinwilliams/tcpdaemon
 Contact me by calvinwilliams.c@gmail.com
 
