@@ -12,7 +12,7 @@ xientd与tcpdaemon的功能比较
 * 应用接口模式 : xinetd只支持主守护模式，tcpdaemon还支持函数调用模式和异构模式
 * 跨平台 : xinetd是UNIX独有软件，tcpdaemon是跨平台软件，支持类UNIX、Linux、WINDOWS等主流操作系统（有待实现）
 
-tcpdaemon提供了两种TCP连接管理模型
+tcpdaemon提供了三种TCP连接管理模型
 * 即时派生进程模型 : 接受一个连接，就派生一个进程处理之
 * 领导者-追随者预派生进程池模型 : 预派生一个进程池，自适应抢接受新连接
 * 领导者-追随者预派生线程池模型(for WINDOWS) : 预派生一个线程池，自适应抢接受新连接
