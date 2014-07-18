@@ -10,7 +10,7 @@ xientd与tcpdaemon的功能比较
 * 应用亲和力 : xinetd主要面向系统服务层的TCP服务，tcpdaemon还面向应用层
 * TCP连接管理模型 : xinetd只支持即时派生进程模型，tcpdaemon还支持领导者-追随者预派生进程池模型等其它高性能模型
 * 应用接口模式 : xinetd只支持主守护模式，tcpdaemon还支持函数调用模式和异构模式
-* 跨平台 : xinetd是UNIX独有软件，tcpdaemon是跨平台软件，支持类UNIX、Linux、WINDOWS等主流操作系统（有待实现）
+* 跨平台 : xinetd是UNIX独有软件，tcpdaemon是跨平台软件，支持类UNIX、Linux、WINDOWS等主流操作系统
 
 tcpdaemon提供了三种TCP连接管理模型
 * 即时派生进程模型 : 接受一个连接，就派生一个进程处理之
