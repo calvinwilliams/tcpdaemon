@@ -9,16 +9,15 @@
 #@ c_FILE
 c_FILE		=	\
 			main.c \
-			nomain.c \
-			_main.c \
 			tcpdaemon.c \
-			util.c \
 			worker.c \
+			LOGC.c \
+			service.c \
 
 ###### 目标文件、安装目录配置区
 BIN		=	tcpdaemon
 BININST		=	$(HOME)/exbin
-LIB		=	libtcpdaemon.so libtcpdaemonmain.so
+LIB		=	libtcpdaemon.so
 LIBINST		=	$(HOME)/exlib
 HDER		=	tcpdaemon.h
 HDERINST	=	$(HOME)/exinc/tcpdaemon
@@ -45,12 +44,9 @@ CLEAN_ADDITION	=
 include $(MKTPLDIR)/makeobj_$(MKTPLOS).inc
 
 ###### 目标文件依赖关系
-tcpdaemon:	util.o main.o _main.o tcpdaemon.o worker.o
-	$(CC) $(ESOFLAGS) -o $@ util.o main.o _main.o tcpdaemon.o worker.o $(LFLAGS)
+tcpdaemon:	main.o tcpdaemon.o worker.o LOGC.o service.o
+	$(CC) $(ESOFLAGS) -o $@ main.o tcpdaemon.o worker.o LOGC.o service.o $(LFLAGS)
 
-libtcpdaemon.so:util.o tcpdaemon.o worker.o
-	$(CC) $(SOFLAGS) -o $@ util.o tcpdaemon.o worker.o $(LFLAGS)
-
-libtcpdaemonmain.so:util.o nomain.o _main.o tcpdaemon.o worker.o
-	$(CC) $(SOFLAGS) -o $@ util.o nomain.o _main.o tcpdaemon.o worker.o $(LFLAGS)
+libtcpdaemon.so: tcpdaemon.o worker.o LOGC.o service.o
+	$(CC) $(SOFLAGS) -o $@ tcpdaemon.o worker.o LOGC.o service.o $(LFLAGS)
 

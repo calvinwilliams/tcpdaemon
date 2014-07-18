@@ -3,7 +3,7 @@ tcpdaemon - TCPÁ¬½Ó¹ÜÀíÊØ»¤
 1.¸ÅÊö
 
 tcpdaemonÊÇÀàËÆÓÚxinetdµÄTCPÊØ»¤·şÎñ£¬Ëü·â×°Ìá¹©ÁË¸÷ÖÖ³£¼ûTCPÁ¬½Ó¹ÜÀíÄ£ĞÍ£¨¼´Ê±ÅÉÉú¡¢Ô¤ÅÉÉú½ø³Ì³ØµÈ£©£¬Ê¹ÓÃÕßÖ»Ğè±àĞ´TCPÍ¨Ñ¶Êı¾İ½»»»Ğ­ÒéºÍÓ¦ÓÃ´¦Àí´úÂë£¬¾ÍÄÜ¿ìËÙÍêÕû¹¹Ôì×Ô¼ºµÄTCPÓ¦ÓÃ·şÎñÆ÷¡£
-Ê¹ÓÃtcpdaemon¿ÉÊ¹ÄãÃâÓÚ±àĞ´¸´ÔÓµÄTCPÁ¬½Ó¹ÜÀí´úÂëºÍ½ø³ÌÏß³ÌÄ£ĞÍ£¬ÈçÁ¬½Ó³ØµÄÎ¬»¤£¬tcpdaemonÌá¹©·á¸»µÄ·â×°ºÃµÄÄ£ĞÍ£¨¶¼ÊÇUNPÀïµÄ¾­µä·şÎñ¶ËÄ£ĞÍ£©¿ìËÙ±»ÄãµÄÓ¦ÓÃµ÷ÓÃ£¬ÄãÖ»Ğè±àĞ´Ê¹ÓÃ´úÂë¼´¿É¡£
+Ê¹ÓÃtcpdaemon¿ÉÊ¹ÄãÃâÓÚ±àĞ´¸´ÔÓµÄTCPÁ¬½Ó¹ÜÀí´úÂëºÍ½ø³ÌÏß³ÌÄ£ĞÍ£¬ÈçÁ¬½Ó³ØµÄÎ¬»¤£¬tcpdaemonÌá¹©·á¸»µÄ·â×°ºÃµÄÄ£ĞÍ£¨¶¼ÊÇUNPÀïµÄ¾­µä·şÎñ¶ËÄ£ĞÍ£©¿ìËÙ±»ÄãµÄÓ¦ÓÃµ÷ÓÃ£¬ÄãÖ»Ğè±àĞ´Ó¦ÓÃ´úÂë¼´¿É¡£
 Ê¹ÓÃtcpdaemon²»½ö¿ÉÒÔÏñxinetdÒ»Ñù°ÑÄãµÄÓ¦ÓÃÒÔ¿ÉÖ´ĞĞ³ÌĞò·½Ê½¹Ò½Óµ½tcpdaemonÊØ»¤ÉÏ£¬»¹Ìá¹©ÁËÆäËü¶àÖÖÓ¦ÓÃ½Ó¿ÚÄ£Ê½£¬ÈçÄãÀ´ÊµÏÖmainº¯ÊıºÍ½ø³ÌÈë¿Ú£¬ÊÊÓ¦¸÷ÖÖ¸÷ÑùµÄ´úÂë½á¹¹³¡ºÏ¡£
 
 xientdÓëtcpdaemonµÄ¹¦ÄÜ±È½Ï
@@ -15,12 +15,12 @@ xientdÓëtcpdaemonµÄ¹¦ÄÜ±È½Ï
 tcpdaemonÌá¹©ÁËÁ½ÖÖTCPÁ¬½Ó¹ÜÀíÄ£ĞÍ
 * ¼´Ê±ÅÉÉú½ø³ÌÄ£ĞÍ : ½ÓÊÜÒ»¸öÁ¬½Ó£¬¾ÍÅÉÉúÒ»¸ö½ø³Ì´¦ÀíÖ®
 * Áìµ¼Õß-×·ËæÕßÔ¤ÅÉÉú½ø³Ì³ØÄ£ĞÍ : Ô¤ÅÉÉúÒ»¸ö½ø³Ì³Ø£¬×ÔÊÊÓ¦ÇÀ½ÓÊÜĞÂÁ¬½Ó
+* Áìµ¼Õß-×·ËæÕßÔ¤ÅÉÉúÏß³Ì³ØÄ£ĞÍ(for WINDOWS) : Ô¤ÅÉÉúÒ»¸öÏß³Ì³Ø£¬×ÔÊÊÓ¦ÇÀ½ÓÊÜĞÂÁ¬½Ó
 ½«À´»¹½«Ö§³Ö¸ü¶àÄ£ĞÍ£¬ÈçÏß³ÌÄ£ĞÍ
 
-tcpdaemonÌá¹©ÁËÈıÖÖÓ¦ÓÃ½Ó¿ÚÄ£Ê½
+tcpdaemonÌá¹©ÁËÁ½ÖÖÓ¦ÓÃ½Ó¿ÚÄ£Ê½
 * Ö÷ÊØ»¤Ä£Ê½ : ´«Í³µÄxinetdÄ£Ê½£¬Æô¶¯Ò»¸öTCPÊØ»¤£¬¿Í»§»¯²¿·ÖÒÔ¿ÉÖ´ĞĞ³ÌĞò»ò¶¯Ì¬¿â·½Ê½¹Ò½ÓÆäÉÏ
 * º¯Êıµ÷ÓÃÄ£Ê½ : Ó¦ÓÃÖ÷¿Ø½ø³Ì¿ò¼Ü£¬ÒÔº¯Êıµ÷ÓÃÄ£Ê½µ÷ÓÃtcpdaemon£¬Á´½Ó³É¶ÀÁ¢µÄÓ¦ÓÃ³ÌĞò
-* Òì¹¹Ä£Ê½ : tcpdaemonÖ÷¿Ø½ø³Ì¿ò¼Ü£¬µ«Á´½Ó³É¶ÀÁ¢µÄÓ¦ÓÃ³ÌĞò
 ÈıÖÖÓ¦ÓÃ½Ó¿ÚÄ£Ê½ÒÑ¾­×ã¹»ÊÊÓ¦¼¸ºõËùÓĞÓ¦ÓÃ½Ó¿Ú³¡ºÏ
 
 2.±àÒë°²×°
@@ -28,33 +28,28 @@ tcpdaemonÌá¹©ÁËÈıÖÖÓ¦ÓÃ½Ó¿ÚÄ£Ê½
 ÒÔLinux²Ù×÷ÏµÍ³ÎªÀı£¬Ã¿¸öÄ¿Â¼ÀïµÄ¹¹Ôì½Å±¾¾ùÊÇmakefile.Linux£¬Íâ²ãÄ¿Â¼makefile.Linuxµİ¹éÏÂ¼¶×ÓÄ¿Â¼
 [code]
 $ make -f makefile.Linux install
-make[1]: Entering directory `~/src/tcpdaemon-1.0.0/src'
-make[2]: Entering directory `~/src/tcpdaemon-1.0.0/src'
-gcc -g -fPIC -Wall -Werror -O2 -I.  -c util.c
+make[1]: Entering directory `~/src/tcpdaemon-1.1.0/src'
+make[2]: Entering directory `~/src/tcpdaemon-1.1.0/src'
 gcc -g -fPIC -Wall -Werror -O2 -I.  -c tcpdaemon.c
 gcc -g -fPIC -Wall -Werror -O2 -I.  -c worker.c
-gcc -g -fPIC -Wall -Werror -O2 -shared -o libtcpdaemon.so util.o tcpdaemon.o worker.o -L. -lpthread -ldl
-gcc -g -fPIC -Wall -Werror -O2 -I.  -c nomain.c
-gcc -g -fPIC -Wall -Werror -O2 -I.  -c _main.c
-gcc -g -fPIC -Wall -Werror -O2 -shared -o tcpdaemon.so util.o nomain.o _main.o tcpdaemon.o worker.o -L. -lpthread -ldl
+gcc -g -fPIC -Wall -Werror -O2 -I.  -c LOGC.c
+gcc -g -fPIC -Wall -Werror -O2 -I.  -c service.c
+gcc -g -fPIC -Wall -Werror -O2 -shared -o libtcpdaemon.so tcpdaemon.o worker.o LOGC.o service.o -L. -lpthread -ldl
 gcc -g -fPIC -Wall -Werror -O2 -I.  -c main.c
-gcc -g -fPIC -Wall -Werror -O2  -o tcpdaemon util.o main.o _main.o tcpdaemon.o worker.o -L. -lpthread -ldl
-make[2]: Leaving directory `~/src/tcpdaemon-1.0.0/src'
+gcc -g -fPIC -Wall -Werror -O2  -o tcpdaemon util.o main.o tcpdaemon.o worker.o LOGC.o service.o -L. -lpthread -ldl
+make[2]: Leaving directory `~/src/tcpdaemon-1.1.0/src'
 cp -f tcpdaemon ~/bin/
 cp -f libtcpdaemon.so ~/lib/
-cp -f tcpdaemon.so ~/lib/
 cp -f tcpdaemon.h ~/include/
-make[1]: Leaving directory `~/src/tcpdaemon-1.0.0/src'
-make[1]: Entering directory `~/src/tcpdaemon-1.0.0/test'
-make[2]: Entering directory `~/src/tcpdaemon-1.0.0/test'
+make[1]: Leaving directory `~/src/tcpdaemon-1.1.0/src'
+make[1]: Entering directory `~/src/tcpdaemon-1.1.0/test'
+make[2]: Entering directory `~/src/tcpdaemon-1.1.0/test'
 gcc -Wall -Werror -O2 -fno-strict-aliasing -g -fPIC -I. -I~/include  -c testso.c
 gcc -Wall -Werror -O2 -fno-strict-aliasing -g -fPIC -shared -o testso.so testso.o -L.
 gcc -Wall -Werror -O2 -fno-strict-aliasing -g -fPIC -I. -I~/include  -c test.c
 gcc -Wall -Werror -O2 -fno-strict-aliasing -g -fPIC  -o test test.o ~/lib/libtcpdaemon.so -L.
-gcc -Wall -Werror -O2 -fno-strict-aliasing -g -fPIC -I. -I~/include  -c testnomain.c
-gcc -Wall -Werror -O2 -fno-strict-aliasing -g -fPIC  -o testnomain testnomain.o ~/lib/tcpdaemon.so -L.
-make[2]: Leaving directory `~/src/tcpdaemon-1.0.0/test'
-make[1]: Leaving directory `~/src/tcpdaemon-1.0.0/test'
+make[2]: Leaving directory `~/src/tcpdaemon-1.1.0/test'
+make[1]: Leaving directory `~/src/tcpdaemon-1.1.0/test'
 [/code]
 
 3.Ò»¸öÊ¹ÓÃÊ¾Àı
@@ -71,20 +66,20 @@ int tcpmain( void *param_tcpmain , int sock , struct sockaddr *addr )
 $ make -f makefile.Linux
 gcc -Wall -Werror -O2 -fno-strict-aliasing -g -fPIC -I. -I~/include  -c testso.c
 gcc -Wall -Werror -O2 -fno-strict-aliasing -g -fPIC -shared -o testso.so testso.o
-$ tcpdaemon -m LF -n 10 -l 127.0.0.1:7879 -s testso.so
+$ tcpdaemon -m LF -c 10 -l 127.0.0.1:7879 -s testso.so
 tcpdaemonÊØ»¤Æô¶¯
 $ ps -ef | grep tcpdaemon
-502      13692     1  0 12:12 ?        00:00:00 tcpdaemon -m LF -n 10 -l 127.0.0.1:7879 -s testso.so
-502      13693 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -n 10 -l 127.0.0.1:7879 -s testso.so
-502      13694 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -n 10 -l 127.0.0.1:7879 -s testso.so
-502      13695 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -n 10 -l 127.0.0.1:7879 -s testso.so
-502      13696 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -n 10 -l 127.0.0.1:7879 -s testso.so
-502      13697 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -n 10 -l 127.0.0.1:7879 -s testso.so
-502      13698 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -n 10 -l 127.0.0.1:7879 -s testso.so
-502      13699 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -n 10 -l 127.0.0.1:7879 -s testso.so
-502      13700 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -n 10 -l 127.0.0.1:7879 -s testso.so
-502      13701 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -n 10 -l 127.0.0.1:7879 -s testso.so
-502      13702 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -n 10 -l 127.0.0.1:7879 -s testso.so
+502      13692     1  0 12:12 ?        00:00:00 tcpdaemon -m LF -c 10 -l 127.0.0.1:7879 -s testso.so
+502      13693 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -c 10 -l 127.0.0.1:7879 -s testso.so
+502      13694 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -c 10 -l 127.0.0.1:7879 -s testso.so
+502      13695 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -c 10 -l 127.0.0.1:7879 -s testso.so
+502      13696 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -c 10 -l 127.0.0.1:7879 -s testso.so
+502      13697 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -c 10 -l 127.0.0.1:7879 -s testso.so
+502      13698 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -c 10 -l 127.0.0.1:7879 -s testso.so
+502      13699 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -c 10 -l 127.0.0.1:7879 -s testso.so
+502      13700 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -c 10 -l 127.0.0.1:7879 -s testso.so
+502      13701 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -c 10 -l 127.0.0.1:7879 -s testso.so
+502      13702 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -c 10 -l 127.0.0.1:7879 -s testso.so
 $ telnet 127.0.0.1 7879
 Trying 127.0.0.1...
 Connected to localhost.localdomain (127.0.0.1).
@@ -143,23 +138,31 @@ $ ab -c 10 -n 100000 http://localhost:7879/index.html
 
 [code]
 $ tcpdaemon
-USAGE : tcpdaemon -m LF -n process_count [ -r max_requests_per_process ] -l ip:port -s so_pathfilename
-                  -m IF [ -n max_process_count ] -l ip:port -s so_pathfilename
+USAGE : tcpdaemon -m LF -c process_count [ -n max_requests_per_process ] -l ip:port -s so_pathfilename
+                  -m IF [ -c max_process_count ] -l ip:port -s so_pathfilename
         other options :
+                  -v
+                  [ --daemon-level ]
                   [ --loglevel-(debug|info|warn|error|fatal) ] [ --tcp-nodelay ] [ --tcp-linger linger ]
+                  [ --tcp-nodelay ] [ --tcp-linger linger ]
+                  [ --install-winservice ] [ --uninstall-winservice ]
 [/code]
 ²ÎÊıËµÃ÷ÈçÏÂ
 -m TCPÁ¬½Ó¹ÜÀíÄ£ĞÍ
 	LF Áìµ¼Õß-×·ËæÕßÔ¤ÅÉÉú½ø³Ì³ØÄ£ĞÍ
 	IF ¼´Ê±ÅÉÉú½ø³ÌÄ£ĞÍ
--n µ±ÎªÁìµ¼Õß-×·ËæÕßÔ¤ÅÉÉú½ø³Ì³ØÄ£ĞÍÊ±Îª¹¤×÷½ø³Ì³Ø½ø³ÌÊıÁ¿
+-c µ±ÎªÁìµ¼Õß-×·ËæÕßÔ¤ÅÉÉú½ø³Ì³ØÄ£ĞÍÊ±Îª¹¤×÷½ø³Ì³Ø½ø³ÌÊıÁ¿
    µ±Îª¼´Ê±ÅÉÉú½ø³ÌÄ£ĞÍÊ±Îª×î´ó×Ó½ø³ÌÊıÁ¿
--r µ±ÎªÁìµ¼Õß-×·ËæÕßÔ¤ÅÉÉú½ø³Ì³ØÄ£ĞÍÊ±Îªµ¥¸ö¹¤×÷½ø³Ì×î´ó´¦ÀíÓ¦ÓÃ´ÎÊı£¬È»ºó×ÔÈ»½áÊø£¬½ø³Ì³ØĞÂ´´½¨Ò»¸ö¹¤×÷½ø³ÌÌæ´úÖ®
+-n µ±ÎªÁìµ¼Õß-×·ËæÕßÔ¤ÅÉÉú½ø³Ì³ØÄ£ĞÍÊ±Îªµ¥¸ö¹¤×÷½ø³Ì×î´ó´¦ÀíÓ¦ÓÃ´ÎÊı£¬È»ºó×ÔÈ»½áÊø£¬½ø³Ì³ØĞÂ´´½¨Ò»¸ö¹¤×÷½ø³ÌÌæ´úÖ®
 -l ±¾µØÕìÌıIPºÍPORT£¬Èç"127.0.0.1:7879"
 -s ÓÃ¾ø¶ÔÂ·¾¶»òÏà¶ÔÂ·¾¶±í´ïµÄÓ¦ÓÃ¶¯Ì¬¿âÎÄ¼şÃû
+-v ÏÔÊ¾°æ±¾
+--daemon-level Æô¶¯Ê±×ª»»ÎªÊØ»¤½ø³Ì
 --loglevel-(debug|info|warn|error|fatal) ÈÕÖ¾µÈ¼¶£¬ÈÕÖ¾ÎÄ¼şÃûÄ¬ÈÏÎª"$HOME/log/tcpdaemon.log"
 --tcp-nodelay ÆôÓÃTCP_NODELAYÑ¡Ïî
 --tcp-linger ÆôÓÃTCP_LINGERÑ¡Ïî£¬Êµ¼ÊÉèÖÃÖµ=²ÎÊıÖµ-1
+--install-winservice WINDOWSÉÏ°Ñ±¾ÃüÁîĞĞ°²×°³É·şÎñ"Tcp Daemon"
+--uninstall-winservice WINDOWSÉÏĞ¶ÔØ±¾·şÎñ
 
 5.TCPÁ¬½Ó¹ÜÀíÄ£ĞÍ
 
@@ -171,9 +174,13 @@ tcpdaemonÖ»ÔËĞĞÒ»¸öÕìÌıÊØ»¤£¬Ã¿µ±Ò»¸öĞÂÁ¬½Ó½øÀ´ºó£¬ÅÉÉúÒ»¸ö×Ó½ø³Ì¸ºÔğ×ª½»¸øÓ¦ÓÃ¡
 
 tcpdaemon»áÆô¶¯Ò»¸ö¹ÜÀí½ø³ÌºÍÒ»¸ö¹¤×÷½ø³Ì³Ø£¬¹¤×÷½ø³Ì×é¾ºÕù½ÓÊÜĞÂÁ¬½Ó£¬²¢Í¬²½×ª½»¸øÓ¦ÓÃ¡£
 
+5.3.Áìµ¼Õß-×·ËæÕßÔ¤ÅÉÉúÏß³Ì³ØÄ£ĞÍ(WINDOWSÆ½Ì¨)
+
+tcpdaemon»áÆô¶¯Ò»¸ö¼à¿Ø½ø³ÌºÍÒ»¸ö¹¤×÷½ø³Ì£¬¼à¿Ø½ø³Ì¼à¿Ø¹¤×÷½ø³Ì£¬¼à¿Ø½ø³Ì¼à¿ØÖØÆô¹¤×÷½ø³Ì¡£¹¤×÷½ø³Ì´´½¨Ò»¸ö¼à¿ØÏß³ÌºÍÒ»×é¹¤×÷Ïß³Ì£¬¼à¿ØÏß³Ì¼à¿ØÖØÆô¹¤×÷Ïß³Ì¡£¹¤×÷Ïß³Ì×é¾ºÕù½ÓÊÜĞÂÁ¬½Ó£¬²¢Í¬²½×ª½»¸øÓ¦ÓÃ¡£
+
 6.Ó¦ÓÃ½Ó¿ÚÄ£Ê½
 
-ÎªÊÊÓ¦Óë¸÷ÖÖ¸÷ÑùµÄÓ¦ÓÃ¶Ô½Ó£¬tcpdaemonÌá¹©ÁËÈıÖÖÄ£Ê½¡£
+ÎªÊÊÓ¦Óë¸÷ÖÖ¸÷ÑùµÄÓ¦ÓÃ¶Ô½Ó£¬tcpdaemonÌá¹©ÁËÁ½ÖÖÄ£Ê½¡£
 
 6.1.Ö÷ÊØ»¤Ä£Ê½
 
@@ -199,7 +206,7 @@ $ gcc -Wall -Werror -O2 -fno-strict-aliasing -g -fPIC -shared -o xxx.so xxx.o
 
 ÔËĞĞ
 [code]
-$ tcpdaemon -m LF -n 10 -l 127.0.0.1:7879 -s xxx.so
+$ tcpdaemon -m LF -c 10 -l 127.0.0.1:7879 -s xxx.so
 [/code]
 
 ±¾Ä£Ê½ÓÃÓÚÈÃtcpdaemon×Ô´øÊØ»¤½ø³Ì¸ºÔğÆ½Ì¨£¬Ó¦ÓÃÖ»ĞèÒªÌá¹©¶¯Ì¬¿â¹ÒÈëµÄ³¡ºÏ¡£
@@ -209,6 +216,7 @@ $ tcpdaemon -m LF -n 10 -l 127.0.0.1:7879 -s xxx.so
 Ó¦ÓÃ×Ô¼º¸ºÔğÊµÏÖmainº¯Êı£¬¿ØÖÆ½ø³Ì¿ò¼Ü£¬×¼±¸ºÃºóµ÷ÓÃº¯Êıtcpdaemon(Á´½ÓÊ±ÒşÊ½Á´ÉÏlibtcpdaemon.so¿â)ÊµÏÖTCPÁ¬½Ó¹ÜÀí£¬ÎÄ¼şºÍº¯Êıµ÷ÓÃ¹ØÏµÈçÏÂ
 xxx.exe(main) -> libtcpdaemon.so(tcpdaemon) -> xxx.exe(tcpmain)
 ÔÚUNIXÏÂ¿ÉÖ´ĞĞÎÄ¼ş¶¼Ã»ÓĞÀ©Õ¹Ãû£¬ÕâÀïÎÒĞ´³Éxxx.exe±ãÓÚËµÃ÷
+×¢Òâ£ºÈç¹ûÓ¦ÓÃÒª×ª»»ÎªÊØ»¤½ø³Ì£¬µÃ×Ô¼º´¦Àí£¬¼´Ó¦ÓÃ×Ô¼º¿ØÖÆ½ø³Ì¿ò¼Ü¡£
 
 ±àĞ´ÓÃÓÚ´¦ÀíÍ¨Ñ¶Êı¾İĞ­ÒéºÍÓ¦ÓÃÂß¼­µÄxxx.c
 [code]
@@ -226,14 +234,22 @@ int main()
        ep.call_mode = TCPDAEMON_CALLMODE_MAIN ;
        strcpy( ep.server_model , "LF" );
        ep.max_process_count = 10 ;
-       ep.max_requests_per_process = -1 ; /* ¿ÉÑ¡Ñ¡ÏîÒ²¿ÉÒÔ²»¸³Öµ */
+       ep.max_requests_per_process = 0 ; /* ¿ÉÑ¡Ñ¡ÏîÒ²¿ÉÒÔ²»¸³Öµ */
        strcpy( ep.ip , "127.0.0.1" );
        ep.port = 7879 ;
        strcpy( ep.so_pathfilename , "testso.so" );
        ep.pfunc_tcpmain = & tcpmain ;
        ep.param_tcpmain = NULL ;
-       ep.log_level = LOGLEVEL_DEBUG ;
+       ep.log_level = LOGLEVEL_INFO ;
 
+#if ( defined _WIN32 )
+	{
+	WSADATA		wsd;
+	if( WSAStartup( MAKEWORD(2,2) , & wsd ) != 0 )
+		return 1;
+	}
+#endif
+	
        return -tcpdaemon( & ep );
 }
 [/code]
@@ -252,42 +268,13 @@ $ ./xxx
 ±¾Ä£Ê½ÓÃÓÚÓ¦ÓÃÏ£Íû×Ô¼ºÖ÷¿ØÊØ»¤¶ø²»Ê¹ÓÃtcpdaemonÊØ»¤µÄ³¡ºÏ¡£
 xxx.oÈ¥Á´½Ólibtcpdaemon.aÊÇ·ñ»áÊ¹µÃxxx.exeÖ´ĞĞ¸ü¿ìÄØ£¿Âé·³Äú×ÔĞĞ±àÒëlibtcpdaemon.a
 
-6.3.Òì¹¹Ä£Ê½
-
-ÓëÖ÷ÊØ»¤Ä£Ê½ÀàËÆ£¬mainº¯ÊıÔÚtcpdaemon.soÀï£¬Ö»²»¹ı×îºóÁ´½Ó³ÉÍêÕû¿ÉÖ´ĞĞ³ÌĞò¶ø·Ç½èÓÃtcpdaemon×öÊØ»¤£¬ÎÄ¼şºÍº¯Êıµ÷ÓÃ¹ØÏµÈçÏÂ
-tcpdaemon.so(main->tcpdaemon) -> xxx.exe(tcpmain)
-
-±àĞ´ÓÃÓÚ´¦ÀíÍ¨Ñ¶Êı¾İĞ­ÒéºÍÓ¦ÓÃÂß¼­µÄxxx.c
-[code]
-#include "tcpdaemon.h"
-int tcpmain( void *param_tcpmain , int sock , struct sockaddr *addr )
-{
-	/* ...´¦ÀíÍ¨Ñ¶Êı¾İĞ­ÒéºÍÓ¦ÓÃÂß¼­... */
-	return 0;
-}
-func_tcpmain	*g_pfunc_tcpmain = & tcpmain ;
-void		*g_param_tcpmain = NULL ;
-[/code]
-
-±àÒëxxx.c²¢ºÍtcpdaemon.soÒ»ÆğÁ´½Ó³Éxxx.exe
-[code]
-$ gcc -Wall -Werror -O2 -fno-strict-aliasing -g -fPIC -I. -I~/include  -c xxx.c
-$ gcc -Wall -Werror -O2 -fno-strict-aliasing -g -fPIC  -o xxx xxx.o ~/lib/tcpdaemon.so
-[/code]
-
-ÔËĞĞ
-[code]
-$ ./xxx
-[/code]
-
-±¾Ä£Ê½ÓÃÓÚÓ¦ÓÃÏ£Íû×Ô¼ºÖ÷¿ØÊØ»¤µ«ÓÖ²»Ïë×Ô¼ºÊµÏÖmainº¯Êı½âÎöÃüÁîĞĞ²ÎÊıµÄ³¡ºÏ¡£
-
 7.ºóĞøÀ©Õ¹¼Æ»®
 
-* ÊµÏÖÆäËüTCPÁ¬½Ó¹ÜÀíÄ£ĞÍ£¬Èç¼´Ê±ÅÉÉúÏß³ÌÄ£ĞÍ¡¢Áìµ¼Õß-×·ËæÕßÔ¤ÅÉÉúÏß³Ì³ØÄ£ĞÍ£¬ÒÔ±ã¸üºÃµÄÔËĞĞÔÚWINDOWSÉÏ
+£¨ÔİÎŞ£©
 
 8.×Ü½á
 
+»¶Ó­Ê¹ÓÃ ^_^
 Èí¼şÊ×Ò³ : http://www.oschina.net/p/tcpdaemon
 ×÷ÕßÁªÏµ : calvinwilliams.c@gmail.com
 
