@@ -148,21 +148,21 @@ USAGE : tcpdaemon -m LF -c process_count [ -n max_requests_per_process ] -l ip:p
                   [ --install-winservice ] [ --uninstall-winservice ]
 [/code]
 参数说明如下
--m TCP连接管理模型
+-m	TCP连接管理模型
 	LF 领导者-追随者预派生进程池模型
 	IF 即时派生进程模型
--c 当为领导者-追随者预派生进程池模型时为工作进程池进程数量
-   当为即时派生进程模型时为最大子进程数量
--n 当为领导者-追随者预派生进程池模型时为单个工作进程最大处理应用次数，然后自然结束，进程池新创建一个工作进程替代之
--l 本地侦听IP和PORT，如"127.0.0.1:7879"
--s 用绝对路径或相对路径表达的应用动态库文件名
--v 显示版本
---daemon-level 启动时转换为守护进程
+-c	当为领导者-追随者预派生进程池模型时为工作进程池进程数量
+	当为即时派生进程模型时为最大子进程数量
+-n	当为领导者-追随者预派生进程池模型时为单个工作进程最大处理应用次数，然后自然结束，进程池新创建一个工作进程替代之
+-l	本地侦听IP和PORT，如"127.0.0.1:7879"
+-s	用绝对路径或相对路径表达的应用动态库文件名
+-v	显示版本
+--daemon-level		启动时转换为守护进程
 --loglevel-(debug|info|warn|error|fatal) 日志等级，日志文件名默认为"$HOME/log/tcpdaemon.log"
---tcp-nodelay 启用TCP_NODELAY选项
---tcp-linger 启用TCP_LINGER选项，实际设置值=参数值-1
---install-winservice WINDOWS上把本命令行安装成服务"Tcp Daemon"
---uninstall-winservice WINDOWS上卸载本服务
+--tcp-nodelay		启用TCP_NODELAY选项
+--tcp-linger		启用TCP_LINGER选项，实际设置值=参数值-1
+--install-winservice	WINDOWS上把本命令行安装成服务"Tcp Daemon"
+--uninstall-winservice	WINDOWS上卸载本服务
 
 5.TCP连接管理模型
 
@@ -252,6 +252,43 @@ int main()
 	
        return -tcpdaemon( & ep );
 }
+[/code]
+
+结构TcpdaemonEntryParam成员描述见tcpdaemon.h
+[code]
+struct TcpdaemonEntryParam
+{
+	int		daemon_level ;	/* 是否转化为守护服务 1:转化 0:不转化（缺省） */
+	
+	char		log_pathfilename[ MAXLEN_FILENAME + 1 ] ;	/* 日志输出文件名，不设置则输出到标准输出上 */
+	int		log_level ;	/* 日志等级，不设置则缺省DEBUG等级 */
+	
+	int		call_mode ;	/* 应用接口模式
+					   TCPDAEMON_CALLMODE_DAEMON:主守护模式
+					   TCPDAEMON_CALLMODE_MAIN:函数调用模式
+					*/
+	
+	char		server_model[ 10 + 1 ] ;	/* TCP连接管理模型
+							LF:领导者-追随者预派生进程池模型 for UNIX,Linux
+							IF:即时派生进程模型 for UNIX,Linux
+							WIN-TLF:领导者-追随者预派生线程池模型 for win32
+							*/
+	long		max_process_count ;	/* 当为领导者-追随者预派生进程池模型时为工作进程池进程数量，当为即时派生进程模型时为最大子进程数量 */
+	long		max_requests_per_process ;	/* 当为领导者-追随者预派生进程池模型时为单个工作进程最大处理应用次数 */
+	char		ip[ 20 + 1 ] ;	/* 本地侦听IP */
+	long		port ;	/* 本地侦听PORT */
+	char		so_pathfilename[ MAXLEN_FILENAME + 1 ] ;	/* 用绝对路径或相对路径表达的应用动态库文件名 */
+	
+	func_tcpmain	*pfunc_tcpmain ;	/* 当函数调用模式时，指向把TCP连接交给应用入口函数指针 */
+	void		*param_tcpmain ;	/* 当函数调用模式时，指向把TCP连接交给应用入口函数的参数指针 */
+	
+	int		tcp_nodelay ;	/* 启用TCP_NODELAY选项 1:启用 0:不启用（缺省） */
+	int		tcp_linger ;	/* 启用TCP_LINGER选项 1:启用并设置成参数值-1值 0:不启用（缺省） */
+	
+	/* 以下为内部使用 */
+	int		install_winservice ;
+	int		uninstall_winservice ;
+} ;
 [/code]
 
 编译xxx.c并和libtcpdaemon.so一起链接成xxx.exe

@@ -20,7 +20,7 @@ In the future will also support more models, such as thread model.
 
 tcpdaemon provides two application interface modes
 * Main guardian mode : traditional mode like xinetd, initiate a TCP daemon and custom part in an executable program or dynamic library way to hook up on it 
-* Function call mode : the master framework to function invocation pattern called tcpdaemon, link into separate application 
+* Call function mode : the master framework to function invocation pattern called tcpdaemon, link into separate application 
 Three application interface pattern is enough to adapt to almost all applications interface.
 
 2.Compiling and installation
@@ -140,22 +140,22 @@ USAGE : tcpdaemon -m LF -n process_count [ -r max_requests_per_process ] -l ip:p
         other options :
                   [ --loglevel-(debug|info|warn|error|fatal) ] [ --tcp-nodelay ] [ --tcp-linger linger ]
 [/code]
--m TCP connection management model 
+-m	TCP connection management model 
 	LF : Leader-Follower process pool model
 	IF : Instant derived process model
--c work process amount on Leader-Follower process pool model
-   
-   maximum work process amount on instant derived process model
--n work process maximum application processing times on Leader-Follower process pool model , create a new process of alternative work process
--l local listen IP and PORT, such as "127.0.0.1:7879"
--s file name of dynamic link library
--v show version
---daemon-level convert a daemon on startup
+	WIN-TLF : Leader-Follower thread pool model
+-c	work process amount on Leader-Follower process pool model
+	maximum work process amount on instant derived process model
+-n	work process maximum application processing times on Leader-Follower process pool model , create a new process of alternative work process
+-l	local listen IP and PORT, such as "127.0.0.1:7879"
+-s	file name of dynamic link library
+-v	show version
+--daemon-level		convert a daemon on startup
 --loglevel-(debug|info|warn|error|fatal) log level, the log file name defaults to "$HOME/log/tcpdaemon log" 
---tcp-nodelay Enable TCP_NODELAY option
---tcp-linger Enable TCP_LINGER option , The actual setting value = parameter values - 1
---install-winservice install a windows service
---uninstall-winservice uninstall this service
+--tcp-nodelay		Enable TCP_NODELAY option
+--tcp-linger		Enable TCP_LINGER option , The actual setting value = parameter values - 1
+--install-winservice	install a windows service
+--uninstall-winservice	uninstall this service
 
 5.TCP connection management model
 
@@ -175,7 +175,7 @@ Tcpdaemon will start a monitoring process and a working process, monitoring proc
 
 In order to adapt to dock with applications, tcpdaemon provides two modes.
 
-6.1.The main guardian 
+6.1.Main guardian mode
 
 Which is the most commonly used mode , tcpdaemon framework provides a daemon responsible for process, runtime explicitly articulated application provides dynamic library to deal with data communication protocol and application logic.
 tcpdaemon.exe(main->tcpdaemon) -> xxx.so(tcpmain)
@@ -205,7 +205,7 @@ $ tcpdaemon -m LF -c 10 -l 127.0.0.1:7879 -s xxx.so
 
 This pattern is used to make tcpdaemon bring daemon responsible for platform, application only needs to provide the dynamic library into the occasion.
 
-6.2.Function call mode
+6.2.Call function mode
 
 Application itself is responsible for implementing the main function, the control process framework, ready to call a function after tcpdaemon (link in the chain of implicit libtcpdaemon.so library) implemented TCP connection management.
 xxx.exe(main) -> libtcpdaemon.so(tcpdaemon) -> xxx.exe(tcpmain)
@@ -245,6 +245,43 @@ int main()
 	
        return -tcpdaemon( & ep );
 }
+[/code]
+
+Structure TcpdaemonEntryParam description see tcpdaemon.h
+[code]
+struct TcpdaemonEntryParam
+{
+	int		daemon_level ;	/* Whether into daemon service 1:YES 0:NO(DEFAULT) */
+	
+	char		log_pathfilename[ MAXLEN_FILENAME + 1 ] ;	/* default to standard output  */
+	int		log_level ;	/* default the DEBUG level */
+	
+	int		call_mode ;	/* Application interface pattern
+					   TCPDAEMON_CALLMODE_DAEMON:Main guardian mode
+					   TCPDAEMON_CALLMODE_MAIN:Call function mode
+					*/
+	
+	char		server_model[ 10 + 1 ] ;	/* TCP connection management model
+							LF:Leader-Follower process pool model for UNIX,Linux
+							IF:Instant derived process model for UNIX,Linux
+							WIN-TLF:Leader-Follower thread pool model for win32
+							*/
+	long		max_process_count ;	/* work process amount on Leader-Follower process pool model , or maximum work process amount on instant derived process model */
+	long		max_requests_per_process ;	/* work process maximum application processing times on Leader-Follower process pool model */
+	char		ip[ 20 + 1 ] ;	/* local listen IP */
+	long		port ;	/* local listen PORT */
+	char		so_pathfilename[ MAXLEN_FILENAME + 1 ] ;	/* file name of dynamic link library */
+	
+	func_tcpmain	*pfunc_tcpmain ;	/* tcpmain function pointer */
+	void		*param_tcpmain ;	/* tcpmain function parameter */
+	
+	int		tcp_nodelay ;	/* Enable TCP_NODELAY option 1:enable 0:disable(DEFAULT) */
+	int		tcp_linger ;	/* Enable TCP_LINGER option 1:enable 0:disable(DEFAULT) */
+	
+	/* The following for internal use */
+	int		install_winservice ;
+	int		uninstall_winservice ;
+} ;
 [/code]
 
 Compile xxx.c and libtcpdaemon.so link together into xxx.exe 

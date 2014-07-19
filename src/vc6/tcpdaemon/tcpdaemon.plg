@@ -6,7 +6,7 @@
 --------------------Configuration: tcpdaemon - Win32 Debug--------------------
 </h3>
 <h3>Command Lines</h3>
-Creating temporary file "C:\DOCUME~1\calvin\LOCALS~1\Temp\RSPA0.tmp" with contents
+Creating temporary file "C:\DOCUME~1\calvin\LOCALS~1\Temp\RSPE6.tmp" with contents
 [
 /nologo /MDd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /Fp"Debug/tcpdaemon.pch" /YX /Fo"Debug/" /Fd"Debug/" /FD /GZ /c 
 "D:\Work\C Projects\tcpdaemon-1.1.0\src\LOGC.c"
@@ -15,8 +15,8 @@ Creating temporary file "C:\DOCUME~1\calvin\LOCALS~1\Temp\RSPA0.tmp" with conten
 "D:\Work\C Projects\tcpdaemon-1.1.0\src\tcpdaemon.c"
 "D:\Work\C Projects\tcpdaemon-1.1.0\src\worker.c"
 ]
-Creating command line "cl.exe @C:\DOCUME~1\calvin\LOCALS~1\Temp\RSPA0.tmp" 
-Creating temporary file "C:\DOCUME~1\calvin\LOCALS~1\Temp\RSPA1.tmp" with contents
+Creating command line "cl.exe @C:\DOCUME~1\calvin\LOCALS~1\Temp\RSPE6.tmp" 
+Creating temporary file "C:\DOCUME~1\calvin\LOCALS~1\Temp\RSPE7.tmp" with contents
 [
 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib wsock32.lib /nologo /subsystem:console /incremental:yes /pdb:"Debug/tcpdaemon.pdb" /debug /machine:I386 /out:"Debug/tcpdaemon.exe" /pdbtype:sept 
 ".\Debug\LOGC.obj"
@@ -25,7 +25,7 @@ kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32
 ".\Debug\tcpdaemon.obj"
 ".\Debug\worker.obj"
 ]
-Creating command line "link.exe @C:\DOCUME~1\calvin\LOCALS~1\Temp\RSPA1.tmp"
+Creating command line "link.exe @C:\DOCUME~1\calvin\LOCALS~1\Temp\RSPE7.tmp"
 <h3>Output Window</h3>
 Compiling...
 LOGC.c
@@ -35,7 +35,7 @@ tcpdaemon.c
 worker.c
 Linking...
    Creating library Debug/tcpdaemon.lib and object Debug/tcpdaemon.exp
-Creating temporary file "C:\DOCUME~1\calvin\LOCALS~1\Temp\RSPA5.bat" with contents
+Creating temporary file "C:\DOCUME~1\calvin\LOCALS~1\Temp\RSPEB.bat" with contents
 [
 @echo off
 mkdir "%ProgramFiles%"
@@ -45,7 +45,7 @@ copy Debug\tcpdaemon.exe "%ProgramFiles%\tcpdaemon\bin\" /Y
 mkdir "%ProgramFiles%\tcpdaemon\include"
 copy ..\..\tcpdaemon.h "%ProgramFiles%\tcpdaemon\include\" /Y
 ]
-Creating command line "C:\DOCUME~1\calvin\LOCALS~1\Temp\RSPA5.bat"
+Creating command line "C:\DOCUME~1\calvin\LOCALS~1\Temp\RSPEB.bat"
 
 子目录或文件 C:\Program Files 已经存在。
 子目录或文件 C:\Program Files\tcpdaemon 已经存在。
