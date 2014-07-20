@@ -3,10 +3,64 @@
 <pre>
 <h1>Build Log</h1>
 <h3>
+--------------------Configuration: libtcpdaemon - Win32 Debug--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\calvin\LOCALS~1\Temp\RSPDB.tmp" with contents
+[
+/nologo /MTd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "LIBTCPDAEMON_EXPORTS" /Fp"Debug/libtcpdaemon.pch" /YX /Fo"Debug/" /Fd"Debug/" /FD /GZ /c 
+"D:\Work\C Projects\tcpdaemon-1.1.0\src\LOGC.c"
+"D:\Work\C Projects\tcpdaemon-1.1.0\src\tcpdaemon.c"
+"D:\Work\C Projects\tcpdaemon-1.1.0\src\worker.c"
+]
+Creating command line "cl.exe @C:\DOCUME~1\calvin\LOCALS~1\Temp\RSPDB.tmp" 
+Creating temporary file "C:\DOCUME~1\calvin\LOCALS~1\Temp\RSPDC.tmp" with contents
+[
+kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib wsock32.lib /nologo /dll /incremental:yes /pdb:"Debug/libtcpdaemon.pdb" /debug /machine:I386 /out:"Debug/libtcpdaemon.dll" /implib:"Debug/libtcpdaemon.lib" /pdbtype:sept 
+".\Debug\LOGC.obj"
+".\Debug\tcpdaemon.obj"
+".\Debug\worker.obj"
+]
+Creating command line "link.exe @C:\DOCUME~1\calvin\LOCALS~1\Temp\RSPDC.tmp"
+<h3>Output Window</h3>
+Compiling...
+LOGC.c
+tcpdaemon.c
+worker.c
+Linking...
+   Creating library Debug/libtcpdaemon.lib and object Debug/libtcpdaemon.exp
+Creating temporary file "C:\DOCUME~1\calvin\LOCALS~1\Temp\RSPE0.bat" with contents
+[
+@echo off
+mkdir "%ProgramFiles%"
+mkdir "%ProgramFiles%\tcpdaemon"
+mkdir "%ProgramFiles%\tcpdaemon\bin"
+copy Debug\libtcpdaemon.dll "%ProgramFiles%\tcpdaemon\bin\" /Y
+mkdir "%ProgramFiles%\tcpdaemon\lib"
+copy Debug\libtcpdaemon.lib "%ProgramFiles%\tcpdaemon\lib\" /Y
+mkdir "%ProgramFiles%\tcpdaemon\include"
+copy ..\..\tcpdaemon.h "%ProgramFiles%\tcpdaemon\include\" /Y
+]
+Creating command line "C:\DOCUME~1\calvin\LOCALS~1\Temp\RSPE0.bat"
+
+子目录或文件 C:\Program Files 已经存在。
+子目录或文件 C:\Program Files\tcpdaemon 已经存在。
+子目录或文件 C:\Program Files\tcpdaemon\bin 已经存在。
+已复制         1 个文件。
+子目录或文件 C:\Program Files\tcpdaemon\lib 已经存在。
+已复制         1 个文件。
+子目录或文件 C:\Program Files\tcpdaemon\include 已经存在。
+已复制         1 个文件。
+
+
+
+<h3>Results</h3>
+libtcpdaemon.dll - 0 error(s), 0 warning(s)
+<h3>
 --------------------Configuration: tcpdaemon - Win32 Debug--------------------
 </h3>
 <h3>Command Lines</h3>
-Creating temporary file "C:\DOCUME~1\calvin\LOCALS~1\Temp\RSPE6.tmp" with contents
+Creating temporary file "C:\DOCUME~1\calvin\LOCALS~1\Temp\RSPE1.tmp" with contents
 [
 /nologo /MDd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /Fp"Debug/tcpdaemon.pch" /YX /Fo"Debug/" /Fd"Debug/" /FD /GZ /c 
 "D:\Work\C Projects\tcpdaemon-1.1.0\src\LOGC.c"
@@ -15,8 +69,8 @@ Creating temporary file "C:\DOCUME~1\calvin\LOCALS~1\Temp\RSPE6.tmp" with conten
 "D:\Work\C Projects\tcpdaemon-1.1.0\src\tcpdaemon.c"
 "D:\Work\C Projects\tcpdaemon-1.1.0\src\worker.c"
 ]
-Creating command line "cl.exe @C:\DOCUME~1\calvin\LOCALS~1\Temp\RSPE6.tmp" 
-Creating temporary file "C:\DOCUME~1\calvin\LOCALS~1\Temp\RSPE7.tmp" with contents
+Creating command line "cl.exe @C:\DOCUME~1\calvin\LOCALS~1\Temp\RSPE1.tmp" 
+Creating temporary file "C:\DOCUME~1\calvin\LOCALS~1\Temp\RSPE2.tmp" with contents
 [
 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib wsock32.lib /nologo /subsystem:console /incremental:yes /pdb:"Debug/tcpdaemon.pdb" /debug /machine:I386 /out:"Debug/tcpdaemon.exe" /pdbtype:sept 
 ".\Debug\LOGC.obj"
@@ -25,7 +79,7 @@ kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32
 ".\Debug\tcpdaemon.obj"
 ".\Debug\worker.obj"
 ]
-Creating command line "link.exe @C:\DOCUME~1\calvin\LOCALS~1\Temp\RSPE7.tmp"
+Creating command line "link.exe @C:\DOCUME~1\calvin\LOCALS~1\Temp\RSPE2.tmp"
 <h3>Output Window</h3>
 Compiling...
 LOGC.c
@@ -35,7 +89,7 @@ tcpdaemon.c
 worker.c
 Linking...
    Creating library Debug/tcpdaemon.lib and object Debug/tcpdaemon.exp
-Creating temporary file "C:\DOCUME~1\calvin\LOCALS~1\Temp\RSPEB.bat" with contents
+Creating temporary file "C:\DOCUME~1\calvin\LOCALS~1\Temp\RSPE6.bat" with contents
 [
 @echo off
 mkdir "%ProgramFiles%"
@@ -45,7 +99,7 @@ copy Debug\tcpdaemon.exe "%ProgramFiles%\tcpdaemon\bin\" /Y
 mkdir "%ProgramFiles%\tcpdaemon\include"
 copy ..\..\tcpdaemon.h "%ProgramFiles%\tcpdaemon\include\" /Y
 ]
-Creating command line "C:\DOCUME~1\calvin\LOCALS~1\Temp\RSPEB.bat"
+Creating command line "C:\DOCUME~1\calvin\LOCALS~1\Temp\RSPE6.bat"
 
 子目录或文件 C:\Program Files 已经存在。
 子目录或文件 C:\Program Files\tcpdaemon 已经存在。
