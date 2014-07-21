@@ -24,6 +24,7 @@ unsigned int WINAPI worker( void *pv )
 	
 	int			nret = 0 ;
 	
+	/* 设置日志环境 */
 	SetLogFile( pse->pep->log_pathfilename );
 	SetLogLevel( pse->pep->log_level );
 	
