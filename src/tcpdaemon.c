@@ -836,11 +836,14 @@ int tcpdaemon( struct TcpdaemonEntryParam *pep )
 	
 	int				nret = 0 ;
 	
-	InfoLog( __FILE__ , __LINE__ , "tcpdaemon startup - version %s\n" , __version_tcpdaemon );
-	
 	memset( & se , 0x00 , sizeof(struct TcpdaemonServerEnv) );
 	se.pep = pep ;
 	g_pse = & se ;
+	
+	/* 设置日志环境 */
+	SetLogFile( pep->log_pathfilename );
+	SetLogLevel( pep->log_level );
+	InfoLog( __FILE__ , __LINE__ , "tcpdaemon startup - version %s\n" , __version_tcpdaemon );
 	
 	/* 检查入口参数 */
 	nret = CheckCommandParameter( pep ) ;
@@ -848,10 +851,6 @@ int tcpdaemon( struct TcpdaemonEntryParam *pep )
 	{
 		return nret;
 	}
-	
-	SetLogFile( pep->log_pathfilename );
-	SetLogLevel( pep->log_level );
-	InfoLog( __FILE__ , __LINE__ , "tcpdaemon startup\n" );
 	
 #if ( defined __linux__ ) || ( defined __unix )
 	if( STRCMP( pep->server_model , == , "IF" ) )
