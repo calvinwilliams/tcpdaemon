@@ -30,7 +30,7 @@ extern char		__version_tcpdaemon[] ;
 #define THANDLE_T		pthread_t
 #define OBJECTHANDLE		void *
 #define ERRNO			errno
-#define DLERROR			dlerror
+#define DLERROR			dlerror()
 #define OPEN			open
 #define CLOSE			close
 #define CLOSESOCKET		close

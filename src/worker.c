@@ -117,7 +117,7 @@ unsigned int WINAPI worker( void *pv )
 		DebugLog( __FILE__ , __LINE__ , "WORKER(%ld) | leave accept mutex ok\n" , pse->index );
 		
 		/* 调用通讯数据协议及应用处理回调函数 */
-		DebugLog( __FILE__ , __LINE__ , "WORKER(%ld) | call tcpmain sock[%d]\n" , pse->index , accept_sock );
+		InfoLog( __FILE__ , __LINE__ , "WORKER(%ld) | call tcpmain sock[%d]\n" , pse->index , accept_sock );
 		nret = pse->pfunc_tcpmain( pse->pep->param_tcpmain , accept_sock , & accept_addr ) ;
 		if( nret < 0 )
 		{
@@ -130,7 +130,7 @@ unsigned int WINAPI worker( void *pv )
 		}
 		else
 		{
-			DebugLog( __FILE__ , __LINE__ , "WORKER(%ld) | tcpmain return[%d]\n" , pse->index , nret );
+			InfoLog( __FILE__ , __LINE__ , "WORKER(%ld) | tcpmain return[%d]\n" , pse->index , nret );
 		}
 		
 		/* 关闭客户端连接 */

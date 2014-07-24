@@ -369,7 +369,7 @@ _DO_FORK :
 				CLOSESOCKET( pse->listen_sock );
 				
 				/* 调用通讯数据协议及应用处理回调函数 */
-				DebugLog( __FILE__ , __LINE__ , "call tcpmain sock[%d]\n" , accept_sock );
+				InfoLog( __FILE__ , __LINE__ , "call tcpmain sock[%d]\n" , accept_sock );
 				nret = pse->pfunc_tcpmain( pse->pep->param_tcpmain , accept_sock , & accept_addr ) ;
 				if( nret < 0 )
 				{
@@ -381,7 +381,7 @@ _DO_FORK :
 				}
 				else
 				{
-					DebugLog( __FILE__ , __LINE__ , "tcpmain return[%d]\n" , nret );
+					InfoLog( __FILE__ , __LINE__ , "tcpmain return[%d]\n" , nret );
 				}
 				
 				/* 关闭客户端连接 */
