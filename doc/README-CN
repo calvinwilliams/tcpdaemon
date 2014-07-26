@@ -158,6 +158,8 @@ USAGE : tcpdaemon -m LF -c process_count [ -n max_requests_per_process ] -l ip:p
 -s	用绝对路径或相对路径表达的应用动态库文件名
 -v	显示版本
 --daemon-level		启动时转换为守护进程
+--work-user work_user	启动时切换用户
+--work-path work_path	启动时初始目录
 --loglevel-(debug|info|warn|error|fatal) 日志等级，日志文件名默认为"$HOME/log/tcpdaemon.log"
 --tcp-nodelay		启用TCP_NODELAY选项
 --tcp-linger		启用TCP_LINGER选项，实际设置值=参数值-1

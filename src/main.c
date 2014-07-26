@@ -15,6 +15,10 @@ void usage()
 	printf( "        other options :\n" );
 	printf( "                  -v\n" );
 	printf( "                  [ --daemon-level ]\n" );
+#if ( defined __linux__ ) || ( defined __unix )
+	printf( "                  [ --work-user work_user ]\n" );
+#endif
+	printf( "                  [ --work-path work_path ]\n" );
 	printf( "                  [ --logfile log_pathfilename --loglevel-(debug|info|warn|error|fatal) ]\n" );
 	printf( "                  [ --tcp-nodelay ] [ --tcp-linger linger ]\n" );
 #if ( defined _WIN32 )
@@ -62,12 +66,12 @@ int ParseCommandParameter( int argc , char *argv[] , struct TcpdaemonEntryParam 
 			p = strchr( argv[c+1] , ':' ) ;
 			if( p == NULL )
 			{
-				InfoLog( __FILE__ , __LINE__ , "parameter --listen[%s]无效\n" , argv[c+1] );
+				InfoLog( __FILE__ , __LINE__ , "parameter --listen[%s]无效" , argv[c+1] );
 				return 1;
 			}
 			if( p - argv[c+1] > sizeof(pep->ip) - 1 )
 			{
-				InfoLog( __FILE__ , __LINE__ , "parameter -l[%s]中的ip过长\n" , argv[c+1] );
+				InfoLog( __FILE__ , __LINE__ , "parameter -l[%s]中的ip过长" , argv[c+1] );
 				return 1;
 			}
 			strncpy( pep->ip , argv[c+1] , p - argv[c+1] );
@@ -77,6 +81,18 @@ int ParseCommandParameter( int argc , char *argv[] , struct TcpdaemonEntryParam 
 		else if( STRCMP( argv[c] , == , "-s" ) && c + 1 < argc )
 		{
 			strncpy( pep->so_pathfilename , argv[c+1] , sizeof(pep->so_pathfilename)-1 );
+			c++;
+		}
+#if ( defined __linux__ ) || ( defined __unix )
+		else if( STRCMP( argv[c] , == , "--work-user" ) && c + 1 < argc )
+		{
+			strncpy( pep->work_user , argv[c+1] , sizeof(pep->work_user)-1 );
+			c++;
+		}
+#endif
+		else if( STRCMP( argv[c] , == , "--work-path" ) && c + 1 < argc )
+		{
+			strncpy( pep->work_path , argv[c+1] , sizeof(pep->work_path)-1 );
 			c++;
 		}
 		else if( STRCMP( argv[c] , == , "--logfile" ) && c + 1 < argc )
@@ -129,7 +145,7 @@ int ParseCommandParameter( int argc , char *argv[] , struct TcpdaemonEntryParam 
 		}
 		else
 		{
-			InfoLog( __FILE__ , __LINE__ , "parameter[%s] invalid\n" , argv[c] );
+			InfoLog( __FILE__ , __LINE__ , "parameter[%s] invalid" , argv[c] );
 			usage();
 			exit(1);
 		}
@@ -178,7 +194,7 @@ int main( int argc , char *argv[] )
 		nret = ConvertToDaemon() ;
 		if( nret )
 		{
-			ErrorLog( __FILE__ , __LINE__ , "convert to daemon failed[%d]\n" , nret );
+			ErrorLog( __FILE__ , __LINE__ , "convert to daemon failed[%d]" , nret );
 			return nret;
 		}
 	}

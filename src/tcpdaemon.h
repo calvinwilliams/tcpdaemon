@@ -37,10 +37,12 @@
 #include <sys/wait.h>
 #include <sys/select.h>
 #include <netinet/tcp.h>
+#include <pwd.h>
 #elif ( defined _WIN32 )
 #include <windows.h>
 #include <io.h>
 #include <process.h>
+#include <direct.h>
 #endif
 
 #if ( defined __unix ) || ( defined __linux__ )
@@ -148,6 +150,9 @@ struct TcpdaemonEntryParam
 				/* local listen PORT */
 	char		so_pathfilename[ MAXLEN_FILENAME + 1 ] ;	/* 用绝对路径或相对路径表达的应用动态库文件名 */
 									/* file name of dynamic link library */
+	
+	char		work_user[ 64 + 1 ] ;
+	char		work_path[ MAXLEN_FILENAME + 1 ] ;
 	
 	func_tcpmain	*pfunc_tcpmain ;	/* 当函数调用模式时，指向把TCP连接交给应用入口函数指针 */
 						/* tcpmain function pointer */

@@ -151,6 +151,8 @@ USAGE : tcpdaemon -m LF -n process_count [ -r max_requests_per_process ] -l ip:p
 -s	file name of dynamic link library
 -v	show version
 --daemon-level		convert a daemon on startup
+--work-user work_user	set the start users
+--work-path work_path	set the initial directory
 --loglevel-(debug|info|warn|error|fatal) log level, the log file name defaults to "$HOME/log/tcpdaemon log" 
 --tcp-nodelay		Enable TCP_NODELAY option
 --tcp-linger		Enable TCP_LINGER option , The actual setting value = parameter values - 1
