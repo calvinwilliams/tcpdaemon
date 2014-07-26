@@ -32,7 +32,7 @@ int CheckCommandParameter( struct TcpdaemonEntryParam *pep )
 	{
 		if( pep->max_process_count <= 0 )
 		{
-			ErrorLog( __FILE__ , __LINE__ , "worker poll size[%ld] invalid\n" , pep->max_process_count );
+			ErrorLog( __FILE__ , __LINE__ , "worker poll size[%ld] invalid" , pep->max_process_count );
 			return 1;
 		}
 		
@@ -43,7 +43,7 @@ int CheckCommandParameter( struct TcpdaemonEntryParam *pep )
 	{
 		if( pep->max_process_count <= 0 )
 		{
-			ErrorLog( __FILE__ , __LINE__ , "worker poll size[%ld] invalid\n" , pep->max_process_count );
+			ErrorLog( __FILE__ , __LINE__ , "worker poll size[%ld] invalid" , pep->max_process_count );
 			return 1;
 		}
 		
@@ -51,7 +51,7 @@ int CheckCommandParameter( struct TcpdaemonEntryParam *pep )
 	}
 #endif
 	
-	ErrorLog( __FILE__ , __LINE__ , "server mode[%s] invalid\n" , pep->server_model );
+	ErrorLog( __FILE__ , __LINE__ , "server mode[%s] invalid" , pep->server_model );
 	return 1;
 }
 
@@ -114,7 +114,7 @@ static int InitDaemonEnv( struct TcpdaemonServerEnv *pse )
 #endif
 		if( pse->so_handle == NULL )
 		{
-			ErrorLog( __FILE__ , __LINE__ , "dlopen[%s]failed[%s]\n" , pse->pep->so_pathfilename , DLERROR );
+			ErrorLog( __FILE__ , __LINE__ , "dlopen[%s]failed[%s]" , pse->pep->so_pathfilename , DLERROR );
 			return -1;
 		}
 		
@@ -125,7 +125,7 @@ static int InitDaemonEnv( struct TcpdaemonServerEnv *pse )
 #endif
 		if( pse->pfunc_tcpmain == NULL )
 		{
-			ErrorLog( __FILE__ , __LINE__ , "dlsym[%s]failed[%s]\n" , TCPMAIN , DLERROR );
+			ErrorLog( __FILE__ , __LINE__ , "dlsym[%s]failed[%s]" , TCPMAIN , DLERROR );
 			return -1;
 		}
 	}
@@ -136,7 +136,7 @@ static int InitDaemonEnv( struct TcpdaemonServerEnv *pse )
 	}
 	else
 	{
-		ErrorLog( __FILE__ , __LINE__ , "call_mode[%d]invalid\n" , pse->pep->call_mode );
+		ErrorLog( __FILE__ , __LINE__ , "call_mode[%d]invalid" , pse->pep->call_mode );
 		return -1;
 	}
 	
@@ -144,7 +144,7 @@ static int InitDaemonEnv( struct TcpdaemonServerEnv *pse )
 	pse->listen_sock = socket( AF_INET , SOCK_STREAM , IPPROTO_TCP ) ;
 	if( pse->listen_sock == -1 )
 	{
-		ErrorLog( __FILE__ , __LINE__ , "socket failed , ERRNO[%d]\n" , ERRNO );
+		ErrorLog( __FILE__ , __LINE__ , "socket failed , ERRNO[%d]" , ERRNO );
 		return -1;
 	}
 	
@@ -162,7 +162,7 @@ static int InitDaemonEnv( struct TcpdaemonServerEnv *pse )
 	nret = bind( pse->listen_sock , (struct sockaddr *) & inaddr, sizeof(struct sockaddr) ) ;
 	if( nret == -1 )
 	{
-		ErrorLog( __FILE__ , __LINE__ , "bind[%s:%ld]failed , ERRNO[%d]\n" , pse->pep->ip , pse->pep->port , ERRNO );
+		ErrorLog( __FILE__ , __LINE__ , "bind[%s:%ld]failed , ERRNO[%d]" , pse->pep->ip , pse->pep->port , ERRNO );
 		return -1;
 	}
 	}
@@ -170,8 +170,26 @@ static int InitDaemonEnv( struct TcpdaemonServerEnv *pse )
 	nret = listen( pse->listen_sock , pse->pep->max_process_count * 2 ) ;
 	if( nret == -1 )
 	{
-		ErrorLog( __FILE__ , __LINE__ , "listen failed , ERRNO[%d]\n" , ERRNO );
+		ErrorLog( __FILE__ , __LINE__ , "listen failed , ERRNO[%d]" , ERRNO );
 		return -1;
+	}
+	
+#if ( defined __linux__ ) || ( defined __unix )
+	if( STRCMP( pse->pep->work_user , != , "" ) )
+	{
+	struct passwd	*pw ;
+	pw = getpwnam( pse->pep->work_user ) ;
+	if( pw )
+	{
+		setuid( pw->pw_uid );
+		setgid( pw->pw_gid );
+	}
+	}
+#endif
+	
+	if( STRCMP( pse->pep->work_path , != , "" ) )
+	{
+		CHDIR( pse->pep->work_path );
 	}
 	
 	return 0;
@@ -235,7 +253,7 @@ int tcpdaemon_IF( struct TcpdaemonServerEnv *pse )
 	nret = InitDaemonEnv_IF( pse ) ;
 	if( nret )
 	{
-		ErrorLog( __FILE__ , __LINE__ , "init IF failed[%d]\n" , nret );
+		ErrorLog( __FILE__ , __LINE__ , "init IF failed[%d]" , nret );
 		CleanDaemonEnv_IF( pse );
 		return nret;
 	}
@@ -255,7 +273,7 @@ int tcpdaemon_IF( struct TcpdaemonServerEnv *pse )
 	act.sa_flags = SA_RESTART ;
 	nret = sigaction( SIGCHLD , & act , NULL );
 	
-	InfoLog( __FILE__ , __LINE__ , "parent listen starting\n" );
+	InfoLog( __FILE__ , __LINE__ , "parent listen starting" );
 	
 	/* 父进程侦听开始 */
 	while(1)
@@ -282,7 +300,7 @@ _DO_SELECT :
 			}
 			else
 			{
-				ErrorLog( __FILE__ , __LINE__ , "select failed , ERRNO[%d]\n" , ERRNO );
+				ErrorLog( __FILE__ , __LINE__ , "select failed , ERRNO[%d]" , ERRNO );
 				break;
 			}
 		}
@@ -308,19 +326,19 @@ _DO_ACCEPT :
 				}
 				else
 				{
-					ErrorLog( __FILE__ , __LINE__ , "accept failed , ERRNO[%d]\n" , ERRNO );
+					ErrorLog( __FILE__ , __LINE__ , "accept failed , ERRNO[%d]" , ERRNO );
 					break;
 				}
 			}
 			else
 			{
 				
-				DebugLog( __FILE__ , __LINE__ , "accept ok , [%d]accept[%d]\n" , pse->listen_sock , accept_sock );
+				DebugLog( __FILE__ , __LINE__ , "accept ok , [%d]accept[%d]" , pse->listen_sock , accept_sock );
 			}
 			
 			if( pse->pep->max_process_count != 0 && pse->process_count + 1 > pse->pep->max_process_count )
 			{
-				ErrorLog( __FILE__ , __LINE__ , "too many sockets\n" );
+				ErrorLog( __FILE__ , __LINE__ , "too many sockets" );
 				CLOSE( accept_sock );
 				continue;
 			}
@@ -356,7 +374,7 @@ _DO_FORK :
 				}
 				else
 				{
-					ErrorLog( __FILE__ , __LINE__ , "fork failed , ERRNO[%d]\n" , ERRNO );
+					ErrorLog( __FILE__ , __LINE__ , "fork failed , ERRNO[%d]" , ERRNO );
 					CLOSE( accept_sock );
 					continue;
 				}
@@ -369,27 +387,27 @@ _DO_FORK :
 				CLOSESOCKET( pse->listen_sock );
 				
 				/* 调用通讯数据协议及应用处理回调函数 */
-				InfoLog( __FILE__ , __LINE__ , "call tcpmain sock[%d]\n" , accept_sock );
+				InfoLog( __FILE__ , __LINE__ , "call tcpmain sock[%d]" , accept_sock );
 				nret = pse->pfunc_tcpmain( pse->pep->param_tcpmain , accept_sock , & accept_addr ) ;
 				if( nret < 0 )
 				{
-					ErrorLog( __FILE__ , __LINE__ , "tcpmain return[%d]\n" , nret );
+					ErrorLog( __FILE__ , __LINE__ , "tcpmain return[%d]" , nret );
 				}
 				else if( nret > 0 )
 				{
-					WarnLog( __FILE__ , __LINE__ , "tcpmain return[%d]\n" , nret );
+					WarnLog( __FILE__ , __LINE__ , "tcpmain return[%d]" , nret );
 				}
 				else
 				{
-					InfoLog( __FILE__ , __LINE__ , "tcpmain return[%d]\n" , nret );
+					InfoLog( __FILE__ , __LINE__ , "tcpmain return[%d]" , nret );
 				}
 				
 				/* 关闭客户端连接 */
 				CLOSESOCKET( accept_sock );
-				DebugLog( __FILE__ , __LINE__ , "CLOSE[%d]\n" , accept_sock );
+				DebugLog( __FILE__ , __LINE__ , "CLOSE[%d]" , accept_sock );
 				
 				/* 子进程退出 */
-				DebugLog( __FILE__ , __LINE__ , "child exit\n" );
+				DebugLog( __FILE__ , __LINE__ , "child exit" );
 				exit(0);
 			}
 			else
@@ -414,16 +432,16 @@ _DO_FORK :
 	
 	sigaction( SIGTERM , & oldact , NULL );
 	
-	InfoLog( __FILE__ , __LINE__ , "parent listen ended\n" );
+	InfoLog( __FILE__ , __LINE__ , "parent listen ended" );
 	
-	InfoLog( __FILE__ , __LINE__ , "waiting for all children exit starting\n" );
+	InfoLog( __FILE__ , __LINE__ , "waiting for all children exit starting" );
 	
 	while( pse->process_count > 0 )
 	{
 		waitpid( -1 , & status , 0 );
 	}
 	
-	InfoLog( __FILE__ , __LINE__ , "waiting for all chdilren exit ended\n" );
+	InfoLog( __FILE__ , __LINE__ , "waiting for all chdilren exit ended" );
 	
 	/* 清理守护环境 */
 	CleanDaemonEnv_IF( pse );
@@ -444,7 +462,7 @@ static int InitDaemonEnv_LF( struct TcpdaemonServerEnv *pse )
 	pse->accept_mutex = semget( IPC_PRIVATE , 1 , IPC_CREAT | 00777 ) ;
 	if( pse->accept_mutex == -1 )
 	{
-		ErrorLog( __FILE__ , __LINE__ , "create mutex failed\n" );
+		ErrorLog( __FILE__ , __LINE__ , "create mutex failed" );
 		return -1;
 	}
 	
@@ -454,7 +472,7 @@ static int InitDaemonEnv_LF( struct TcpdaemonServerEnv *pse )
 	nret = semctl( pse->accept_mutex , 0 , SETVAL , semopts ) ;
 	if( nret == -1 )
 	{
-		ErrorLog( __FILE__ , __LINE__ , "set mutex failed\n" );
+		ErrorLog( __FILE__ , __LINE__ , "set mutex failed" );
 		return -1;
 	}
 	}
@@ -463,7 +481,7 @@ static int InitDaemonEnv_LF( struct TcpdaemonServerEnv *pse )
 	pse->pids = (pid_t*)malloc( sizeof(pid_t) * (pse->pep->max_process_count+1) ) ;
 	if( pse->pids == NULL )
 	{
-		ErrorLog( __FILE__ , __LINE__ , "alloc failed , ERRNO[%d]\n" , ERRNO );
+		ErrorLog( __FILE__ , __LINE__ , "alloc failed , ERRNO[%d]" , ERRNO );
 		return -1;
 	}
 	memset( pse->pids , 0x00 , sizeof(pid_t) * (pse->pep->max_process_count+1) );
@@ -472,7 +490,7 @@ static int InitDaemonEnv_LF( struct TcpdaemonServerEnv *pse )
 	pse->alive_pipes = (PIPE_T*)malloc( sizeof(PIPE_T) * (pse->pep->max_process_count+1) ) ;
 	if( pse->alive_pipes == NULL )
 	{
-		ErrorLog( __FILE__ , __LINE__ , "alloc failed , ERRNO[%d]\n" , ERRNO );
+		ErrorLog( __FILE__ , __LINE__ , "alloc failed , ERRNO[%d]" , ERRNO );
 		return -1;
 	}
 	memset( pse->alive_pipes , 0x00 , sizeof(PIPE_T) * (pse->pep->max_process_count+1) );
@@ -516,7 +534,7 @@ int tcpdaemon_LF( struct TcpdaemonServerEnv *pse )
 	nret = InitDaemonEnv_LF( pse ) ;
 	if( nret )
 	{
-		ErrorLog( __FILE__ , __LINE__ , "init LF failed[%d]\n" , nret );
+		ErrorLog( __FILE__ , __LINE__ , "init LF failed[%d]" , nret );
 		CleanDaemonEnv_LF( pse );
 		return nret;
 	}
@@ -532,14 +550,14 @@ int tcpdaemon_LF( struct TcpdaemonServerEnv *pse )
 	signal( SIGCHLD , SIG_DFL );
 	
 	/* 创建工作进程池 */
-	InfoLog( __FILE__ , __LINE__ , "create worker pool starting\n" );
+	InfoLog( __FILE__ , __LINE__ , "create worker pool starting" );
 	
 	for( pse->index = 1 ; pse->index <= pse->pep->max_process_count ; pse->index++ )
 	{
 		nret = pipe( pse->alive_pipes[pse->index-1].fd ) ;
 		if( nret == -1 )
 		{
-			ErrorLog( __FILE__ , __LINE__ , "pipe failed , ERRNO[%d]\n" , ERRNO );
+			ErrorLog( __FILE__ , __LINE__ , "pipe failed , ERRNO[%d]" , ERRNO );
 			CleanDaemonEnv_LF( pse );
 			return -11;
 		}
@@ -547,7 +565,7 @@ int tcpdaemon_LF( struct TcpdaemonServerEnv *pse )
 		pse->pids[pse->index-1] = fork() ;
 		if( pse->pids[pse->index-1] == -1 )
 		{
-			ErrorLog( __FILE__ , __LINE__ , "fork failed , ERRNO[%d]\n" , ERRNO );
+			ErrorLog( __FILE__ , __LINE__ , "fork failed , ERRNO[%d]" , ERRNO );
 			CleanDaemonEnv_LF( pse );
 			return -11;
 		}
@@ -571,10 +589,10 @@ int tcpdaemon_LF( struct TcpdaemonServerEnv *pse )
 		SLEEP(1);
 	}
 	
-	InfoLog( __FILE__ , __LINE__ , "create worker pool ended\n" );
+	InfoLog( __FILE__ , __LINE__ , "create worker pool ended" );
 	
 	/* 监控工作进程池 */
-	InfoLog( __FILE__ , __LINE__ , "monitoring all children starting\n" );
+	InfoLog( __FILE__ , __LINE__ , "monitoring all children starting" );
 	
 	while(1)
 	{
@@ -592,16 +610,16 @@ int tcpdaemon_LF( struct TcpdaemonServerEnv *pse )
 				/* 重启工作进程 */
 				CLOSE( pse->alive_pipes[pse->index-1].fd[1] );
 				
-				InfoLog( __FILE__ , __LINE__ , "detecting child[%ld]pid[%ld] exit , rebooting\n" , pse->index , (long)pid );
+				InfoLog( __FILE__ , __LINE__ , "detecting child[%ld]pid[%ld] exit , rebooting" , pse->index , (long)pid );
 				
-				sleep(1);
+				SLEEP(1);
 				
 				pse->requests_per_process = 0 ;
 				
 				nret = pipe( pse->alive_pipes[pse->index-1].fd ) ;
 				if( nret )
 				{
-					ErrorLog( __FILE__ , __LINE__ , "pipe failed , ERRNO[%d]\n" , ERRNO );
+					ErrorLog( __FILE__ , __LINE__ , "pipe failed , ERRNO[%d]" , ERRNO );
 					CleanDaemonEnv_LF( pse );
 					return -11;
 				}
@@ -609,7 +627,7 @@ int tcpdaemon_LF( struct TcpdaemonServerEnv *pse )
 				pse->pids[pse->index-1] = fork() ;
 				if( pse->pids[pse->index-1] == -1 )
 				{
-					ErrorLog( __FILE__ , __LINE__ , "fork failed , ERRNO[%d]\n" , ERRNO );
+					ErrorLog( __FILE__ , __LINE__ , "fork failed , ERRNO[%d]" , ERRNO );
 					CleanDaemonEnv_LF( pse );
 					return -11;
 				}
@@ -635,17 +653,17 @@ int tcpdaemon_LF( struct TcpdaemonServerEnv *pse )
 		}
 		if( pse->index > pse->pep->max_process_count )
 		{
-			InfoLog( __FILE__ , __LINE__ , "detecting unknow child pid[%ld] exit\n" , (long)pid );
+			InfoLog( __FILE__ , __LINE__ , "detecting unknow child pid[%ld] exit" , (long)pid );
 			continue;
 		}
 	}
 	
-	InfoLog( __FILE__ , __LINE__ , "monitoring all children ended\n" );
+	InfoLog( __FILE__ , __LINE__ , "monitoring all children ended" );
 	
 	sigaction( SIGTERM , & oldact , NULL );
 	
 	/* 销毁进程池 */
-	InfoLog( __FILE__ , __LINE__ , "destroy worker poll starting\n" );
+	InfoLog( __FILE__ , __LINE__ , "destroy worker poll starting" );
 	
 	for( pse->index = 1 ; pse->index <= pse->pep->max_process_count ; pse->index++ )
 	{
@@ -658,7 +676,7 @@ int tcpdaemon_LF( struct TcpdaemonServerEnv *pse )
 		CLOSE( pse->alive_pipes[pse->index-1].fd[1] );
 	}
 	
-	InfoLog( __FILE__ , __LINE__ , "destroy worker poll ended\n" );
+	InfoLog( __FILE__ , __LINE__ , "destroy worker poll ended" );
 	
 	/* 清理守护环境 */
 	CleanDaemonEnv_LF( pse );
@@ -686,7 +704,7 @@ static int InitDaemonEnv_WIN_TLF( struct TcpdaemonServerEnv *pse )
 	pse->thandles = (THANDLE_T*)malloc( sizeof(THANDLE_T) * (pse->pep->max_process_count+1) ) ;
 	if( pse->thandles == NULL )
 	{
-		ErrorLog( __FILE__ , __LINE__ , "alloc failed , ERRNO[%d]\n" , ERRNO );
+		ErrorLog( __FILE__ , __LINE__ , "alloc failed , ERRNO[%d]" , ERRNO );
 		return -1;
 	}
 	memset( pse->thandles , 0x00 , sizeof(THANDLE_T) * (pse->pep->max_process_count+1) );
@@ -694,7 +712,7 @@ static int InitDaemonEnv_WIN_TLF( struct TcpdaemonServerEnv *pse )
 	pse->tids = (TID_T*)malloc( sizeof(TID_T) * (pse->pep->max_process_count+1) ) ;
 	if( pse->tids == NULL )
 	{
-		ErrorLog( __FILE__ , __LINE__ , "alloc failed , ERRNO[%d]\n" , ERRNO );
+		ErrorLog( __FILE__ , __LINE__ , "alloc failed , ERRNO[%d]" , ERRNO );
 		return -1;
 	}
 	memset( pse->tids , 0x00 , sizeof(TID_T) * (pse->pep->max_process_count+1) );
@@ -735,20 +753,20 @@ int tcpdaemon_WIN_TLF( struct TcpdaemonServerEnv *pse )
 	nret = InitDaemonEnv_WIN_TLF( pse ) ;
 	if( nret )
 	{
-		ErrorLog( __FILE__ , __LINE__ , "init WIN-TLF failed[%d]\n" , nret );
+		ErrorLog( __FILE__ , __LINE__ , "init WIN-TLF failed[%d]" , nret );
 		CleanDaemonEnv_WIN_TLF( pse );
 		return nret;
 	}
 	
 	/* 创建工作进程池 */
-	InfoLog( __FILE__ , __LINE__ , "create worker pool starting\n" );
+	InfoLog( __FILE__ , __LINE__ , "create worker pool starting" );
 	
 	for( pse->index = 1 ; pse->index <= pse->pep->max_process_count ; pse->index++ )
 	{
 		pse_new = DuplicateServerEnv( pse ) ;
 		if( pse_new == NULL )
 		{
-			ErrorLog( __FILE__ , __LINE__ , "DuplicateServerEnv failed , ERRNO[%d]\n" , ERRNO );
+			ErrorLog( __FILE__ , __LINE__ , "DuplicateServerEnv failed , ERRNO[%d]" , ERRNO );
 			CleanDaemonEnv_WIN_TLF( pse );
 			return -11;
 		}
@@ -756,7 +774,7 @@ int tcpdaemon_WIN_TLF( struct TcpdaemonServerEnv *pse )
 		pse->thandles[pse->index-1] = (THANDLE_T)_beginthreadex( NULL , 0 , worker , pse_new , 0 , & (pse->tids[pse->index-1]) ) ;
 		if( pse->thandles[pse->index-1] == NULL )
 		{
-			ErrorLog( __FILE__ , __LINE__ , "_beginthreadex failed , ERRNO[%d]\n" , ERRNO );
+			ErrorLog( __FILE__ , __LINE__ , "_beginthreadex failed , ERRNO[%d]" , ERRNO );
 			CleanDaemonEnv_WIN_TLF( pse );
 			return -12;
 		}
@@ -764,10 +782,10 @@ int tcpdaemon_WIN_TLF( struct TcpdaemonServerEnv *pse )
 		SLEEP(1);
 	}
 	
-	InfoLog( __FILE__ , __LINE__ , "create worker pool ended\n" );
+	InfoLog( __FILE__ , __LINE__ , "create worker pool ended" );
 	
 	/* 监控工作线程池 */
-	InfoLog( __FILE__ , __LINE__ , "monitoring all children starting\n" );
+	InfoLog( __FILE__ , __LINE__ , "monitoring all children starting" );
 	
 	while(1)
 	{
@@ -775,14 +793,14 @@ int tcpdaemon_WIN_TLF( struct TcpdaemonServerEnv *pse )
 		index = WaitForMultipleObjects( pse->pep->max_process_count , pse->thandles , FALSE , INFINITE ) ;
 		if( index == WAIT_FAILED )
 		{
-			ErrorLog( __FILE__ , __LINE__ , "WaitForMultipleObjects failed , errno[%d]\n" , ERRNO );
+			ErrorLog( __FILE__ , __LINE__ , "WaitForMultipleObjects failed , errno[%d]" , ERRNO );
 			break;
 		}
 		index = index - WAIT_OBJECT_0 + 1 ;
 		CloseHandle( pse->thandles[index-1] );
 		
 		/* 重启线程进程 */
-		InfoLog( __FILE__ , __LINE__ , "detecting child[%ld]tid[%ld] exit , rebooting\n" , index , pse->tids[index-1] );
+		InfoLog( __FILE__ , __LINE__ , "detecting child[%ld]tid[%ld] exit , rebooting" , index , pse->tids[index-1] );
 		
 		Sleep(1000);
 		
@@ -791,7 +809,7 @@ int tcpdaemon_WIN_TLF( struct TcpdaemonServerEnv *pse )
 		pse_new = DuplicateServerEnv( pse ) ;
 		if( pse_new == NULL )
 		{
-			ErrorLog( __FILE__ , __LINE__ , "DuplicateServerEnv failed , ERRNO[%d]\n" , ERRNO );
+			ErrorLog( __FILE__ , __LINE__ , "DuplicateServerEnv failed , ERRNO[%d]" , ERRNO );
 			CleanDaemonEnv_WIN_TLF( pse );
 			return -11;
 		}
@@ -799,16 +817,16 @@ int tcpdaemon_WIN_TLF( struct TcpdaemonServerEnv *pse )
 		pse->thandles[index-1] = (THANDLE_T)_beginthreadex( NULL , 0 , worker , pse_new , 0 , & (pse->tids[index-1]) ) ;
 		if( pse->thandles[index-1] == NULL )
 		{
-			ErrorLog( __FILE__ , __LINE__ , "_beginthreadex failed , ERRNO[%d]\n" , ERRNO );
+			ErrorLog( __FILE__ , __LINE__ , "_beginthreadex failed , ERRNO[%d]" , ERRNO );
 			CleanDaemonEnv_WIN_TLF( pse );
 			return -12;
 		}
 	}
 	
-	InfoLog( __FILE__ , __LINE__ , "monitoring all children ended\n" );
+	InfoLog( __FILE__ , __LINE__ , "monitoring all children ended" );
 	
 	/* 销毁线程池 */
-	InfoLog( __FILE__ , __LINE__ , "destroy worker poll starting\n" );
+	InfoLog( __FILE__ , __LINE__ , "destroy worker poll starting" );
 	
 	for( pse->index = 1 ; pse->index <= pse->pep->max_process_count ; pse->index++ )
 	{
@@ -819,7 +837,7 @@ int tcpdaemon_WIN_TLF( struct TcpdaemonServerEnv *pse )
 		}	
 	}
 	
-	InfoLog( __FILE__ , __LINE__ , "destroy worker poll ended\n" );
+	InfoLog( __FILE__ , __LINE__ , "destroy worker poll ended" );
 	
 	/* 清理守护环境 */
 	CleanDaemonEnv_WIN_TLF( pse );
@@ -843,7 +861,7 @@ int tcpdaemon( struct TcpdaemonEntryParam *pep )
 	/* 设置日志环境 */
 	SetLogFile( pep->log_pathfilename );
 	SetLogLevel( pep->log_level );
-	InfoLog( __FILE__ , __LINE__ , "tcpdaemon startup - version %s\n" , __version_tcpdaemon );
+	InfoLog( __FILE__ , __LINE__ , "tcpdaemon startup - version %s" , __version_tcpdaemon );
 	
 	/* 检查入口参数 */
 	nret = CheckCommandParameter( pep ) ;
@@ -871,7 +889,7 @@ int tcpdaemon( struct TcpdaemonEntryParam *pep )
 	}
 #endif
 	
-	InfoLog( __FILE__ , __LINE__ , "tcpdaemon ended - version %s\n" , __version_tcpdaemon );
+	InfoLog( __FILE__ , __LINE__ , "tcpdaemon ended - version %s" , __version_tcpdaemon );
 	
 	return nret;
 }

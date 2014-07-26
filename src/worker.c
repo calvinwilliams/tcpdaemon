@@ -30,7 +30,7 @@ unsigned int WINAPI worker( void *pv )
 	
 	while(1)
 	{
-		DebugLog( __FILE__ , __LINE__ , "WORKER(%ld) | waiting for entering accept mutex\n" , pse->index );
+		DebugLog( __FILE__ , __LINE__ , "WORKER(%ld) | waiting for entering accept mutex" , pse->index );
 		
 #if ( defined __linux__ ) || ( defined __unix )
 		/* 进入临界区 */
@@ -41,13 +41,13 @@ unsigned int WINAPI worker( void *pv )
 		nret = semop( pse->accept_mutex , & sb , 1 ) ;
 		if( nret == -1 )
 		{
-			ErrorLog( __FILE__ , __LINE__ , "WORKER(%ld) | enter accept mutex failed , errno[%d]\n" , pse->index , ERRNO );
+			ErrorLog( __FILE__ , __LINE__ , "WORKER(%ld) | enter accept mutex failed , errno[%d]" , pse->index , ERRNO );
 			return 1;
 		}
 #elif ( defined _WIN32 )
 		EnterCriticalSection( & accept_critical_section );
 #endif
-		DebugLog( __FILE__ , __LINE__ , "WORKER(%ld) | enter accept mutex ok\n" , pse->index );
+		DebugLog( __FILE__ , __LINE__ , "WORKER(%ld) | enter accept mutex ok" , pse->index );
 		
 		/* 监控侦听socket或存活管道事件 */
 		FD_ZERO( & readfds );
@@ -60,14 +60,14 @@ unsigned int WINAPI worker( void *pv )
 #endif
 		if( nret == -1 )
 		{	
-			ErrorLog( __FILE__ , __LINE__ , "WORKER(%ld) | select failed , errno[%d]\n" , pse->index , ERRNO );
+			ErrorLog( __FILE__ , __LINE__ , "WORKER(%ld) | select failed , errno[%d]" , pse->index , ERRNO );
 			break;
 		}
 		
 #if ( defined __linux__ ) || ( defined __unix )
 		if( FD_ISSET( pse->alive_pipes[pse->index-1].fd[0] , & readfds ) )
 		{
-			DebugLog( __FILE__ , __LINE__ , "WORKER(%ld) | alive_pipe received quit command\n" , pse->index );
+			DebugLog( __FILE__ , __LINE__ , "WORKER(%ld) | alive_pipe received quit command" , pse->index );
 			break;
 		}
 #endif
@@ -78,12 +78,12 @@ unsigned int WINAPI worker( void *pv )
 		accept_sock = accept( pse->listen_sock , & accept_addr , & accept_addrlen ) ;
 		if( accept_sock == -1 )
 		{
-			ErrorLog( __FILE__ , __LINE__ , "WORKER(%ld) | accept failed , errno[%d]\n" , pse->index , ERRNO );
+			ErrorLog( __FILE__ , __LINE__ , "WORKER(%ld) | accept failed , errno[%d]" , pse->index , ERRNO );
 			break;
 		}
 		else
 		{
-			DebugLog( __FILE__ , __LINE__ , "WORKER(%ld) | accept ok , [%d]accept[%d]\n" , pse->index , pse->listen_sock , accept_sock );
+			DebugLog( __FILE__ , __LINE__ , "WORKER(%ld) | accept ok , [%d]accept[%d]" , pse->index , pse->listen_sock , accept_sock );
 		}
 		
 		if( pse->pep->tcp_nodelay > 0 )
@@ -108,40 +108,40 @@ unsigned int WINAPI worker( void *pv )
 		nret = semop( pse->accept_mutex , & sb , 1 ) ;
 		if( nret == -1 )
 		{
-			ErrorLog( __FILE__ , __LINE__ , "WORKER(%ld) | leave accept mutex failed , errno[%d]\n" , pse->index , ERRNO );
+			ErrorLog( __FILE__ , __LINE__ , "WORKER(%ld) | leave accept mutex failed , errno[%d]" , pse->index , ERRNO );
 			return 1;
 		}
 #elif ( defined _WIN32 )
 		LeaveCriticalSection( & accept_critical_section );
 #endif
-		DebugLog( __FILE__ , __LINE__ , "WORKER(%ld) | leave accept mutex ok\n" , pse->index );
+		DebugLog( __FILE__ , __LINE__ , "WORKER(%ld) | leave accept mutex ok" , pse->index );
 		
 		/* 调用通讯数据协议及应用处理回调函数 */
-		InfoLog( __FILE__ , __LINE__ , "WORKER(%ld) | call tcpmain sock[%d]\n" , pse->index , accept_sock );
+		InfoLog( __FILE__ , __LINE__ , "WORKER(%ld) | call tcpmain sock[%d]" , pse->index , accept_sock );
 		nret = pse->pfunc_tcpmain( pse->pep->param_tcpmain , accept_sock , & accept_addr ) ;
 		if( nret < 0 )
 		{
-			ErrorLog( __FILE__ , __LINE__ , "WORKER(%ld) | tcpmain return[%d]\n" , pse->index , nret );
+			ErrorLog( __FILE__ , __LINE__ , "WORKER(%ld) | tcpmain return[%d]" , pse->index , nret );
 			return 1;
 		}
 		else if( nret > 0 )
 		{
-			WarnLog( __FILE__ , __LINE__ , "WORKER(%ld) | tcpmain return[%d]\n" , pse->index , nret );
+			WarnLog( __FILE__ , __LINE__ , "WORKER(%ld) | tcpmain return[%d]" , pse->index , nret );
 		}
 		else
 		{
-			InfoLog( __FILE__ , __LINE__ , "WORKER(%ld) | tcpmain return[%d]\n" , pse->index , nret );
+			InfoLog( __FILE__ , __LINE__ , "WORKER(%ld) | tcpmain return[%d]" , pse->index , nret );
 		}
 		
 		/* 关闭客户端连接 */
 		CLOSESOCKET( accept_sock );
-		DebugLog( __FILE__ , __LINE__ , "WORKER(%ld) | close[%d]\n" , pse->index , accept_sock );
+		DebugLog( __FILE__ , __LINE__ , "WORKER(%ld) | close[%d]" , pse->index , accept_sock );
 		
 		/* 检查工作进程处理数量 */
 		pse->requests_per_process++;
 		if( pse->pep->max_requests_per_process != 0 && pse->requests_per_process >= pse->pep->max_requests_per_process )
 		{
-			InfoLog( __FILE__ , __LINE__ , "WORKER(%ld) | maximum number of processing[%ld][%ld] , ending\n" , pse->index , pse->requests_per_process , pse->pep->max_requests_per_process );
+			InfoLog( __FILE__ , __LINE__ , "WORKER(%ld) | maximum number of processing[%ld][%ld] , ending" , pse->index , pse->requests_per_process , pse->pep->max_requests_per_process );
 			return 1;
 		}
 	}
@@ -155,13 +155,13 @@ unsigned int WINAPI worker( void *pv )
 	nret = semop( pse->accept_mutex , & sb , 1 ) ;
 	if( nret == -1 )
 	{
-		InfoLog( __FILE__ , __LINE__ , "WORKER(%ld) | leave accept mutex finally failed , errno[%d]\n" , pse->index , ERRNO );
+		InfoLog( __FILE__ , __LINE__ , "WORKER(%ld) | leave accept mutex finally failed , errno[%d]" , pse->index , ERRNO );
 		return 1;
 	}
 #elif ( defined _WIN32 )
 	LeaveCriticalSection( & accept_critical_section );
 #endif
-	DebugLog( __FILE__ , __LINE__ , "WORKER(%ld) | leave accept mutex finally ok\n" , pse->index );
+	DebugLog( __FILE__ , __LINE__ , "WORKER(%ld) | leave accept mutex finally ok" , pse->index );
 	
 #if ( defined __linux__ ) || ( defined __unix )
 	return 0;

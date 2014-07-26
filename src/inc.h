@@ -40,6 +40,7 @@ extern char		__version_tcpdaemon[] ;
 #define SOCKLEN_T		socklen_t
 #define PIPE(_pipes_)		pipe(_pipes_)
 #define SLEEP(_seconds_)	sleep(_seconds_)
+#define CHDIR			chdir
 #elif ( defined _WIN32 )
 #define PID_T			long
 #define TID_T			unsigned long
@@ -56,6 +57,7 @@ extern char		__version_tcpdaemon[] ;
 #define SOCKLEN_T		long
 #define PIPE(_pipes_)		_pipe((_pipes_),256,_O_BINARY)
 #define SLEEP(_seconds_)	Sleep(_seconds_*1000)
+#define CHDIR			_chdir
 #endif
 
 /* 信号量值结构 */
