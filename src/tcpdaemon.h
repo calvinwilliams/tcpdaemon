@@ -46,13 +46,11 @@
 #endif
 
 #if ( defined __unix ) || ( defined __linux__ )
-#ifndef _WINDLL_FUNC
 #define _WINDLL_FUNC
-#endif
+#define TLS			__thread
 #elif ( defined _WIN32 )
-#ifndef _WINDLL_FUNC
 #define _WINDLL_FUNC		_declspec(dllexport)
-#endif
+#define TLS			__declspec( thread )
 #endif
 
 #ifndef WINAPI
