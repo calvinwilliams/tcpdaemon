@@ -36,7 +36,6 @@ extern char		__version_tcpdaemon[] ;
 #define CLOSESOCKET		close
 #define VSNPRINTF		vsnprintf
 #define SNPRINTF		snprintf
-#define TLS			__thread
 #define SOCKLEN_T		socklen_t
 #define PIPE(_pipes_)		pipe(_pipes_)
 #define SLEEP(_seconds_)	sleep(_seconds_)
@@ -53,7 +52,6 @@ extern char		__version_tcpdaemon[] ;
 #define CLOSESOCKET		closesocket
 #define VSNPRINTF		_vsnprintf
 #define SNPRINTF		_snprintf
-#define TLS			__declspec( thread )
 #define SOCKLEN_T		long
 #define PIPE(_pipes_)		_pipe((_pipes_),256,_O_BINARY)
 #define SLEEP(_seconds_)	Sleep(_seconds_*1000)
