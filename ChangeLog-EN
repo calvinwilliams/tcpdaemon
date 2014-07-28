@@ -1,6 +1,7 @@
 ver 1.1.1	2014-07-26	calvin
 		* Add command line parameters
 		  , set the start users and the initial directory
+		* struct TcpdaemonEntryParam.param_tcpmain , notice : ensure thread safety yourself
 
 ver 1.1.0	2014-07-17	calvin
 		* Reforming code structure

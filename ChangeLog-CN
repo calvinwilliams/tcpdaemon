@@ -1,5 +1,6 @@
 ver 1.1.1	2014-07-26	calvin
 		* 新增命令行参数，用于设置启动切换用户和初始目录
+		* struct TcpdaemonEntryParam.param_tcpmain , 特别注意：自己保证线程安全
 
 ver 1.1.0	2014-07-17	calvin
 		* 重整了代码结构

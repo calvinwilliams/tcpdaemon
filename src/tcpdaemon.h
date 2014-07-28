@@ -154,8 +154,8 @@ struct TcpdaemonEntryParam
 	
 	func_tcpmain	*pfunc_tcpmain ;	/* 当函数调用模式时，指向把TCP连接交给应用入口函数指针 */
 						/* tcpmain function pointer */
-	void		*param_tcpmain ;	/* 当函数调用模式时，指向把TCP连接交给应用入口函数的参数指针 */
-						/* tcpmain function parameter */
+	void		*param_tcpmain ;	/* 当函数调用模式时，指向把TCP连接交给应用入口函数的参数指针，特别注意：自己保证线程安全 */
+						/* tcpmain function parameter , notice : ensure thread safety yourself */
 	
 	int		tcp_nodelay ;	/* 启用TCP_NODELAY选项 1:启用 0:不启用（缺省） */
 					/* Enable TCP_NODELAY option 1:enable 0:disable(DEFAULT) */
