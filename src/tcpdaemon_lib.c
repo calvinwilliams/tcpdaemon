@@ -472,119 +472,7 @@ _DO_SELECT :
 				break;
 			}
 		}
-		else if( nret > 0 )
-		{
-			/* 接受新客户端连接 */
-_DO_ACCEPT :
-			accept_addrlen = sizeof(struct sockaddr) ;
-			memset( & accept_addr , 0x00 , accept_addrlen );
-			accept_sock = accept( p_env->listen_sock , & accept_addr , & accept_addrlen ) ;
-			if( accept_sock == -1 )
-			{
-				if( ERRNO == EINTR )
-				{
-					if( g_EXIT_flag == 1 )
-					{
-						break;
-					}
-					else
-					{
-						goto _DO_ACCEPT;
-					}
-				}
-				else
-				{
-					ErrorLog( __FILE__ , __LINE__ , "accept failed , ERRNO[%d]" , ERRNO );
-					break;
-				}
-			}
-			else
-			{
-				
-				DebugLog( __FILE__ , __LINE__ , "accept ok , [%d]accept[%d]" , p_env->listen_sock , accept_sock );
-			}
-			
-			if( p_env->p_para->max_process_count != 0 && p_env->process_count + 1 > p_env->p_para->max_process_count )
-			{
-				ErrorLog( __FILE__ , __LINE__ , "too many sockets" );
-				CLOSE( accept_sock );
-				continue;
-			}
-			
-			if( p_env->p_para->tcp_nodelay > 0 )
-			{
-				setsockopt( accept_sock , IPPROTO_TCP , TCP_NODELAY , (void*) & (p_env->p_para->tcp_nodelay) , sizeof(int) );
-			}
-			
-			if( p_env->p_para->tcp_linger > 0 )
-			{
-				struct linger	lg ;
-				lg.l_onoff = 1 ;
-				lg.l_linger = p_env->p_para->tcp_linger - 1 ;
-				setsockopt( accept_sock , SOL_SOCKET , SO_LINGER , (void *) & lg , sizeof(struct linger) );
-			}
-			
-			/* 创建子进程 */
-_DO_FORK :
-			pid = fork() ;
-			if( pid == -1 )
-			{
-				if( ERRNO == EINTR )
-				{
-					if( g_EXIT_flag == 1 )
-					{
-						break;
-					}
-					else
-					{
-						goto _DO_FORK;
-					}
-				}
-				else
-				{
-					ErrorLog( __FILE__ , __LINE__ , "fork failed , ERRNO[%d]" , ERRNO );
-					CLOSE( accept_sock );
-					continue;
-				}
-			}
-			else if( pid == 0 )
-			{
-				signal( SIGTERM , SIG_DFL );
-				signal( SIGCHLD , SIG_DFL );
-				
-				CLOSESOCKET( p_env->listen_sock );
-				
-				/* 调用通讯数据协议及应用处理回调函数 */
-				InfoLog( __FILE__ , __LINE__ , "call tcpmain sock[%d]" , accept_sock );
-				nret = p_env->pfunc_tcpmain( p_env->p_para->param_tcpmain , accept_sock , & accept_addr ) ;
-				if( nret < 0 )
-				{
-					ErrorLog( __FILE__ , __LINE__ , "tcpmain return[%d]" , nret );
-				}
-				else if( nret > 0 )
-				{
-					WarnLog( __FILE__ , __LINE__ , "tcpmain return[%d]" , nret );
-				}
-				else
-				{
-					InfoLog( __FILE__ , __LINE__ , "tcpmain return[%d]" , nret );
-				}
-				
-				/* 关闭客户端连接 */
-				CLOSESOCKET( accept_sock );
-				DebugLog( __FILE__ , __LINE__ , "CLOSE[%d]" , accept_sock );
-				
-				/* 子进程退出 */
-				DebugLog( __FILE__ , __LINE__ , "child exit" );
-				exit(0);
-			}
-			else
-			{
-				CLOSESOCKET( accept_sock );
-				p_env->process_count++;
-			}
-		}
-		else
+		else if( nret == 0 )
 		{
 			do
 			{
@@ -595,6 +483,118 @@ _DO_FORK :
 				}
 			}
 			while( pid > 0 );
+			
+			continue;
+		}
+		
+		/* 接受新客户端连接 */
+_DO_ACCEPT :
+		accept_addrlen = sizeof(struct sockaddr) ;
+		memset( & accept_addr , 0x00 , accept_addrlen );
+		accept_sock = accept( p_env->listen_sock , & accept_addr , & accept_addrlen ) ;
+		if( accept_sock == -1 )
+		{
+			if( ERRNO == EINTR )
+			{
+				if( g_EXIT_flag == 1 )
+				{
+					break;
+				}
+				else
+				{
+					goto _DO_ACCEPT;
+				}
+			}
+			else
+			{
+				ErrorLog( __FILE__ , __LINE__ , "accept failed , ERRNO[%d]" , ERRNO );
+				break;
+			}
+		}
+		else
+		{
+			
+			DebugLog( __FILE__ , __LINE__ , "accept ok , [%d]accept[%d]" , p_env->listen_sock , accept_sock );
+		}
+		
+		if( p_env->p_para->max_process_count != 0 && p_env->process_count + 1 > p_env->p_para->max_process_count )
+		{
+			ErrorLog( __FILE__ , __LINE__ , "too many sockets" );
+			CLOSE( accept_sock );
+			continue;
+		}
+		
+		if( p_env->p_para->tcp_nodelay > 0 )
+		{
+			setsockopt( accept_sock , IPPROTO_TCP , TCP_NODELAY , (void*) & (p_env->p_para->tcp_nodelay) , sizeof(int) );
+		}
+		
+		if( p_env->p_para->tcp_linger > 0 )
+		{
+			struct linger	lg ;
+			lg.l_onoff = 1 ;
+			lg.l_linger = p_env->p_para->tcp_linger - 1 ;
+			setsockopt( accept_sock , SOL_SOCKET , SO_LINGER , (void *) & lg , sizeof(struct linger) );
+		}
+		
+		/* 创建子进程 */
+_DO_FORK :
+		pid = fork() ;
+		if( pid == -1 )
+		{
+			if( ERRNO == EINTR )
+			{
+				if( g_EXIT_flag == 1 )
+				{
+					break;
+				}
+				else
+				{
+					goto _DO_FORK;
+				}
+			}
+			else
+			{
+				ErrorLog( __FILE__ , __LINE__ , "fork failed , ERRNO[%d]" , ERRNO );
+				CLOSE( accept_sock );
+				continue;
+			}
+		}
+		else if( pid == 0 )
+		{
+			signal( SIGTERM , SIG_DFL );
+			signal( SIGCHLD , SIG_DFL );
+			
+			CLOSESOCKET( p_env->listen_sock );
+			
+			/* 调用通讯数据协议及应用处理回调函数 */
+			InfoLog( __FILE__ , __LINE__ , "call tcpmain sock[%d]" , accept_sock );
+			nret = p_env->pfunc_tcpmain( p_env->p_para->param_tcpmain , accept_sock , & accept_addr ) ;
+			if( nret < 0 )
+			{
+				ErrorLog( __FILE__ , __LINE__ , "tcpmain return[%d]" , nret );
+			}
+			else if( nret > 0 )
+			{
+				WarnLog( __FILE__ , __LINE__ , "tcpmain return[%d]" , nret );
+			}
+			else
+			{
+				InfoLog( __FILE__ , __LINE__ , "tcpmain return[%d]" , nret );
+			}
+			
+			/* 关闭客户端连接 */
+			CLOSESOCKET( accept_sock );
+			DebugLog( __FILE__ , __LINE__ , "CLOSE[%d]" , accept_sock );
+			
+			/* 子进程退出 */
+			DebugLog( __FILE__ , __LINE__ , "child exit" );
+			exit(0);
+		}
+		else
+		{
+			CLOSESOCKET( accept_sock );
+			p_env->process_count++;
 		}
 	}
 	
