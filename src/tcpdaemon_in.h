@@ -1,10 +1,10 @@
-#ifndef _H_INC_
-#define _H_INC_
+#ifndef _H_TCPDAEMON_IN_
+#define _H_TCPDAEMON_IN_
 
 /*
  * tcpdaemon - TCP连接管理守护
  * author      : calvin
- * email       : calvinwilliams.c@gmail.com
+ * email       : calvinwilliams@163.com
  *
  * Licensed under the LGPL v2.1, see the file LICENSE in base directory.
  */
@@ -16,12 +16,31 @@ extern "C" {
 #define TCPDAEMON_CALLMODE_DAEMON		1 /* 运行模式1:主守护模式 */
 
 #include "LOGC.h"
-#include "service.h"
 
 #include "tcpdaemon.h"
 
-/* 版本串 */
-extern char		__version_tcpdaemon[] ;
+/* 公共宏 */
+#ifndef MAXLEN_FILENAME
+#define MAXLEN_FILENAME			256
+#endif
+
+#ifndef STRCMP
+#define STRCMP(_a_,_C_,_b_) ( strcmp(_a_,_b_) _C_ 0 )
+#define STRNCMP(_a_,_C_,_b_,_n_) ( strncmp(_a_,_b_,_n_) _C_ 0 )
+#endif
+
+#ifndef MEMCMP
+#define MEMCMP(_a_,_C_,_b_,_n_) ( memcmp(_a_,_b_,_n_) _C_ 0 )
+#endif
+
+/* 跨平台宏 */
+#if ( defined __linux__ ) || ( defined __unix )
+#define RECV			recv
+#define SEND			send
+#elif ( defined _WIN32 )
+#define RECV			recv
+#define SEND			send
+#endif
 
 /* 跨平台宏 */
 #if ( defined __linux__ ) || ( defined __unix )
@@ -73,9 +92,9 @@ typedef struct
 	int		fd[ 2 ] ;
 } PIPE_T ;
 
-struct TcpdaemonServerEnv
+struct TcpdaemonServerEnvirment
 {
-	struct TcpdaemonEntryParam	*pep ;
+	struct TcpdaemonEntryParameter	*p_para ;
 	
 	OBJECTHANDLE			so_handle ; /* 动态库打开句柄 */
 	func_tcpmain			*pfunc_tcpmain ; /* 动态库入口:通讯数据协议及应用处理回调函数 */
@@ -101,17 +120,7 @@ struct TcpdaemonServerEnv
 	TID_T				*tids ;
 } ;
 
-int ParseCommandParameter( int argc , char *argv[] , struct TcpdaemonEntryParam *pep );
-int CheckCommandParameter( struct TcpdaemonEntryParam *pep );
-
-struct TcpdaemonServerEnv *DuplicateServerEnv( struct TcpdaemonServerEnv *pse );
-
-void usage();
-void version();
-
-#if ( defined _WIN32 )
-extern CRITICAL_SECTION			accept_critical_section; /* accept临界区 */
-#endif
+int CheckCommandParameter( struct TcpdaemonEntryParameter *p_para );
 
 #ifdef __cplusplus
 }

@@ -1,4 +1,5 @@
 # 此文件由makelocal.sh自动生成
+MAKEFILE_POSTFIX=.WINDOWS-MinGW
 # 此文件由makeobj.sh自动生成
 ############################################################
 # 项目名 : 
@@ -29,11 +30,10 @@ c_FILE_CLEAN	=	$(c_FILE_o) $(c_FILE2_o) $(c_FILE3_o) $(c_FILE4_o) $(c_FILE5_o)
 	$(CC) $(CFLAGS) -c $<
 
 c_FILE		=	\
-			main.c \
-			tcpdaemon.c \
+			tcpdaemon_main.c \
+			tcpdaemon_lib.c \
 			worker.c \
 			LOGC.c \
-			service.c \
 
 ###### 目标文件、安装目录配置区
 BIN		=	tcpdaemon
@@ -41,7 +41,7 @@ BININST		=	$(HOME)/bin
 LIB		=	libtcpdaemon.so
 LIBINST		=	$(HOME)/lib
 HDER		=	tcpdaemon.h
-HDERINST	=	$(HOME)/include
+HDERINST	=	$(HOME)/include/tcpdaemon
 
 ###### 编译选项
 CFLAGS		=	-I. \
@@ -56,7 +56,7 @@ CLEAN_ADDITION	=
 
 ###### 加载mktpl模板库
 # 最终目标列表
-all	:	$(OBJ) $(OBJ2) $(LIB) $(LIB2) $(NOCLEAN_OBJ) $(NOINST_OBJ) $(BIN) $(BIN2)
+all	:	$(OBJ) $(OBJ2) $(LIB) $(LIB2) $(SQL) $(NOCLEAN_OBJ) $(NOINST_OBJ) $(BIN) $(BIN2)
 
 # 文件系统宏
 CD		=	cd
@@ -66,7 +66,7 @@ MV		=	move
 MKDIR		=	mkdir
 
 # 预定义源文件清理删除关联宏
-_FILE_CLEAN	=	$(c_FILE_CLEAN) $(cpp_FILE_CLEAN) $(SQC_FILE_CLEAN) $(csm_FILE_CLEAN) $(c_html_FILE_CLEAN) $(cui_FILE_CLEAN) $(dtd_FILE_CLEAN) $(prt_FILE_CLEAN) $(fmd_FILE_CLEAN) $(smd_FILE_CLEAN) $(def_FILE_CLEAN) $(act_FILE_CLEAN)
+_FILE_CLEAN	=	$(c_FILE_CLEAN) $(cpp_FILE_CLEAN) $(SQC_FILE_CLEAN) $(ec_FILE_CLEAN) $(ec_FILE2_CLEAN) $(csm_FILE_CLEAN) $(c_html_FILE_CLEAN) $(cui_FILE_CLEAN) $(dtd_FILE_CLEAN) $(prt_FILE_CLEAN) $(fmd_FILE_CLEAN) $(smd_FILE_CLEAN) $(def_FILE_CLEAN) $(act_FILE_CLEAN)
 
 # 清理删除规则
 clean		:
@@ -78,17 +78,17 @@ DFTHDER		=	$(csm_FILE_DFTHDER) $(cui_FILE_DFTHDER) $(dtd_FILE_DFTHDER) $(prt_FIL
 
 # 提交安装规则
 install		:	all
+
 ifneq ($(strip $(BIN)),)
 ifneq ($(strip $(BININST)),)
 	-$(MKDIR) "$(BININST)"
 	$(CP) $(BIN) "$(BININST)/"
 endif
 endif
-
-ifneq ($(strip $(LIB)),)
-ifneq ($(strip $(LIBINST)),)
-	-$(MKDIR) "$(LIBINST)"
-	$(CP) $(LIB) "$(LIBINST)/"
+ifneq ($(strip $(BIN2)),)
+ifneq ($(strip $(BININST2)),)
+	-$(MKDIR) "$(BININST2)"
+	$(CP) $(BIN2) "$(BININST2)/"
 endif
 endif
 
@@ -98,13 +98,26 @@ ifneq ($(strip $(HDERINST)),)
 	$(CP) $(HDER) "$(HDERINST)/"
 endif
 endif
+ifneq ($(strip $(HDER2)),)
+ifneq ($(strip $(HDERINST2)),)
+	-$(MKDIR) "$(HDERINST2)"
+	$(CP) $(HDER2) "$(HDERINST2)/"
+endif
+endif
+
+ifneq ($(strip $(DFTHDER)),)
+ifneq ($(strip $(DFTHDERINST)),)
+	-$(MKDIR) "$(DFTHDERINST)"
+	$(CP) $(DFTHDER) "$(DFTHDERINST)/"
+endif
+endif
 
 
 
 ###### 目标文件依赖关系
-tcpdaemon:	main.o tcpdaemon.o worker.o LOGC.o service.o
-	$(CC) $(ESOFLAGS) -o $@ main.o tcpdaemon.o worker.o LOGC.o service.o $(LFLAGS)
+tcpdaemon:	tcpdaemon_main.o tcpdaemon_lib.o LOGC.o
+	$(CC) $(ESOFLAGS) -o $@ tcpdaemon_main.o tcpdaemon_lib.o LOGC.o $(LFLAGS)
 
-libtcpdaemon.so: tcpdaemon.o worker.o LOGC.o service.o
-	$(CC) $(SOFLAGS) -o $@ tcpdaemon.o worker.o LOGC.o service.o $(LFLAGS)
+libtcpdaemon.so: tcpdaemon_lib.o LOGC.o
+	$(CC) $(SOFLAGS) -o $@ tcpdaemon_lib.o LOGC.o $(LFLAGS)
 

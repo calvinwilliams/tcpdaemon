@@ -1,4 +1,5 @@
 # 此文件由makelocal.sh自动生成
+MAKEFILE_POSTFIX=.AIX
 # 此文件由makeobj.sh自动生成
 ############################################################
 # 项目名 : 
@@ -14,8 +15,8 @@ SOFLAGS		=	-G -bnoentry
 ESOFLAGS	=	-bdynamic -brtl -qcpluscm
 
 # c源代码文件宏及推导规则
-CC		=	xlc -q64 -O2 -qtls
-CC_NOWARN	=	xlc -q64 -O2 -qtls
+CC		=	xlc -q64 -O2 -qlanglvl=ansi -qsrcmsg -qinfo=dcl:eff:ini:par:pro:rea:ret
+CC_NOWARN	=	xlc -q64 -O2
 
 c_FILE_o	=	$(c_FILE:.c=.o)
 c_FILE2_o	=	$(c_FILE2:.c=.o)
@@ -29,11 +30,10 @@ c_FILE_CLEAN	=	$(c_FILE_o) $(c_FILE2_o) $(c_FILE3_o) $(c_FILE4_o) $(c_FILE5_o)
 	$(CC) $(CFLAGS) -c $<
 
 c_FILE		=	\
-			main.c \
-			tcpdaemon.c \
+			tcpdaemon_main.c \
+			tcpdaemon_lib.c \
 			worker.c \
 			LOGC.c \
-			service.c \
 
 ###### 目标文件、安装目录配置区
 BIN		=	tcpdaemon
@@ -41,7 +41,7 @@ BININST		=	$(HOME)/bin
 LIB		=	libtcpdaemon.so
 LIBINST		=	$(HOME)/lib
 HDER		=	tcpdaemon.h
-HDERINST	=	$(HOME)/include
+HDERINST	=	$(HOME)/include/tcpdaemon
 
 ###### 编译选项
 CFLAGS		=	-I. \
@@ -56,7 +56,7 @@ CLEAN_ADDITION	=
 
 ###### 加载mktpl模板库
 # 最终目标列表
-all	:	$(OBJ) $(OBJ2) $(LIB) $(LIB2) $(NOCLEAN_OBJ) $(NOINST_OBJ) $(BIN) $(BIN2)
+all	:	$(OBJ) $(OBJ2) $(LIB) $(LIB2) $(SQL) $(NOINST_OBJ) $(BIN) $(BIN2)
 
 # 文件系统宏
 CD		=	cd
@@ -66,7 +66,7 @@ MV		=	mv -f
 MKDIR		=	mkdir -p
 
 # 预定义源文件清理删除关联宏
-_FILE_CLEAN	=	$(c_FILE_CLEAN) $(cpp_FILE_CLEAN) $(SQC_FILE_CLEAN) $(csm_FILE_CLEAN) $(c_html_FILE_CLEAN) $(cui_FILE_CLEAN) $(dtd_FILE_CLEAN) $(prt_FILE_CLEAN) $(fmd_FILE_CLEAN) $(smd_FILE_CLEAN) $(def_FILE_CLEAN) $(act_FILE_CLEAN)
+_FILE_CLEAN	=	$(c_FILE_CLEAN) $(cpp_FILE_CLEAN) $(SQC_FILE_CLEAN) $(ec_FILE_CLEAN) $(ec_FILE2_CLEAN) $(csm_FILE_CLEAN) $(c_html_FILE_CLEAN) $(cui_FILE_CLEAN) $(dtd_FILE_CLEAN) $(prt_FILE_CLEAN) $(fmd_FILE_CLEAN) $(smd_FILE_CLEAN) $(def_FILE_CLEAN) $(act_FILE_CLEAN)
 
 # 清理删除规则
 clean		:
@@ -81,27 +81,28 @@ DFTHDER		=	$(csm_FILE_DFTHDER) $(cui_FILE_DFTHDER) $(dtd_FILE_DFTHDER) $(prt_FIL
 
 # 提交安装规则
 install		:	all
+
 	@if [ -n "$(BIN)" -a -n "$(BININST)" ] ; then \
 		if [ ! -d "$(BININST)" ] ; then \
 			echo $(MKDIR) $(BININST) ; \
 			$(MKDIR) $(BININST) ; \
 		fi ; \
 		for FILE in `echo $(BIN)` ; do \
-			echo $(CP) $$FILE $(BININST)/ ; \
+			echo $(RM) $(BININST)/$$FILE ; \
 			$(RM) $(BININST)/$$FILE ; \
+			echo $(CP) $$FILE $(BININST)/ ; \
 			$(CP) $$FILE $(BININST)/ ; \
 		done \
 	fi
-
-	@if [ -n "$(LIB)" -a -n "$(LIBINST)" ] ; then \
-		if [ ! -d "$(LIBINST)" ] ; then \
-			echo $(MKDIR) $(LIBINST) ; \
-			$(MKDIR) $(LIBINST) ; \
+	@if [ -n "$(BIN2)" -a -n "$(BININST2)" ] ; then \
+		if [ ! -d "$(BININST2)" ] ; then \
+			echo $(MKDIR) $(BININST2) ; \
+			$(MKDIR) $(BININST2) ; \
 		fi ; \
-		for FILE in `echo $(LIB)` ; do \
-			echo $(CP) $$FILE $(LIBINST)/ ; \
-			$(RM) $(LIBINST)/$$FILE ; \
-			$(CP) $$FILE $(LIBINST)/ ; \
+		for FILE in `echo $(BIN2)` ; do \
+			echo $(CP) $$FILE $(BININST2)/ ; \
+			$(RM) $(BININST2)/$$FILE ; \
+			$(CP) $$FILE $(BININST2)/ ; \
 		done \
 	fi
 
@@ -111,18 +112,44 @@ install		:	all
 			$(MKDIR) $(HDERINST) ; \
 		fi ; \
 		for FILE in `echo $(HDER)` ; do \
-			echo $(CP) $$FILE $(HDERINST)/ ; \
+			echo $(RM) $(HDERINST)/$$FILE ; \
 			$(RM) $(HDERINST)/$$FILE ; \
+			echo $(CP) $$FILE $(HDERINST)/ ; \
 			$(CP) $$FILE $(HDERINST)/ ; \
+		done \
+	fi
+	@if [ -n "$(HDER2)" -a -n "$(HDERINST2)" ] ; then \
+		if [ ! -d "$(HDERINST2)" ] ; then \
+			echo $(MKDIR) $(HDERINST2) ; \
+			$(MKDIR) $(HDERINST2) ; \
+		fi ; \
+		for FILE in `echo $(HDER2)` ; do \
+			echo $(RM) $(HDERINST2)/$$FILE ; \
+			$(RM) $(HDERINST2)/$$FILE ; \
+			echo $(CP) $$FILE $(HDERINST2)/ ; \
+			$(CP) $$FILE $(HDERINST2)/ ; \
+		done \
+	fi
+
+	@if [ -n "$(DFTHDER)" -a -n "$(DFTHDERINST)" ] ; then \
+		if [ ! -d "$(DFTHDERINST)" ] ; then \
+			echo $(MKDIR) $(DFTHDERINST) ; \
+			$(MKDIR) $(DFTHDERINST) ; \
+		fi ; \
+		for FILE in `echo $(DFTHDER)` ; do \
+			echo $(RM) $(DFTHDERINST)/$$FILE ; \
+			$(RM) $(DFTHDERINST)/$$FILE ; \
+			echo $(CP) $$FILE $(DFTHDERINST)/ ; \
+			$(CP) $$FILE $(DFTHDERINST)/ ; \
 		done \
 	fi
 
 
 
 ###### 目标文件依赖关系
-tcpdaemon:	main.o tcpdaemon.o worker.o LOGC.o service.o
-	$(CC) $(ESOFLAGS) -o $@ main.o tcpdaemon.o worker.o LOGC.o service.o $(LFLAGS)
+tcpdaemon:	tcpdaemon_main.o tcpdaemon_lib.o LOGC.o
+	$(CC) $(ESOFLAGS) -o $@ tcpdaemon_main.o tcpdaemon_lib.o LOGC.o $(LFLAGS)
 
-libtcpdaemon.so: tcpdaemon.o worker.o LOGC.o service.o
-	$(CC) $(SOFLAGS) -o $@ tcpdaemon.o worker.o LOGC.o service.o $(LFLAGS)
+libtcpdaemon.so: tcpdaemon_lib.o LOGC.o
+	$(CC) $(SOFLAGS) -o $@ tcpdaemon_lib.o LOGC.o $(LFLAGS)
 

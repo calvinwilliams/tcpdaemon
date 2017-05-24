@@ -1,4 +1,5 @@
 # 此文件由makelocal.sh自动生成
+MAKEFILE_POSTFIX=.Linux
 # 此文件由makeobj.sh自动生成
 ############################################################
 # 项目名 : 
@@ -14,7 +15,7 @@ SOFLAGS		=	-shared
 ESOFLAGS	=	
 
 # c源代码文件宏及推导规则
-CC		=	gcc -g -fPIC -Wall -Werror -O2
+CC		=	gcc -g -fPIC -O2 -Wall -Werror -fno-strict-aliasing
 CC_NOWARN	=	gcc -g -fPIC -O2
 
 c_FILE_o	=	$(c_FILE:.c=.o)
@@ -29,11 +30,10 @@ c_FILE_CLEAN	=	$(c_FILE_o) $(c_FILE2_o) $(c_FILE3_o) $(c_FILE4_o) $(c_FILE5_o)
 	$(CC) $(CFLAGS) -c $<
 
 c_FILE		=	\
-			main.c \
-			tcpdaemon.c \
+			tcpdaemon_main.c \
+			tcpdaemon_lib.c \
 			worker.c \
 			LOGC.c \
-			service.c \
 
 ###### 目标文件、安装目录配置区
 BIN		=	tcpdaemon
@@ -41,7 +41,7 @@ BININST		=	$(HOME)/bin
 LIB		=	libtcpdaemon.so
 LIBINST		=	$(HOME)/lib
 HDER		=	tcpdaemon.h
-HDERINST	=	$(HOME)/include
+HDERINST	=	$(HOME)/include/tcpdaemon
 
 ###### 编译选项
 CFLAGS		=	-I. \
@@ -56,17 +56,17 @@ CLEAN_ADDITION	=
 
 ###### 加载mktpl模板库
 # 最终目标列表
-all	:	$(OBJ) $(OBJ2) $(LIB) $(LIB2) $(NOCLEAN_OBJ) $(NOINST_OBJ) $(BIN) $(BIN2)
+all	:	$(OBJ) $(OBJ2) $(LIB) $(LIB2) $(SQL) $(NOINST_OBJ) $(BIN) $(BIN2)
 
 # 文件系统宏
 CD		=	cd
 RM		=	rm -f
-CP		=	cp -f
+CP		=	cp -rf
 MV		=	mv -f
 MKDIR		=	mkdir -p
 
 # 预定义源文件清理删除关联宏
-_FILE_CLEAN	=	$(c_FILE_CLEAN) $(cpp_FILE_CLEAN) $(SQC_FILE_CLEAN) $(csm_FILE_CLEAN) $(c_html_FILE_CLEAN) $(cui_FILE_CLEAN) $(dtd_FILE_CLEAN) $(prt_FILE_CLEAN) $(fmd_FILE_CLEAN) $(smd_FILE_CLEAN) $(def_FILE_CLEAN) $(act_FILE_CLEAN) $(sml2c_FILE_CLEAN)
+_FILE_CLEAN	=	$(c_FILE_CLEAN) $(cpp_FILE_CLEAN) $(SQC_FILE_CLEAN) $(ec_FILE_CLEAN) $(ec_FILE2_CLEAN) $(csm_FILE_CLEAN) $(c_html_FILE_CLEAN) $(cui_FILE_CLEAN) $(dtd_FILE_CLEAN) $(prt_FILE_CLEAN) $(fmd_FILE_CLEAN) $(smd_FILE_CLEAN) $(def_FILE_CLEAN) $(act_FILE_CLEAN) $(sml2c_FILE_CLEAN)
 
 # 清理删除规则
 .PHONY:clean
@@ -83,44 +83,96 @@ DFTHDER		=	$(csm_FILE_DFTHDER) $(cui_FILE_DFTHDER) $(dtd_FILE_DFTHDER) $(prt_FIL
 # 提交安装规则
 .PHONY:install
 install		:	all
-ifneq ($(strip $(BIN)),)
+
 ifneq ($(strip $(BININST)),)
 	@if [ ! -d "$(BININST)" ] ; then \
 		echo $(MKDIR) $(BININST) ; \
 		$(MKDIR) $(BININST) ; \
-	fi ; \
-	for FILE in `echo $(BIN)` ; do \
-		echo $(CP) $$FILE $(BININST)/ ; \
-		$(RM) $(BININST)/$$FILE ; \
-		$(CP) $$FILE $(BININST)/ ; \
+	fi
+ifneq ($(strip $(BIN)),)
+	@for FILE in `echo $(BIN)` ; do \
+		if [ -f $(BININST)/$$FILE ] ; then \
+			echo $(RM) $(BININST)/$$FILE ; \
+			$(RM) $(BININST)/$$FILE ; \
+		fi ; \
+		if [ -f $$FILE ] ; then \
+			echo $(CP) $$FILE $(BININST)/ ; \
+			$(CP) $$FILE $(BININST)/ ; \
+		fi ; \
+	done
+endif
+endif
+ifneq ($(strip $(BININST2)),)
+	@if [ ! -d "$(BININST2)" ] ; then \
+		echo $(MKDIR) $(BININST2) ; \
+		$(MKDIR) $(BININST2) ; \
+	fi
+ifneq ($(strip $(BIN2)),)
+	@for FILE in `echo $(BIN2)` ; do \
+		if [ -f $(BININST2)/$$FILE ] ; then \
+			echo $(RM) $(BININST2)/$$FILE ; \
+			$(RM) $(BININST2)/$$FILE ; \
+		fi ; \
+		if [ -f $$FILE ] ; then \
+			echo $(CP) $$FILE $(BININST2)/ ; \
+			$(CP) $$FILE $(BININST2)/ ; \
+		fi ; \
 	done
 endif
 endif
 
-ifneq ($(strip $(LIB)),)
-ifneq ($(strip $(LIBINST)),)
-	@if [ ! -d "$(LIBINST)" ] ; then \
-		echo $(MKDIR) $(LIBINST) ; \
-		$(MKDIR) $(LIBINST) ; \
-	fi ; \
-	for FILE in `echo $(LIB)` ; do \
-		echo $(CP) $$FILE $(LIBINST)/ ; \
-		$(RM) $(LIBINST)/$$FILE ; \
-		$(CP) $$FILE $(LIBINST)/ ; \
-	done
-endif
-endif
-
-ifneq ($(strip $(HDER)),)
 ifneq ($(strip $(HDERINST)),)
 	@if [ ! -d "$(HDERINST)" ] ; then \
 		echo $(MKDIR) $(HDERINST) ; \
 		$(MKDIR) $(HDERINST) ; \
-	fi ; \
-	for FILE in `echo $(HDER)` ; do \
-		echo $(CP) $$FILE $(HDERINST)/ ; \
-		$(RM) $(HDERINST)/$$FILE ; \
-		$(CP) $$FILE $(HDERINST)/ ; \
+	fi
+ifneq ($(strip $(HDER)),)
+	@for FILE in `echo $(HDER)` ; do \
+		if [ -f $(HDERINST)/$$FILE ] ; then \
+			echo $(RM) $(HDERINST)/$$FILE ; \
+			$(RM) $(HDERINST)/$$FILE ; \
+		fi ; \
+		if [ -f $$FILE ] ; then \
+			echo $(CP) $$FILE $(HDERINST)/ ; \
+			$(CP) $$FILE $(HDERINST)/ ; \
+		fi ; \
+	done
+endif
+endif
+ifneq ($(strip $(HDERINST2)),)
+	@if [ ! -d "$(HDERINST2)" ] ; then \
+		echo $(MKDIR) $(HDERINST2) ; \
+		$(MKDIR) $(HDERINST2) ; \
+	fi
+ifneq ($(strip $(HDER2)),)
+	@for FILE in `echo $(HDER2)` ; do \
+		if [ -f $(HDERINST2)/$$FILE ] ; then \
+			echo $(RM) $(HDERINST2)/$$FILE ; \
+			$(RM) $(HDERINST2)/$$FILE ; \
+		fi ; \
+		if [ -f $$FILE ] ; then \
+			echo $(CP) $$FILE $(HDERINST2)/ ; \
+			$(CP) $$FILE $(HDERINST2)/ ; \
+		fi ; \
+	done
+endif
+endif
+
+ifneq ($(strip $(DFTHDERINST)),)
+	@if [ ! -d "$(DFTHDERINST)" ] ; then \
+		echo $(MKDIR) $(DFTHDERINST) ; \
+		$(MKDIR) $(DFTHDERINST) ; \
+	fi
+ifneq ($(strip $(DFTHDER)),)
+	@for FILE in `echo $(DFTHDER)` ; do \
+		if [ -f $(DFTHDERINST)/$$FILE ] ; then \
+			echo $(RM) $(DFTHDERINST)/$$FILE ; \
+			$(RM) $(DFTHDERINST)/$$FILE ; \
+		fi ; \
+		if [ -f $$FILE ] ; then \
+			echo $(CP) $$FILE $(DFTHDERINST)/ ; \
+			$(CP) $$FILE $(DFTHDERINST)/ ; \
+		fi ; \
 	done
 endif
 endif
@@ -128,9 +180,9 @@ endif
 
 
 ###### 目标文件依赖关系
-tcpdaemon:	main.o tcpdaemon.o worker.o LOGC.o service.o
-	$(CC) $(ESOFLAGS) -o $@ main.o tcpdaemon.o worker.o LOGC.o service.o $(LFLAGS)
+tcpdaemon:	tcpdaemon_main.o tcpdaemon_lib.o LOGC.o
+	$(CC) $(ESOFLAGS) -o $@ tcpdaemon_main.o tcpdaemon_lib.o LOGC.o $(LFLAGS)
 
-libtcpdaemon.so: tcpdaemon.o worker.o LOGC.o service.o
-	$(CC) $(SOFLAGS) -o $@ tcpdaemon.o worker.o LOGC.o service.o $(LFLAGS)
+libtcpdaemon.so: tcpdaemon_lib.o LOGC.o
+	$(CC) $(SOFLAGS) -o $@ tcpdaemon_lib.o LOGC.o $(LFLAGS)
 
