@@ -90,7 +90,7 @@ struct TcpdaemonEntryParameter
 	int		log_level ;	/* 日志等级，不设置则缺省DEBUG等级 */
 	
 	int		call_mode ;	/* 应用接口模式
-					   TCPDAEMON_CALLMODE_DAEMON:主守护模式
+					   TCPDAEMON_CALLMODE_CALLBACK:主守护模式
 					   TCPDAEMON_CALLMODE_MAIN:函数调用模式
 					*/
 	
@@ -102,7 +102,7 @@ struct TcpdaemonEntryParameter
 	long		max_process_count ;	/* 当为领导者-追随者预派生进程池模型时为工作进程池进程数量，当为即时派生进程模型时为最大子进程数量 */
 	long		max_requests_per_process ;	/* 当为领导者-追随者预派生进程池模型时为单个工作进程最大处理应用次数 */
 	char		ip[ 20 + 1 ] ;	/* 本地侦听IP */
-	long		port ;	/* 本地侦听PORT */
+	int		port ;	/* 本地侦听PORT */
 	char		so_pathfilename[ MAXLEN_FILENAME + 1 ] ;	/* 用绝对路径或相对路径表达的应用动态库文件名 */
 	
 	char		work_user[ 64 + 1 ] ;

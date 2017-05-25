@@ -13,7 +13,7 @@
 extern "C" {
 #endif
 
-#define TCPDAEMON_CALLMODE_DAEMON		1 /* 运行模式1:主守护模式 */
+#define TCPDAEMON_CALLMODE_CALLBACK		1 /* 运行模式1:主守护模式 */
 
 #include "LOGC.h"
 

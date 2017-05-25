@@ -273,7 +273,7 @@ static int InitDaemonEnv( struct TcpdaemonServerEnvirment *p_env )
 	p_env->listen_sock = -1 ;
 	
 	/* 得到通讯数据协议及应用处理回调函数指针 */
-	if( p_env->p_para->call_mode == TCPDAEMON_CALLMODE_DAEMON )
+	if( p_env->p_para->call_mode == TCPDAEMON_CALLMODE_CALLBACK )
 	{
 #if ( defined __linux__ ) || ( defined __unix )
 		p_env->so_handle = dlopen( p_env->p_para->so_pathfilename , RTLD_LAZY ) ;
@@ -366,7 +366,7 @@ static int InitDaemonEnv( struct TcpdaemonServerEnvirment *p_env )
 /* 清理守护环境 */
 static int CleanDaemonEnv( struct TcpdaemonServerEnvirment *p_env )
 {
-	if( p_env->p_para->call_mode == TCPDAEMON_CALLMODE_DAEMON )
+	if( p_env->p_para->call_mode == TCPDAEMON_CALLMODE_CALLBACK )
 	{
 		if( p_env->so_handle )
 		{

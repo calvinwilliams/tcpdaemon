@@ -75,7 +75,7 @@ int ParseCommandParameter( int argc , char *argv[] , struct TcpdaemonEntryParame
 				return 1;
 			}
 			strncpy( p_para->ip , argv[c+1] , p - argv[c+1] );
-			p_para->port = atol(p+1) ;
+			p_para->port = atoi(p+1) ;
 			c++;
 		}
 		else if( STRCMP( argv[c] , == , "-s" ) && c + 1 < argc )
@@ -157,7 +157,7 @@ int ParseCommandParameter( int argc , char *argv[] , struct TcpdaemonEntryParame
 #if ( defined __linux__ ) || ( defined __unix )
 
 /* 转换为守护进程 */
-static int ConvertToDaemon()
+static int BindDaemonServer()
 {
 	pid_t		pid ;
 	int		sig ;
@@ -202,6 +202,7 @@ int main( int argc , char *argv[] )
 	struct TcpdaemonEntryParameter	para ;
 	
 	int				nret = 0 ;
+	
 	if( argc == 1 )
 	{
 		usage();
@@ -210,7 +211,7 @@ int main( int argc , char *argv[] )
 	
 	/* 填充入口参数结构 */
 	memset( & para , 0x00 , sizeof(struct TcpdaemonEntryParameter) );
-	para.call_mode = TCPDAEMON_CALLMODE_DAEMON ;
+	para.call_mode = TCPDAEMON_CALLMODE_CALLBACK ;
 	para.max_process_count = 0 ;
 	para.max_requests_per_process = 0 ;
 	para.log_level = LOGLEVEL_INFO ;
@@ -218,21 +219,17 @@ int main( int argc , char *argv[] )
 	/* 解析命令行参数 */
 	nret = ParseCommandParameter( argc , argv , & para ) ;
 	if( nret )
-	{
 		return nret;
-	}
 	
 	/* 检查命令行参数 */
 	nret = CheckCommandParameter( & para ) ;
 	if( nret )
-	{
 		return nret;
-	}
 	
 	if( para.daemon_level == 1 )
 	{
 		/* 转换为守护进程 */
-		nret = ConvertToDaemon() ;
+		nret = BindDaemonServer() ;
 		if( nret )
 		{
 			ErrorLog( __FILE__ , __LINE__ , "convert to daemon failed[%d]" , nret );
@@ -506,7 +503,7 @@ int main( int argc , char *argv[] )
 	
 	/* 填充入口参数结构 */
 	memset( & para , 0x00 , sizeof(struct TcpdaemonEntryParameter) );
-	para.call_mode = TCPDAEMON_CALLMODE_DAEMON ;
+	para.call_mode = TCPDAEMON_CALLMODE_CALLBACK ;
 	para.max_process_count = 0 ;
 	para.max_requests_per_process = 0 ;
 	para.log_level = LOGLEVEL_INFO ;
@@ -514,16 +511,12 @@ int main( int argc , char *argv[] )
 	/* 解析命令行参数 */
 	nret = ParseCommandParameter( argc , argv , & para ) ;
 	if( nret )
-	{
 		return nret;
-	}
 	
 	/* 检查命令行参数 */
 	nret = CheckCommandParameter( & para ) ;
 	if( nret )
-	{
 		return nret;
-	}
 	
 	if( para.install_winservice )
 	{
