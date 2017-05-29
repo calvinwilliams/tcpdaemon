@@ -8,32 +8,36 @@
  * Licensed under the LGPL v2.1, see the file LICENSE in base directory.
  */
 
-void usage()
+static void usage()
 {
-	printf( "USAGE : tcpdaemon -m LF -c process_count [ -n max_requests_per_process ] -l ip:port -s so_pathfilename\n" );
-	printf( "                  -m IF [ -c max_process_count ] -l ip:port -s so_pathfilename\n" );
+#if ( defined __linux__ ) || ( defined __unix )
+	printf( "USAGE : tcpdaemon -m IF -l ip:port -s so_pathfilename [ -c max_process_count ]\n" );
+	printf( "                  -m LF -l ip:port -s so_pathfilename -c process_count [ -n max_requests_per_process ]\n" );
+#elif ( defined _WIN32 )
+	printf( "USAGE : tcpdaemon -m WIN-TLF -l ip:port -s so_pathfilename -c process_count [ -n max_requests_per_process ]\n" );
+#endif
+	
 	printf( "        other options :\n" );
 	printf( "                  -v\n" );
 	printf( "                  [ --daemon-level ]\n" );
-#if ( defined __linux__ ) || ( defined __unix )
-	printf( "                  [ --work-user work_user ]\n" );
-#endif
 	printf( "                  [ --work-path work_path ]\n" );
 	printf( "                  [ --logfile log_pathfilename --loglevel-(debug|info|warn|error|fatal) ]\n" );
 	printf( "                  [ --tcp-nodelay ] [ --tcp-linger linger ]\n" );
-#if ( defined _WIN32 )
+#if ( defined __linux__ ) || ( defined __unix )
+	printf( "                  [ --work-user work_user ]\n" );
+#elif ( defined _WIN32 )
 	printf( "                  [ --install-winservice ] [ --uninstall-winservice ]\n" );
 #endif
 }
 
-void version()
+static void version()
 {
 	printf( "tcpdaemon v%s\n" , __TCPDAEMON_VERSION );
-	printf( "Copyright by calvin<calvinwilliams@163.com> 2014,2015,2016,2017\n" );
+	printf( "Copyright by calvin<calvinwilliams@163.com> 2014~2017\n" );
 }
 
 /* 解析命令行参数 */
-int ParseCommandParameter( int argc , char *argv[] , struct TcpdaemonEntryParameter *p_para )
+static int ParseCommandParameter( int argc , char *argv[] , struct TcpdaemonEntryParameter *p_para )
 {
 	int		c ;
 	
@@ -157,10 +161,9 @@ int ParseCommandParameter( int argc , char *argv[] , struct TcpdaemonEntryParame
 #if ( defined __linux__ ) || ( defined __unix )
 
 /* 转换为守护进程 */
-static int BindDaemonServer()
+static int BindDaemonServer( func_tcpdaemon *tcpdaemon , struct TcpdaemonEntryParameter	*p_para )
 {
 	pid_t		pid ;
-	int		sig ;
 	
 	pid = fork() ;
 	if( pid == -1 )
@@ -189,56 +192,7 @@ static int BindDaemonServer()
 	chdir("/tmp");
 	umask( 0 ) ;
 	
-	for( sig = 0 ; sig < 30 ; sig++ )
-	{
-		signal( sig , SIG_IGN );
-	}
-	
-	return 0;
-}
-
-int main( int argc , char *argv[] )
-{
-	struct TcpdaemonEntryParameter	para ;
-	
-	int				nret = 0 ;
-	
-	if( argc == 1 )
-	{
-		usage();
-		exit(0);
-	}
-	
-	/* 填充入口参数结构 */
-	memset( & para , 0x00 , sizeof(struct TcpdaemonEntryParameter) );
-	para.call_mode = TCPDAEMON_CALLMODE_CALLBACK ;
-	para.max_process_count = 0 ;
-	para.max_requests_per_process = 0 ;
-	para.log_level = LOGLEVEL_INFO ;
-	
-	/* 解析命令行参数 */
-	nret = ParseCommandParameter( argc , argv , & para ) ;
-	if( nret )
-		return nret;
-	
-	/* 检查命令行参数 */
-	nret = CheckCommandParameter( & para ) ;
-	if( nret )
-		return nret;
-	
-	if( para.daemon_level == 1 )
-	{
-		/* 转换为守护进程 */
-		nret = BindDaemonServer() ;
-		if( nret )
-		{
-			ErrorLog( __FILE__ , __LINE__ , "convert to daemon failed[%d]" , nret );
-			return nret;
-		}
-	}
-	
-	/* 调用tcpdaemon函数 */
-	return -tcpdaemon( & para );
+	return tcpdaemon( p_para );
 }
 
 #elif ( defined _WIN32 )
@@ -470,12 +424,11 @@ static int control( long control_status )
 	return 0;
 }
 
+#endif
+
 int main( int argc , char *argv[] )
 {
 	struct TcpdaemonEntryParameter	para ;
-	
-	char				command_line[ 256 + 1 ] ;
-	long				c , len ;
 	
 	int				nret = 0 ;
 	
@@ -485,6 +438,7 @@ int main( int argc , char *argv[] )
 		exit(0);
 	}
 	
+#if ( defined _WIN32 )
 	if( argc == 1 + 1 && STRCMP( argv[1] , == , "--uninstall-winservice" ) )
 	{
 		/* 卸载WINDOWS服务 */
@@ -500,6 +454,7 @@ int main( int argc , char *argv[] )
 		
 		return 0;
 	}
+#endif
 	
 	/* 填充入口参数结构 */
 	memset( & para , 0x00 , sizeof(struct TcpdaemonEntryParameter) );
@@ -513,13 +468,12 @@ int main( int argc , char *argv[] )
 	if( nret )
 		return nret;
 	
-	/* 检查命令行参数 */
-	nret = CheckCommandParameter( & para ) ;
-	if( nret )
-		return nret;
-	
+#if ( defined _WIN32 )
 	if( para.install_winservice )
 	{
+		long		c , len ;
+		char		command_line[ 256 + 1 ] ;
+		
 		/* 安装WINDOWS服务 */
 		memset( command_line , 0x00 , sizeof(command_line) );
 		len = 0 ;
@@ -546,9 +500,26 @@ int main( int argc , char *argv[] )
 		
 		return 0;
 	}
+#endif
 	
 	if( para.daemon_level == 1 )
 	{
+#if ( defined __unix ) || ( defined __linux__ )
+		/* 转换为守护进程 */
+		nret = BindDaemonServer( & tcpdaemon , & para ) ;
+		if( nret )
+		{
+			ErrorLog( __FILE__ , __LINE__ , "convert to daemon failed[%d]" , nret );
+			return nret;
+		}
+		else
+		{
+			return 0;
+		}
+#elif ( defined _WIN32 )
+		long		c , len ;
+		char		command_line[ 256 + 1 ] ;
+		
 		/* 父进程，转化为服务 */
 		memset( command_line , 0x00 , sizeof(command_line) );
 		len = SNPRINTF( command_line , sizeof(command_line) , "%s" , "tcpdaemon.exe" ) ;
@@ -564,9 +535,23 @@ int main( int argc , char *argv[] )
 		}
 		
 		nret = BindDaemonServer( "TcpDaemon" , monitor , command_line , & control ) ;
+		if( nret )
+		{
+			ErrorLog( __FILE__ , __LINE__ , "convert to daemon failed[%d]" , nret );
+			return nret;
+		}
+		else
+		{
+			return 0;
+		}
+#endif
 	}
 	else
 	{
+#if ( defined __unix ) || ( defined __linux__ )
+		/* 调用tcpdaemon函数 */
+		return -tcpdaemon( & para );
+#elif ( defined _WIN32 )
 		/* 子进程，干活 */
 		{
 		WSADATA		wsd;
@@ -576,11 +561,8 @@ int main( int argc , char *argv[] )
 		
 		/* 调用tcpdaemon函数 */
 		nret = tcpdaemon( & para ) ;
-		
 		WSACleanup();
-	}
-	
-	return -nret;
-}
-
+		retutn -nret;
 #endif
+	}
+}

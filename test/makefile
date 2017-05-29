@@ -16,11 +16,11 @@ NOINST_OBJ	=	testso.so test
 
 ###### 编译选项
 CFLAGS		=	-I. \
-			-I$(HOME)/exinc/tcpdaemon \
+			-I$(HOME)/include/tcpdaemon \
 
 ###### 链接选项
 LFLAGS		=	-L. \
-			-L$(HOME)/exlib \
+			-L$(HOME)/lib \
 
 ###### 额外宏定义区
 CLEAN_ADDITION	=

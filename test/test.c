@@ -37,17 +37,17 @@ int tcpmain( void *param_tcpmain , int sock , struct sockaddr *addr )
 
 int main()
 {
-	struct TcpdaemonEntryParam	ep ;
+	struct TcpdaemonEntryParameter	ep ;
 	
-	memset( & ep , 0x00 , sizeof(struct TcpdaemonEntryParam) );
+	memset( & ep , 0x00 , sizeof(struct TcpdaemonEntryParameter) );
 	ep.call_mode = TCPDAEMON_CALLMODE_MAIN ;
-	/* strcpy( ep.server_model , "LF" ); */
-	strcpy( ep.server_model , "WIN-TLF" );
+	strcpy( ep.server_model , "LF" );
+	/* strcpy( ep.server_model , "WIN-TLF" ); */
 	ep.max_process_count = 10 ;
 	strcpy( ep.ip , "0" );
 	ep.port = 7879 ;
-	/* strcpy( ep.so_pathfilename , "testso.so" ); */
-	strcpy( ep.so_pathfilename , "test\\Debug\\testso.dll" );
+	strcpy( ep.so_pathfilename , "testso.so" );
+	/* strcpy( ep.so_pathfilename , "test\\Debug\\testso.dll" ); */
 	ep.pfunc_tcpmain = & tcpmain ;
 	ep.param_tcpmain = NULL ;
 	ep.log_level = LOGLEVEL_INFO ;

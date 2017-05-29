@@ -9,73 +9,15 @@
  * Licensed under the LGPL v2.1, see the file LICENSE in base directory.
  */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#define TCPDAEMON_CALLMODE_CALLBACK		1 /* 运行模式1:主守护模式 */
-
 #include "LOGC.h"
 
 #include "tcpdaemon.h"
 
-/* 公共宏 */
-#ifndef MAXLEN_FILENAME
-#define MAXLEN_FILENAME			256
+#ifdef __cplusplus
+extern "C" {
 #endif
 
-#ifndef STRCMP
-#define STRCMP(_a_,_C_,_b_) ( strcmp(_a_,_b_) _C_ 0 )
-#define STRNCMP(_a_,_C_,_b_,_n_) ( strncmp(_a_,_b_,_n_) _C_ 0 )
-#endif
-
-#ifndef MEMCMP
-#define MEMCMP(_a_,_C_,_b_,_n_) ( memcmp(_a_,_b_,_n_) _C_ 0 )
-#endif
-
-/* 跨平台宏 */
-#if ( defined __linux__ ) || ( defined __unix )
-#define RECV			recv
-#define SEND			send
-#elif ( defined _WIN32 )
-#define RECV			recv
-#define SEND			send
-#endif
-
-/* 跨平台宏 */
-#if ( defined __linux__ ) || ( defined __unix )
-#define PID_T			pid_t
-#define TID_T			pthread_t
-#define THANDLE_T		pthread_t
-#define OBJECTHANDLE		void *
-#define ERRNO			errno
-#define DLERROR			dlerror()
-#define OPEN			open
-#define CLOSE			close
-#define CLOSESOCKET		close
-#define VSNPRINTF		vsnprintf
-#define SNPRINTF		snprintf
-#define SOCKLEN_T		socklen_t
-#define PIPE(_pipes_)		pipe(_pipes_)
-#define SLEEP(_seconds_)	sleep(_seconds_)
-#define CHDIR			chdir
-#elif ( defined _WIN32 )
-#define PID_T			long
-#define TID_T			unsigned long
-#define THANDLE_T		HANDLE
-#define OBJECTHANDLE		HINSTANCE
-#define ERRNO			GetLastError()
-#define DLERROR			""
-#define OPEN			_open
-#define CLOSE			_close
-#define CLOSESOCKET		closesocket
-#define VSNPRINTF		_vsnprintf
-#define SNPRINTF		_snprintf
-#define SOCKLEN_T		long
-#define PIPE(_pipes_)		_pipe((_pipes_),256,_O_BINARY)
-#define SLEEP(_seconds_)	Sleep(_seconds_*1000)
-#define CHDIR			_chdir
-#endif
+#define TCPDAEMON_CALLMODE_CALLBACK		1 /* 运行模式:主守护模式 */
 
 /* 信号量值结构 */
 union semun
@@ -119,8 +61,6 @@ struct TcpdaemonServerEnvirment
 	THANDLE_T			*thandles ;
 	TID_T				*tids ;
 } ;
-
-int CheckCommandParameter( struct TcpdaemonEntryParameter *p_para );
 
 #ifdef __cplusplus
 }

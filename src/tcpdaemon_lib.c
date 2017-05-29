@@ -21,173 +21,6 @@ static CRITICAL_SECTION		accept_critical_section; /* accept临界区 */
 
 #define MAX_INT(_a_,_b_)	((_a_)>(_b_)?(_a_):(_b_))
 
-#if ( defined __unix ) || ( defined __linux__ )
-static unsigned int worker( void *pv )
-#elif ( defined _WIN32 )
-static unsigned int WINAPI worker( void *pv )
-#endif
-{
-	struct TcpdaemonServerEnvirment	*p_env = (struct TcpdaemonServerEnvirment *)pv ;
-#if ( defined __linux__ ) || ( defined __unix )
-	struct sembuf		sb ;
-#endif
-	fd_set			readfds ;
-	
-	struct sockaddr		accept_addr ;
-	SOCKLEN_T		accept_addrlen ;
-	int			accept_sock ;
-	
-	int			nret = 0 ;
-	
-	/* 设置日志环境 */
-	SetLogFile( p_env->p_para->log_pathfilename );
-	SetLogLevel( p_env->p_para->log_level );
-	
-	while(1)
-	{
-		DebugLog( __FILE__ , __LINE__ , "WORKER(%ld) | waiting for entering accept mutex" , p_env->index );
-		
-#if ( defined __linux__ ) || ( defined __unix )
-		/* 进入临界区 */
-		memset( & sb , 0x00 , sizeof(struct sembuf) );
-		sb.sem_num = 0 ;
-		sb.sem_op = -1 ;
-		sb.sem_flg = SEM_UNDO ;
-		nret = semop( p_env->accept_mutex , & sb , 1 ) ;
-		if( nret == -1 )
-		{
-			ErrorLog( __FILE__ , __LINE__ , "WORKER(%ld) | enter accept mutex failed , errno[%d]" , p_env->index , ERRNO );
-			return 1;
-		}
-#elif ( defined _WIN32 )
-		EnterCriticalSection( & accept_critical_section );
-#endif
-		DebugLog( __FILE__ , __LINE__ , "WORKER(%ld) | enter accept mutex ok" , p_env->index );
-		
-		/* 监控侦听socket或存活管道事件 */
-		FD_ZERO( & readfds );
-		FD_SET( p_env->listen_sock , & readfds );
-#if ( defined __linux__ ) || ( defined __unix )
-		FD_SET( p_env->alive_pipes[p_env->index-1].fd[0] , & readfds );
-		nret = select( MAX_INT(p_env->listen_sock,p_env->alive_pipes[p_env->index-1].fd[0])+1 , & readfds , NULL , NULL , NULL ) ;
-#elif ( defined _WIN32 )
-		nret = select( p_env->listen_sock+1 , & readfds , NULL , NULL , NULL ) ;
-#endif
-		if( nret == -1 )
-		{	
-			ErrorLog( __FILE__ , __LINE__ , "WORKER(%ld) | select failed , errno[%d]" , p_env->index , ERRNO );
-			break;
-		}
-		
-#if ( defined __linux__ ) || ( defined __unix )
-		if( FD_ISSET( p_env->alive_pipes[p_env->index-1].fd[0] , & readfds ) )
-		{
-			DebugLog( __FILE__ , __LINE__ , "WORKER(%ld) | alive_pipe received quit command" , p_env->index );
-			break;
-		}
-#endif
-		
-		/* 接受新客户端连接 */
-		accept_addrlen = sizeof(struct sockaddr) ;
-		memset( & accept_addr , 0x00 , accept_addrlen );
-		accept_sock = accept( p_env->listen_sock , & accept_addr , & accept_addrlen ) ;
-		if( accept_sock == -1 )
-		{
-			ErrorLog( __FILE__ , __LINE__ , "WORKER(%ld) | accept failed , errno[%d]" , p_env->index , ERRNO );
-			break;
-		}
-		else
-		{
-			DebugLog( __FILE__ , __LINE__ , "WORKER(%ld) | accept ok , [%d]accept[%d]" , p_env->index , p_env->listen_sock , accept_sock );
-		}
-		
-		if( p_env->p_para->tcp_nodelay > 0 )
-		{
-			setsockopt( accept_sock , IPPROTO_TCP , TCP_NODELAY , (void*) & (p_env->p_para->tcp_nodelay) , sizeof(int) );
-		}
-		
-		if( p_env->p_para->tcp_linger > 0 )
-		{
-			struct linger	lg ;
-			lg.l_onoff = 1 ;
-			lg.l_linger = p_env->p_para->tcp_linger - 1 ;
-			setsockopt( accept_sock , SOL_SOCKET , SO_LINGER , (void *) & lg , sizeof(struct linger) );
-		}
-		
-#if ( defined __linux__ ) || ( defined __unix )
-		/* 离开临界区 */
-		memset( & sb , 0x00 , sizeof(struct sembuf) );
-		sb.sem_num = 0 ;
-		sb.sem_op = 1 ;
-		sb.sem_flg = SEM_UNDO ;
-		nret = semop( p_env->accept_mutex , & sb , 1 ) ;
-		if( nret == -1 )
-		{
-			ErrorLog( __FILE__ , __LINE__ , "WORKER(%ld) | leave accept mutex failed , errno[%d]" , p_env->index , ERRNO );
-			return 1;
-		}
-#elif ( defined _WIN32 )
-		LeaveCriticalSection( & accept_critical_section );
-#endif
-		DebugLog( __FILE__ , __LINE__ , "WORKER(%ld) | leave accept mutex ok" , p_env->index );
-		
-		/* 调用通讯数据协议及应用处理回调函数 */
-		InfoLog( __FILE__ , __LINE__ , "WORKER(%ld) | call tcpmain sock[%d]" , p_env->index , accept_sock );
-		nret = p_env->pfunc_tcpmain( p_env->p_para->param_tcpmain , accept_sock , & accept_addr ) ;
-		if( nret < 0 )
-		{
-			ErrorLog( __FILE__ , __LINE__ , "WORKER(%ld) | tcpmain return[%d]" , p_env->index , nret );
-			return 1;
-		}
-		else if( nret > 0 )
-		{
-			WarnLog( __FILE__ , __LINE__ , "WORKER(%ld) | tcpmain return[%d]" , p_env->index , nret );
-		}
-		else
-		{
-			InfoLog( __FILE__ , __LINE__ , "WORKER(%ld) | tcpmain return[%d]" , p_env->index , nret );
-		}
-		
-		/* 关闭客户端连接 */
-		CLOSESOCKET( accept_sock );
-		DebugLog( __FILE__ , __LINE__ , "WORKER(%ld) | close[%d]" , p_env->index , accept_sock );
-		
-		/* 检查工作进程处理数量 */
-		p_env->requests_per_process++;
-		if( p_env->p_para->max_requests_per_process != 0 && p_env->requests_per_process >= p_env->p_para->max_requests_per_process )
-		{
-			InfoLog( __FILE__ , __LINE__ , "WORKER(%ld) | maximum number of processing[%ld][%ld] , ending" , p_env->index , p_env->requests_per_process , p_env->p_para->max_requests_per_process );
-			return 1;
-		}
-	}
-	
-#if ( defined __linux__ ) || ( defined __unix )
-	/* 最终离开临界区 */
-	memset( & sb , 0x00 , sizeof(struct sembuf) );
-	sb.sem_num = 0 ;
-	sb.sem_op = 1 ;
-	sb.sem_flg = SEM_UNDO ;
-	nret = semop( p_env->accept_mutex , & sb , 1 ) ;
-	if( nret == -1 )
-	{
-		InfoLog( __FILE__ , __LINE__ , "WORKER(%ld) | leave accept mutex finally failed , errno[%d]" , p_env->index , ERRNO );
-		return 1;
-	}
-#elif ( defined _WIN32 )
-	LeaveCriticalSection( & accept_critical_section );
-#endif
-	DebugLog( __FILE__ , __LINE__ , "WORKER(%ld) | leave accept mutex finally ok" , p_env->index );
-	
-#if ( defined __linux__ ) || ( defined __unix )
-	return 0;
-#elif ( defined _WIN32 )
-	free( p_env );
-	_endthreadex(0);
-	return 0;
-#endif
-}
-
-
 /* 检查命令行参数 */
 int CheckCommandParameter( struct TcpdaemonEntryParameter *p_para )
 {
@@ -200,8 +33,8 @@ int CheckCommandParameter( struct TcpdaemonEntryParameter *p_para )
 	{
 		if( p_para->max_process_count <= 0 )
 		{
-			ErrorLog( __FILE__ , __LINE__ , "worker poll size[%ld] invalid" , p_para->max_process_count );
-			return 1;
+			ErrorLog( __FILE__ , __LINE__ , "tcpdaemon_LF_worker poll size[%ld] invalid" , p_para->max_process_count );
+			return -1;
 		}
 		
 		return 0;
@@ -211,8 +44,8 @@ int CheckCommandParameter( struct TcpdaemonEntryParameter *p_para )
 	{
 		if( p_para->max_process_count <= 0 )
 		{
-			ErrorLog( __FILE__ , __LINE__ , "worker poll size[%ld] invalid" , p_para->max_process_count );
-			return 1;
+			ErrorLog( __FILE__ , __LINE__ , "tcpdaemon_LF_worker poll size[%ld] invalid" , p_para->max_process_count );
+			return -1;
 		}
 		
 		return 0;
@@ -220,7 +53,7 @@ int CheckCommandParameter( struct TcpdaemonEntryParameter *p_para )
 #endif
 	
 	ErrorLog( __FILE__ , __LINE__ , "server mode[%s] invalid" , p_para->server_model );
-	return 1;
+	return -2;
 }
 
 struct TcpdaemonServerEnvirment *DuplicateServerEnv( struct TcpdaemonServerEnvirment *p_env )
@@ -264,6 +97,172 @@ void sigproc_SIGCHLD( int signo )
 }
 
 #endif
+
+#if ( defined __unix ) || ( defined __linux__ )
+static unsigned int tcpdaemon_LF_worker( void *pv )
+#elif ( defined _WIN32 )
+static unsigned int WINAPI tcpdaemon_LF_worker( void *pv )
+#endif
+{
+	struct TcpdaemonServerEnvirment	*p_env = (struct TcpdaemonServerEnvirment *)pv ;
+#if ( defined __linux__ ) || ( defined __unix )
+	struct sembuf		sb ;
+#endif
+	fd_set			readfds ;
+	
+	struct sockaddr		accept_addr ;
+	SOCKLEN_T		accept_addrlen ;
+	int			accept_sock ;
+	
+	int			nret = 0 ;
+	
+	/* 设置日志环境 */
+	SetLogFile( p_env->p_para->log_pathfilename );
+	SetLogLevel( p_env->p_para->log_level );
+	
+	while(1)
+	{
+		DebugLog( __FILE__ , __LINE__ , "tcpdaemon_LF_worker(%ld) | waiting for entering accept mutex" , p_env->index );
+		
+#if ( defined __linux__ ) || ( defined __unix )
+		/* 进入临界区 */
+		memset( & sb , 0x00 , sizeof(struct sembuf) );
+		sb.sem_num = 0 ;
+		sb.sem_op = -1 ;
+		sb.sem_flg = SEM_UNDO ;
+		nret = semop( p_env->accept_mutex , & sb , 1 ) ;
+		if( nret == -1 )
+		{
+			ErrorLog( __FILE__ , __LINE__ , "tcpdaemon_LF_worker(%ld) | enter accept mutex failed , errno[%d]" , p_env->index , ERRNO );
+			return 1;
+		}
+#elif ( defined _WIN32 )
+		EnterCriticalSection( & accept_critical_section );
+#endif
+		DebugLog( __FILE__ , __LINE__ , "tcpdaemon_LF_worker(%ld) | enter accept mutex ok" , p_env->index );
+		
+		/* 监控侦听socket或存活管道事件 */
+		FD_ZERO( & readfds );
+		FD_SET( p_env->listen_sock , & readfds );
+#if ( defined __linux__ ) || ( defined __unix )
+		FD_SET( p_env->alive_pipes[p_env->index-1].fd[0] , & readfds );
+		nret = select( MAX_INT(p_env->listen_sock,p_env->alive_pipes[p_env->index-1].fd[0])+1 , & readfds , NULL , NULL , NULL ) ;
+#elif ( defined _WIN32 )
+		nret = select( p_env->listen_sock+1 , & readfds , NULL , NULL , NULL ) ;
+#endif
+		if( nret == -1 )
+		{	
+			ErrorLog( __FILE__ , __LINE__ , "tcpdaemon_LF_worker(%ld) | select failed , errno[%d]" , p_env->index , ERRNO );
+			break;
+		}
+		
+#if ( defined __linux__ ) || ( defined __unix )
+		if( FD_ISSET( p_env->alive_pipes[p_env->index-1].fd[0] , & readfds ) )
+		{
+			DebugLog( __FILE__ , __LINE__ , "tcpdaemon_LF_worker(%ld) | alive_pipe received quit command" , p_env->index );
+			break;
+		}
+#endif
+		
+		/* 接受新客户端连接 */
+		accept_addrlen = sizeof(struct sockaddr) ;
+		memset( & accept_addr , 0x00 , accept_addrlen );
+		accept_sock = accept( p_env->listen_sock , & accept_addr , & accept_addrlen ) ;
+		if( accept_sock == -1 )
+		{
+			ErrorLog( __FILE__ , __LINE__ , "tcpdaemon_LF_worker(%ld) | accept failed , errno[%d]" , p_env->index , ERRNO );
+			break;
+		}
+		else
+		{
+			DebugLog( __FILE__ , __LINE__ , "tcpdaemon_LF_worker(%ld) | accept ok , [%d]accept[%d]" , p_env->index , p_env->listen_sock , accept_sock );
+		}
+		
+		if( p_env->p_para->tcp_nodelay > 0 )
+		{
+			setsockopt( accept_sock , IPPROTO_TCP , TCP_NODELAY , (void*) & (p_env->p_para->tcp_nodelay) , sizeof(int) );
+		}
+		
+		if( p_env->p_para->tcp_linger > 0 )
+		{
+			struct linger	lg ;
+			lg.l_onoff = 1 ;
+			lg.l_linger = p_env->p_para->tcp_linger - 1 ;
+			setsockopt( accept_sock , SOL_SOCKET , SO_LINGER , (void *) & lg , sizeof(struct linger) );
+		}
+		
+#if ( defined __linux__ ) || ( defined __unix )
+		/* 离开临界区 */
+		memset( & sb , 0x00 , sizeof(struct sembuf) );
+		sb.sem_num = 0 ;
+		sb.sem_op = 1 ;
+		sb.sem_flg = SEM_UNDO ;
+		nret = semop( p_env->accept_mutex , & sb , 1 ) ;
+		if( nret == -1 )
+		{
+			ErrorLog( __FILE__ , __LINE__ , "tcpdaemon_LF_worker(%ld) | leave accept mutex failed , errno[%d]" , p_env->index , ERRNO );
+			return 1;
+		}
+#elif ( defined _WIN32 )
+		LeaveCriticalSection( & accept_critical_section );
+#endif
+		DebugLog( __FILE__ , __LINE__ , "tcpdaemon_LF_worker(%ld) | leave accept mutex ok" , p_env->index );
+		
+		/* 调用通讯数据协议及应用处理回调函数 */
+		InfoLog( __FILE__ , __LINE__ , "tcpdaemon_LF_worker(%ld) | call tcpmain sock[%d]" , p_env->index , accept_sock );
+		nret = p_env->pfunc_tcpmain( p_env->p_para->param_tcpmain , accept_sock , & accept_addr ) ;
+		if( nret < 0 )
+		{
+			ErrorLog( __FILE__ , __LINE__ , "tcpdaemon_LF_worker(%ld) | tcpmain return[%d]" , p_env->index , nret );
+			return 1;
+		}
+		else if( nret > 0 )
+		{
+			WarnLog( __FILE__ , __LINE__ , "tcpdaemon_LF_worker(%ld) | tcpmain return[%d]" , p_env->index , nret );
+		}
+		else
+		{
+			InfoLog( __FILE__ , __LINE__ , "tcpdaemon_LF_worker(%ld) | tcpmain return[%d]" , p_env->index , nret );
+		}
+		
+		/* 关闭客户端连接 */
+		CLOSESOCKET( accept_sock );
+		DebugLog( __FILE__ , __LINE__ , "tcpdaemon_LF_worker(%ld) | close[%d]" , p_env->index , accept_sock );
+		
+		/* 检查工作进程处理数量 */
+		p_env->requests_per_process++;
+		if( p_env->p_para->max_requests_per_process != 0 && p_env->requests_per_process >= p_env->p_para->max_requests_per_process )
+		{
+			InfoLog( __FILE__ , __LINE__ , "tcpdaemon_LF_worker(%ld) | maximum number of processing[%ld][%ld] , ending" , p_env->index , p_env->requests_per_process , p_env->p_para->max_requests_per_process );
+			return 1;
+		}
+	}
+	
+#if ( defined __linux__ ) || ( defined __unix )
+	/* 最终离开临界区 */
+	memset( & sb , 0x00 , sizeof(struct sembuf) );
+	sb.sem_num = 0 ;
+	sb.sem_op = 1 ;
+	sb.sem_flg = SEM_UNDO ;
+	nret = semop( p_env->accept_mutex , & sb , 1 ) ;
+	if( nret == -1 )
+	{
+		InfoLog( __FILE__ , __LINE__ , "tcpdaemon_LF_worker(%ld) | leave accept mutex finally failed , errno[%d]" , p_env->index , ERRNO );
+		return 1;
+	}
+#elif ( defined _WIN32 )
+	LeaveCriticalSection( & accept_critical_section );
+#endif
+	DebugLog( __FILE__ , __LINE__ , "tcpdaemon_LF_worker(%ld) | leave accept mutex finally ok" , p_env->index );
+	
+#if ( defined __linux__ ) || ( defined __unix )
+	return 0;
+#elif ( defined _WIN32 )
+	free( p_env );
+	_endthreadex(0);
+	return 0;
+#endif
+}
 
 /* 初始化守护环境 */
 static int InitDaemonEnv( struct TcpdaemonServerEnvirment *p_env )
@@ -718,7 +717,7 @@ int tcpdaemon_LF( struct TcpdaemonServerEnvirment *p_env )
 	signal( SIGCHLD , SIG_DFL );
 	
 	/* 创建工作进程池 */
-	InfoLog( __FILE__ , __LINE__ , "create worker pool starting" );
+	InfoLog( __FILE__ , __LINE__ , "create tcpdaemon_LF_worker pool starting" );
 	
 	for( p_env->index = 1 ; p_env->index <= p_env->p_para->max_process_count ; p_env->index++ )
 	{
@@ -742,7 +741,7 @@ int tcpdaemon_LF( struct TcpdaemonServerEnvirment *p_env )
 			signal( SIGTERM , SIG_DFL );
 			
 			CLOSE( p_env->alive_pipes[p_env->index-1].fd[1] );
-			worker( p_env );
+			tcpdaemon_LF_worker( p_env );
 			CLOSE( p_env->alive_pipes[p_env->index-1].fd[0] );
 			
 			CLOSESOCKET( p_env->listen_sock );
@@ -757,7 +756,7 @@ int tcpdaemon_LF( struct TcpdaemonServerEnvirment *p_env )
 		SLEEP(1);
 	}
 	
-	InfoLog( __FILE__ , __LINE__ , "create worker pool ended" );
+	InfoLog( __FILE__ , __LINE__ , "create tcpdaemon_LF_worker pool ended" );
 	
 	/* 监控工作进程池 */
 	InfoLog( __FILE__ , __LINE__ , "monitoring all children starting" );
@@ -804,7 +803,7 @@ int tcpdaemon_LF( struct TcpdaemonServerEnvirment *p_env )
 					signal( SIGTERM , SIG_DFL );
 					
 					CLOSE( p_env->alive_pipes[p_env->index-1].fd[1] );
-					worker( p_env );
+					tcpdaemon_LF_worker( p_env );
 					CLOSE( p_env->alive_pipes[p_env->index-1].fd[0] );
 					
 					CLOSESOCKET( p_env->listen_sock );
@@ -831,7 +830,7 @@ int tcpdaemon_LF( struct TcpdaemonServerEnvirment *p_env )
 	sigaction( SIGTERM , & oldact , NULL );
 	
 	/* 销毁进程池 */
-	InfoLog( __FILE__ , __LINE__ , "destroy worker poll starting" );
+	InfoLog( __FILE__ , __LINE__ , "destroy tcpdaemon_LF_worker poll starting" );
 	
 	for( p_env->index = 1 ; p_env->index <= p_env->p_para->max_process_count ; p_env->index++ )
 	{
@@ -844,7 +843,7 @@ int tcpdaemon_LF( struct TcpdaemonServerEnvirment *p_env )
 		CLOSE( p_env->alive_pipes[p_env->index-1].fd[1] );
 	}
 	
-	InfoLog( __FILE__ , __LINE__ , "destroy worker poll ended" );
+	InfoLog( __FILE__ , __LINE__ , "destroy tcpdaemon_LF_worker poll ended" );
 	
 	/* 清理守护环境 */
 	CleanDaemonEnv_LF( p_env );
@@ -927,7 +926,7 @@ int tcpdaemon_WIN_TLF( struct TcpdaemonServerEnvirment *p_env )
 	}
 	
 	/* 创建工作进程池 */
-	InfoLog( __FILE__ , __LINE__ , "create worker pool starting" );
+	InfoLog( __FILE__ , __LINE__ , "create tcpdaemon_LF_worker pool starting" );
 	
 	for( p_env->index = 1 ; p_env->index <= p_env->p_para->max_process_count ; p_env->index++ )
 	{
@@ -939,7 +938,7 @@ int tcpdaemon_WIN_TLF( struct TcpdaemonServerEnvirment *p_env )
 			return -11;
 		}
 		
-		p_env->thandles[p_env->index-1] = (THANDLE_T)_beginthreadex( NULL , 0 , worker , pse_new , 0 , & (p_env->tids[p_env->index-1]) ) ;
+		p_env->thandles[p_env->index-1] = (THANDLE_T)_beginthreadex( NULL , 0 , tcpdaemon_LF_worker , pse_new , 0 , & (p_env->tids[p_env->index-1]) ) ;
 		if( p_env->thandles[p_env->index-1] == NULL )
 		{
 			ErrorLog( __FILE__ , __LINE__ , "_beginthreadex failed , ERRNO[%d]" , ERRNO );
@@ -950,7 +949,7 @@ int tcpdaemon_WIN_TLF( struct TcpdaemonServerEnvirment *p_env )
 		SLEEP(1);
 	}
 	
-	InfoLog( __FILE__ , __LINE__ , "create worker pool ended" );
+	InfoLog( __FILE__ , __LINE__ , "create tcpdaemon_LF_worker pool ended" );
 	
 	/* 监控工作线程池 */
 	InfoLog( __FILE__ , __LINE__ , "monitoring all children starting" );
@@ -982,7 +981,7 @@ int tcpdaemon_WIN_TLF( struct TcpdaemonServerEnvirment *p_env )
 			return -11;
 		}
 		
-		p_env->thandles[index-1] = (THANDLE_T)_beginthreadex( NULL , 0 , worker , pse_new , 0 , & (p_env->tids[index-1]) ) ;
+		p_env->thandles[index-1] = (THANDLE_T)_beginthreadex( NULL , 0 , tcpdaemon_LF_worker , pse_new , 0 , & (p_env->tids[index-1]) ) ;
 		if( p_env->thandles[index-1] == NULL )
 		{
 			ErrorLog( __FILE__ , __LINE__ , "_beginthreadex failed , ERRNO[%d]" , ERRNO );
@@ -994,7 +993,7 @@ int tcpdaemon_WIN_TLF( struct TcpdaemonServerEnvirment *p_env )
 	InfoLog( __FILE__ , __LINE__ , "monitoring all children ended" );
 	
 	/* 销毁线程池 */
-	InfoLog( __FILE__ , __LINE__ , "destroy worker poll starting" );
+	InfoLog( __FILE__ , __LINE__ , "destroy tcpdaemon_LF_worker poll starting" );
 	
 	for( p_env->index = 1 ; p_env->index <= p_env->p_para->max_process_count ; p_env->index++ )
 	{
@@ -1005,7 +1004,7 @@ int tcpdaemon_WIN_TLF( struct TcpdaemonServerEnvirment *p_env )
 		}	
 	}
 	
-	InfoLog( __FILE__ , __LINE__ , "destroy worker poll ended" );
+	InfoLog( __FILE__ , __LINE__ , "destroy tcpdaemon_LF_worker poll ended" );
 	
 	/* 清理守护环境 */
 	CleanDaemonEnv_WIN_TLF( p_env );
@@ -1016,6 +1015,7 @@ int tcpdaemon_WIN_TLF( struct TcpdaemonServerEnvirment *p_env )
 #endif
 
 /* 主入口函数 */
+func_tcpdaemon tcpdaemon ;
 int tcpdaemon( struct TcpdaemonEntryParameter *p_para )
 {
 	struct TcpdaemonServerEnvirment	se ;
@@ -1034,9 +1034,7 @@ int tcpdaemon( struct TcpdaemonEntryParameter *p_para )
 	/* 检查入口参数 */
 	nret = CheckCommandParameter( p_para ) ;
 	if( nret )
-	{
 		return nret;
-	}
 	
 #if ( defined __linux__ ) || ( defined __unix )
 	if( STRCMP( p_para->server_model , == , "IF" ) )
