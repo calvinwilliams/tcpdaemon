@@ -37,6 +37,7 @@
 #include <sys/wait.h>
 #include <sys/select.h>
 #include <sys/stat.h>
+#include <sys/epoll.h>
 #elif ( defined _WIN32 )
 #include <stdio.h>
 #include <stdlib.h>
@@ -139,12 +140,27 @@ extern char		*__TCPDAEMON_VERSION ;
 
 /* 通讯数据协议及应用处理回调函数原型 */
 struct TcpdaemonEntryParameter ;
+struct TcpdaemonServerEnvirment ;
 typedef int func_tcpdaemon( struct TcpdaemonEntryParameter *p_para );
-typedef int func_tcpmain( void *param_tcpmain , int sock , struct sockaddr *addr );
+typedef int func_tcpmain( struct TcpdaemonServerEnvirment *p_env , int sock , struct sockaddr *addr );
+				/*
+				IF
+								p_env , int accepted_sock , struct sockaddr *accepted_addr
+				LF
+								p_env , int accepted_sock , struct sockaddr *accepted_addr
+				MPIO
+					OnAcceptingSocket	p_env , int accepted_sock , struct sockaddr *accepted_addr
+					OnClosingSocket		p_env , int events , void *custem_data_ptr
+					OnSendingSocket		p_env , int events , void *custem_data_ptr
+					OnReceivingSocket	p_env , int events , void *custem_data_ptr
+					OnClosingSocket		p_env , 0 , void *custem_data_ptr
+				WIN-TLF
+								p_env , int accepted_sock , struct sockaddr *accepted_addr
+				*/
 
 /* 函数调用模式 : xxx.exe(main->tcpmain) + tcpdaemon.so(tcpdaemon) */
 
-#define TCPDAEMON_CALLMODE_MAIN		2 /* 运行模式:主函数调用模式 */
+#define TCPDAEMON_CALLMODE_MAIN		0 /* 运行模式:主函数调用模式 */
 
 /* 主入口参数结构 */
 struct TcpdaemonEntryParameter
@@ -164,7 +180,7 @@ struct TcpdaemonEntryParameter
 							IF:即时派生进程模型 for UNIX,Linux
 							WIN-TLF:领导者-追随者预派生线程池模型 for win32
 							*/
-	long		max_process_count ;	/* 当为领导者-追随者预派生进程池模型时为工作进程池进程数量，当为即时派生进程模型时为最大子进程数量 */
+	long		process_count ;	/* 当为领导者-追随者预派生进程池模型时为工作进程池进程数量，当为即时派生进程模型时为最大子进程数量 */
 	long		max_requests_per_process ;	/* 当为领导者-追随者预派生进程池模型时为单个工作进程最大处理应用次数 */
 	char		ip[ 20 + 1 ] ;	/* 本地侦听IP */
 	int		port ;	/* 本地侦听PORT */
@@ -189,6 +205,15 @@ _WINDLL_FUNC int tcpdaemon( struct TcpdaemonEntryParameter *p_para );
 
 /* WINDOWS服务名 */
 #define TCPDAEMON_SERVICE		"TcpDaemon Service"
+
+/* 环境结构成员 */
+void *GetTcpmainParameter( struct TcpdaemonServerEnvirment *p_env );
+int GetListenSocket( struct TcpdaemonServerEnvirment *p_env );
+int *GetListenSocketPtr( struct TcpdaemonServerEnvirment *p_env );
+struct sockaddr_in GetListenAddress( struct TcpdaemonServerEnvirment *p_env );
+struct sockaddr_in *GetListenAddressPtr( struct TcpdaemonServerEnvirment *p_env );
+int GetProcessCount( struct TcpdaemonServerEnvirment *p_env );
+int *GetEpollArrayBase( struct TcpdaemonServerEnvirment *p_env );
 
 #ifdef __cplusplus
 }

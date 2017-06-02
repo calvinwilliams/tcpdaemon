@@ -56,7 +56,7 @@ static int ParseCommandParameter( int argc , char *argv[] , struct TcpdaemonEntr
 		}
 		else if( STRCMP( argv[c] , == , "-c" ) && c + 1 < argc )
 		{
-			p_para->max_process_count = atol(argv[c+1]) ;
+			p_para->process_count = atol(argv[c+1]) ;
 			c++;
 		}
 		else if( STRCMP( argv[c] , == , "-n" ) && c + 1 < argc )
@@ -459,7 +459,7 @@ int main( int argc , char *argv[] )
 	/* 填充入口参数结构 */
 	memset( & para , 0x00 , sizeof(struct TcpdaemonEntryParameter) );
 	para.call_mode = TCPDAEMON_CALLMODE_CALLBACK ;
-	para.max_process_count = 0 ;
+	para.process_count = 0 ;
 	para.max_requests_per_process = 0 ;
 	para.log_level = LOGLEVEL_INFO ;
 	
