@@ -9,16 +9,11 @@
  * Licensed under the LGPL v2.1, see the file LICENSE in base directory.
  */
 
-#include "LOGC.h"
-
 #include "tcpdaemon.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-/* 主守护模式 : tcpdaemon(main->tcpdaemon->tcpmain) + xxx.so(tcpmain) */
-#define TCPDAEMON_CALLMODE_CALLBACK	1 /* 运行模式:主守护模式 */
 
 /* EPOLL */
 #define MAX_EPOLL_EVENTS		1024
@@ -53,15 +48,16 @@ struct TcpdaemonServerEnvirment
 					/* parent fd[1] -> child fd[0] */
 	
 	/* 在Instance-Fork进程模型使用 */
-	long				process_count ;
+	int				process_count ;
 	
 	/* 在Leader-Follow进程池模型使用 */
 	int				accept_mutex ; /* accept临界区 */
-	long				index ; /* 工作进程序号 */
-	long				requests_per_process ; /* 工作进程当前处理数量 */
+	int				index ; /* 工作进程序号 */
+	int				requests_per_process ; /* 工作进程当前处理数量 */
 	
 	/* 在MultiplexIO进程池模型使用 */
 	int				*epoll_array ;
+	int				is_on_accepting ;
 	
 	/* 在Leader-Follow线程池模型使用 */
 	THANDLE_T			*thandles ;

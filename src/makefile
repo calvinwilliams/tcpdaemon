@@ -18,7 +18,7 @@ BIN		=	tcpdaemon
 BININST		=	$(HOME)/bin
 LIB		=	libtcpdaemon.so
 LIBINST		=	$(HOME)/lib
-HDER		=	tcpdaemon.h
+HDER		=	tcpdaemon.h LOGC.h
 HDERINST	=	$(HOME)/include/tcpdaemon
 
 ###### ±‡“Î—°œÓ

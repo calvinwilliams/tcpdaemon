@@ -21,11 +21,11 @@ static void usage()
 	printf( "                  -v\n" );
 	printf( "                  [ --daemon-level ]\n" );
 	printf( "                  [ --work-path work_path ]\n" );
-	printf( "                  [ --logfile log_pathfilename --loglevel-(debug|info|warn|error|fatal) ]\n" );
-	printf( "                  [ --tcp-nodelay ] [ --tcp-linger linger ]\n" );
 #if ( defined __linux__ ) || ( defined __unix )
 	printf( "                  [ --work-user work_user ]\n" );
 #elif ( defined _WIN32 )
+	printf( "                  [ --logfile log_pathfilename --loglevel-(debug|info|warn|error|fatal) ]\n" );
+	printf( "                  [ --tcp-nodelay ] [ --tcp-linger linger ]\n" );
 	printf( "                  [ --install-winservice ] [ --uninstall-winservice ]\n" );
 #endif
 }
@@ -40,6 +40,8 @@ static void version()
 static int ParseCommandParameter( int argc , char *argv[] , struct TcpdaemonEntryParameter *p_para )
 {
 	int		c ;
+	
+	p_para->tcp_linger = -1 ;
 	
 	/* 解析命令行参数 */
 	for( c = 1 ; c < argc ; c++ )
@@ -87,6 +89,11 @@ static int ParseCommandParameter( int argc , char *argv[] , struct TcpdaemonEntr
 			strncpy( p_para->so_pathfilename , argv[c+1] , sizeof(p_para->so_pathfilename)-1 );
 			c++;
 		}
+		else if( STRCMP( argv[c] , == , "--work-path" ) && c + 1 < argc )
+		{
+			strncpy( p_para->work_path , argv[c+1] , sizeof(p_para->work_path)-1 );
+			c++;
+		}
 #if ( defined __linux__ ) || ( defined __unix )
 		else if( STRCMP( argv[c] , == , "--work-user" ) && c + 1 < argc )
 		{
@@ -94,11 +101,6 @@ static int ParseCommandParameter( int argc , char *argv[] , struct TcpdaemonEntr
 			c++;
 		}
 #endif
-		else if( STRCMP( argv[c] , == , "--work-path" ) && c + 1 < argc )
-		{
-			strncpy( p_para->work_path , argv[c+1] , sizeof(p_para->work_path)-1 );
-			c++;
-		}
 		else if( STRCMP( argv[c] , == , "--logfile" ) && c + 1 < argc )
 		{
 			strncpy( p_para->log_pathfilename , argv[c+1] , sizeof(p_para->log_pathfilename)-1 );
@@ -158,55 +160,7 @@ static int ParseCommandParameter( int argc , char *argv[] , struct TcpdaemonEntr
 	return 0;
 }
 
-#if ( defined __linux__ ) || ( defined __unix )
-
-/* 转换为守护进程 */
-static int BindDaemonServer( func_tcpdaemon *tcpdaemon , struct TcpdaemonEntryParameter	*p_para )
-{
-	pid_t		pid ;
-	
-	pid = fork() ;
-	if( pid == -1 )
-	{
-		return -1;
-	}
-	else if( pid > 0 )
-	{
-		exit(0);
-	}
-	
-	setsid();
-	signal( SIGHUP,SIG_IGN );
-	
-	pid = fork() ;
-	if( pid == -1 )
-	{
-		return -2;
-	}
-	else if( pid > 0 )
-	{
-		exit(0);
-	}
-	
-	setuid( getpid() ) ;
-	chdir("/tmp");
-	umask( 0 ) ;
-	
-	return tcpdaemon( p_para );
-}
-
-#elif ( defined _WIN32 )
-
-STARTUPINFO		g_si ;
-PROCESS_INFORMATION	g_li ;
-	
-static int (* _iRTF_g_pfControlMain)(long lControlStatus) ;
-SERVICE_STATUS		_gssServiceStatus ;
-SERVICE_STATUS_HANDLE	_gsshServiceStatusHandle ;
-HANDLE			_ghServerHandle ;
-void			*_gfServerParameter ;
-char			_gacServerName[257] ;
-int			(* _gfServerMain)( void *pv ) ;
+#if ( defined _WIN32 )
 
 static int InstallDaemonServer( char *pcServerName , char *pcRunParameter )
 {
@@ -284,146 +238,6 @@ static int UninstallDaemonServer( char *pcServerName )
 	return 0;
 }
 
-static void WINAPI ServiceCtrlHandler( DWORD dwControl )
-{
-	switch ( dwControl )
-	{
-		case SERVICE_CONTROL_STOP :
-		case SERVICE_CONTROL_SHUTDOWN :
-			
-			_gssServiceStatus.dwCurrentState = SERVICE_STOP_PENDING ;
-			SetServiceStatus( _gsshServiceStatusHandle , &_gssServiceStatus ) ;
-			_gssServiceStatus.dwCurrentState = SERVICE_STOPPED ;
-			SetServiceStatus( _gsshServiceStatusHandle , &_gssServiceStatus) ;
-			break;
-			
-		case SERVICE_CONTROL_PAUSE :
-			
-			_gssServiceStatus.dwCurrentState = SERVICE_PAUSE_PENDING ;
-			SetServiceStatus( _gsshServiceStatusHandle , &_gssServiceStatus ) ;
-			_gssServiceStatus.dwCurrentState = SERVICE_PAUSED ;
-			SetServiceStatus( _gsshServiceStatusHandle , &_gssServiceStatus) ;
-			break;
-		
-		case SERVICE_CONTROL_CONTINUE :
-			
-			_gssServiceStatus.dwCurrentState = SERVICE_CONTINUE_PENDING ;
-			SetServiceStatus( _gsshServiceStatusHandle , &_gssServiceStatus ) ;
-			_gssServiceStatus.dwCurrentState = SERVICE_RUNNING ;
-			SetServiceStatus( _gsshServiceStatusHandle , &_gssServiceStatus) ;
-			break;
-			
-		case SERVICE_CONTROL_INTERROGATE :
-			
-			_gssServiceStatus.dwCurrentState = SERVICE_RUNNING ;
-			SetServiceStatus( _gsshServiceStatusHandle , &_gssServiceStatus) ;
-			break;
-			
-		default:
-			
-			break;
-			
-	}
-	
-	if( _iRTF_g_pfControlMain )
-		(* _iRTF_g_pfControlMain)( dwControl );
-	
-	return;
-}
-
-static void WINAPI ServiceMainProc( DWORD argc , LPTSTR *argv )
-{
-	_gssServiceStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS ;
-	_gssServiceStatus.dwCurrentState = SERVICE_START_PENDING ;
-	_gssServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP ;
-	_gssServiceStatus.dwWin32ExitCode = 0 ;
-	_gssServiceStatus.dwServiceSpecificExitCode = 0 ;
-	_gssServiceStatus.dwCheckPoint = 0 ;
-	_gssServiceStatus.dwWaitHint = 0 ;
-	
-	_gsshServiceStatusHandle = RegisterServiceCtrlHandler( _gacServerName , ServiceCtrlHandler ) ;
-	if( _gsshServiceStatusHandle == (SERVICE_STATUS_HANDLE)0 )
-		return;
-	
-	_gssServiceStatus.dwCheckPoint = 0 ;
-	_gssServiceStatus.dwWaitHint = 0 ;
-	_gssServiceStatus.dwCurrentState = SERVICE_RUNNING ;
-	
-	SetServiceStatus( _gsshServiceStatusHandle , &_gssServiceStatus );
-	
-	_gfServerMain( _gfServerParameter );
-	
-	return;
-}
-
-static int BindDaemonServer( char *pcServerName , int (* ServerMain)( void *pv ) , void *pv , int (* pfuncControlMain)(long lControlStatus) )
-{
-	SERVICE_TABLE_ENTRY ste[] =
-	{
-		{ _gacServerName , ServiceMainProc },
-		{ NULL , NULL }
-	} ;
-	
-	BOOL		bret ;
-	
-	memset( _gacServerName , 0x00 , sizeof( _gacServerName ) );
-	if( pcServerName )
-	{
-		strncpy( _gacServerName , pcServerName , sizeof( _gacServerName ) - 1 );
-	}
-	
-	_ghServerHandle = GetCurrentProcess() ;
-	_gfServerMain = ServerMain ;
-	_gfServerParameter = pv ;
-	_iRTF_g_pfControlMain = pfuncControlMain ;
-	
-	bret = StartServiceCtrlDispatcher( ste ) ;
-	if( bret != TRUE )
-		return -1;
-	
-	return 0;
-}
-
-static int monitor( void *command_line )
-{
-	BOOL			bret = TRUE ;
-	
-	/* 创建子进程，并监控其结束事件，重启之 */
-	while(1)
-	{
-		memset( & g_si , 0x00 , sizeof(STARTUPINFO) );
-		g_si.dwFlags = STARTF_USESHOWWINDOW ;
-		g_si.wShowWindow = SW_HIDE ;
-		memset( & g_li , 0x00 , sizeof(LPPROCESS_INFORMATION) );
-		bret = CreateProcess( NULL , (char*)command_line , NULL , NULL , TRUE , 0 , NULL , NULL , & g_si , & g_li ) ;
-		if( bret != TRUE )
-		{
-			fprintf( stderr , "CreateProcess failed , errno[%d]\n" , GetLastError() );
-			return 1;
-		}
-		
-		CloseHandle( g_li.hThread );
-		
-		WaitForSingleObject( g_li.hProcess , INFINITE );
-		CloseHandle( g_li.hProcess );
-		
-		Sleep(10*1000);
-	}
-	
-	return 0;
-}
-
-static int control( long control_status )
-{
-	/* 当收到WINDOWS服务结束事件，先结束子进程 */
-	if( control_status == SERVICE_CONTROL_STOP || control_status == SERVICE_CONTROL_SHUTDOWN )
-	{
-		TerminateProcess( g_li.hProcess , 0 );
-	}
-	
-	return 0;
-}
-
 #endif
 
 int main( int argc , char *argv[] )
@@ -458,9 +272,6 @@ int main( int argc , char *argv[] )
 	
 	/* 填充入口参数结构 */
 	memset( & para , 0x00 , sizeof(struct TcpdaemonEntryParameter) );
-	para.call_mode = TCPDAEMON_CALLMODE_CALLBACK ;
-	para.process_count = 0 ;
-	para.max_requests_per_process = 0 ;
 	para.log_level = LOGLEVEL_INFO ;
 	
 	/* 解析命令行参数 */
@@ -502,67 +313,5 @@ int main( int argc , char *argv[] )
 	}
 #endif
 	
-	if( para.daemon_level == 1 )
-	{
-#if ( defined __unix ) || ( defined __linux__ )
-		/* 转换为守护进程 */
-		nret = BindDaemonServer( & tcpdaemon , & para ) ;
-		if( nret )
-		{
-			ErrorLog( __FILE__ , __LINE__ , "convert to daemon failed[%d]" , nret );
-			return nret;
-		}
-		else
-		{
-			return 0;
-		}
-#elif ( defined _WIN32 )
-		long		c , len ;
-		char		command_line[ 256 + 1 ] ;
-		
-		/* 父进程，转化为服务 */
-		memset( command_line , 0x00 , sizeof(command_line) );
-		len = SNPRINTF( command_line , sizeof(command_line) , "%s" , "tcpdaemon.exe" ) ;
-		for( c = 1 ; c < argc ; c++ )
-		{
-			if( STRCMP( argv[c] , != , "--install-winservice" ) && STRCMP( argv[c] , != , "--uninstall-winservice" ) && STRCMP( argv[c] , != , "--daemon-level" ) )
-			{
-				if( strchr( argv[c] , ' ' ) || strchr( argv[c] , '\t' ) )
-					len += SNPRINTF( command_line + len , sizeof(command_line)-1 - len , " \"%s\"" , argv[c] ) ;
-				else
-					len += SNPRINTF( command_line + len , sizeof(command_line)-1 - len , " %s" , argv[c] ) ;
-			}
-		}
-		
-		nret = BindDaemonServer( "TcpDaemon" , monitor , command_line , & control ) ;
-		if( nret )
-		{
-			ErrorLog( __FILE__ , __LINE__ , "convert to daemon failed[%d]" , nret );
-			return nret;
-		}
-		else
-		{
-			return 0;
-		}
-#endif
-	}
-	else
-	{
-#if ( defined __unix ) || ( defined __linux__ )
-		/* 调用tcpdaemon函数 */
-		return -tcpdaemon( & para );
-#elif ( defined _WIN32 )
-		/* 子进程，干活 */
-		{
-		WSADATA		wsd;
-		if( WSAStartup( MAKEWORD(2,2) , & wsd ) != 0 )
-			return 1;
-		}
-		
-		/* 调用tcpdaemon函数 */
-		nret = tcpdaemon( & para ) ;
-		WSACleanup();
-		retutn -nret;
-#endif
-	}
+	return -tcpdaemon( & para );
 }

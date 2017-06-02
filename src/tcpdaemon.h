@@ -49,6 +49,8 @@
 #include <direct.h>
 #endif
 
+#include "LOGC.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -126,11 +128,6 @@ extern "C" {
 extern char		*__TCPDAEMON_VERSION ;
 
 /*
- * 工具层
- */
-
-
-/*
  * 通讯层
  */
 
@@ -138,11 +135,13 @@ extern char		*__TCPDAEMON_VERSION ;
 
 #define TCPMAIN		"tcpmain"
 
+/* 函数调用模式 : xxx.exe(main) + tcpdaemon.so(tcpdaemon) + xxx.exe(tcpmain) */
+
 /* 通讯数据协议及应用处理回调函数原型 */
 struct TcpdaemonEntryParameter ;
 struct TcpdaemonServerEnvirment ;
 typedef int func_tcpdaemon( struct TcpdaemonEntryParameter *p_para );
-typedef int func_tcpmain( struct TcpdaemonServerEnvirment *p_env , int sock , struct sockaddr *addr );
+typedef int func_tcpmain( struct TcpdaemonServerEnvirment *p_env , int sock , void *addr );
 				/*
 				IF
 								p_env , int accepted_sock , struct sockaddr *accepted_addr
@@ -158,9 +157,6 @@ typedef int func_tcpmain( struct TcpdaemonServerEnvirment *p_env , int sock , st
 								p_env , int accepted_sock , struct sockaddr *accepted_addr
 				*/
 
-/* 函数调用模式 : xxx.exe(main->tcpmain) + tcpdaemon.so(tcpdaemon) */
-
-#define TCPDAEMON_CALLMODE_MAIN		0 /* 运行模式:主函数调用模式 */
 
 /* 主入口参数结构 */
 struct TcpdaemonEntryParameter
@@ -170,18 +166,13 @@ struct TcpdaemonEntryParameter
 	char		log_pathfilename[ 256 + 1 ] ;	/* 日志输出文件名，不设置则输出到标准输出上 */
 	int		log_level ;	/* 日志等级，不设置则缺省DEBUG等级 */
 	
-	int		call_mode ;	/* 应用接口模式
-					   TCPDAEMON_CALLMODE_CALLBACK:主守护模式
-					   TCPDAEMON_CALLMODE_MAIN:函数调用模式
-					*/
-	
 	char		server_model[ 10 + 1 ] ;	/* TCP连接管理模型
 							LF:领导者-追随者预派生进程池模型 for UNIX,Linux
 							IF:即时派生进程模型 for UNIX,Linux
 							WIN-TLF:领导者-追随者预派生线程池模型 for win32
 							*/
-	long		process_count ;	/* 当为领导者-追随者预派生进程池模型时为工作进程池进程数量，当为即时派生进程模型时为最大子进程数量 */
-	long		max_requests_per_process ;	/* 当为领导者-追随者预派生进程池模型时为单个工作进程最大处理应用次数 */
+	int		process_count ;	/* 当为领导者-追随者预派生进程池模型时为工作进程池进程数量，当为即时派生进程模型时为最大子进程数量 */
+	int		max_requests_per_process ;	/* 当为领导者-追随者预派生进程池模型时为单个工作进程最大处理应用次数 */
 	char		ip[ 20 + 1 ] ;	/* 本地侦听IP */
 	int		port ;	/* 本地侦听PORT */
 	char		so_pathfilename[ 256 + 1 ] ;	/* 用绝对路径或相对路径表达的应用动态库文件名 */
@@ -207,13 +198,15 @@ _WINDLL_FUNC int tcpdaemon( struct TcpdaemonEntryParameter *p_para );
 #define TCPDAEMON_SERVICE		"TcpDaemon Service"
 
 /* 环境结构成员 */
-void *GetTcpmainParameter( struct TcpdaemonServerEnvirment *p_env );
-int GetListenSocket( struct TcpdaemonServerEnvirment *p_env );
-int *GetListenSocketPtr( struct TcpdaemonServerEnvirment *p_env );
-struct sockaddr_in GetListenAddress( struct TcpdaemonServerEnvirment *p_env );
-struct sockaddr_in *GetListenAddressPtr( struct TcpdaemonServerEnvirment *p_env );
-int GetProcessCount( struct TcpdaemonServerEnvirment *p_env );
-int *GetEpollArrayBase( struct TcpdaemonServerEnvirment *p_env );
+void *TDGetTcpmainParameter( struct TcpdaemonServerEnvirment *p_env );
+int TDGetListenSocket( struct TcpdaemonServerEnvirment *p_env );
+int *TDGetListenSocketPtr( struct TcpdaemonServerEnvirment *p_env );
+struct sockaddr_in TDGetListenAddress( struct TcpdaemonServerEnvirment *p_env );
+struct sockaddr_in *TDGetListenAddressPtr( struct TcpdaemonServerEnvirment *p_env );
+int TDGetProcessCount( struct TcpdaemonServerEnvirment *p_env );
+int *TDGetEpollArrayBase( struct TcpdaemonServerEnvirment *p_env );
+int TDGetThisEpoll( struct TcpdaemonServerEnvirment *p_env );
+int TDIsOnAcceptingSocket( struct TcpdaemonServerEnvirment *p_env );
 
 #ifdef __cplusplus
 }

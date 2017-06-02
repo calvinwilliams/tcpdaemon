@@ -39,12 +39,22 @@ int CheckCommandParameter( struct TcpdaemonEntryParameter *p_para )
 		
 		return 0;
 	}
+	if( STRCMP( p_para->server_model , == , "MPIO" ) )
+	{
+		if( p_para->process_count <= 0 )
+		{
+			ErrorLog( __FILE__ , __LINE__ , "tcpdaemon_MPIO_worker poll size[%ld] invalid" , p_para->process_count );
+			return -1;
+		}
+		
+		return 0;
+	}
 #elif ( defined _WIN32 )
 	if( STRCMP( p_para->server_model , == , "WIN-TLF" ) )
 	{
 		if( p_para->process_count <= 0 )
 		{
-			ErrorLog( __FILE__ , __LINE__ , "tcpdaemon_LF_worker poll size[%ld] invalid" , p_para->process_count );
+			ErrorLog( __FILE__ , __LINE__ , "tcpdaemon_WIN-TLF_worker poll size[%ld] invalid" , p_para->process_count );
 			return -1;
 		}
 		
@@ -54,6 +64,28 @@ int CheckCommandParameter( struct TcpdaemonEntryParameter *p_para )
 	
 	ErrorLog( __FILE__ , __LINE__ , "server mode[%s] invalid" , p_para->server_model );
 	return -2;
+}
+
+/* 设置socket属性 */
+static void SetAcceptedSocketOptions( struct TcpdaemonServerEnvirment *p_env , int accepted_sock )
+{
+	/* 设置侦听端口关闭nagle算法 */
+	if( p_env->p_para->tcp_nodelay == 1 )
+	{
+		int	onoff = 1 ;
+		setsockopt( accepted_sock , IPPROTO_TCP , TCP_NODELAY , (void*) & onoff , sizeof(int) );
+	}
+	
+	/* 设置侦听端口linger值 */
+	if( p_env->p_para->tcp_linger >= 0 )
+	{
+		struct linger	lg ;
+		lg.l_onoff = 1 ;
+		lg.l_linger = p_env->p_para->tcp_linger ;
+		setsockopt( accepted_sock , SOL_SOCKET , SO_LINGER , (void *) & lg , sizeof(struct linger) );
+	}
+	
+	return;
 }
 
 #if ( defined __unix ) || ( defined __linux__ )
@@ -68,9 +100,9 @@ static unsigned int WINAPI tcpdaemon_LF_worker( void *pv )
 #endif
 	fd_set			readfds ;
 	
-	struct sockaddr		accept_addr ;
-	SOCKLEN_T		accept_addrlen ;
-	int			accept_sock ;
+	struct sockaddr		accepted_addr ;
+	SOCKLEN_T		accepted_addrlen ;
+	int			accepted_sock ;
 	
 	int			nret = 0 ;
 	
@@ -78,7 +110,7 @@ static unsigned int WINAPI tcpdaemon_LF_worker( void *pv )
 	SetLogFile( p_env->p_para->log_pathfilename );
 	SetLogLevel( p_env->p_para->log_level );
 	
-	DebugLog( __FILE__ , __LINE__ , "tcpdaemon_LF_worker(%ld) | begin" );
+	DebugLog( __FILE__ , __LINE__ , "tcpdaemon_LF_worker(%ld) | begin" , p_env->index );
 	
 	while(1)
 	{
@@ -125,31 +157,21 @@ static unsigned int WINAPI tcpdaemon_LF_worker( void *pv )
 #endif
 		
 		/* 接受新客户端连接 */
-		accept_addrlen = sizeof(struct sockaddr) ;
-		memset( & accept_addr , 0x00 , accept_addrlen );
-		accept_sock = accept( p_env->listen_sock , & accept_addr , & accept_addrlen ) ;
-		if( accept_sock == -1 )
+		accepted_addrlen = sizeof(struct sockaddr) ;
+		memset( & accepted_addr , 0x00 , accepted_addrlen );
+		accepted_sock = accept( p_env->listen_sock , & accepted_addr , & accepted_addrlen ) ;
+		if( accepted_sock == -1 )
 		{
 			ErrorLog( __FILE__ , __LINE__ , "tcpdaemon_LF_worker(%ld) | accept failed , errno[%d]" , p_env->index , ERRNO );
 			break;
 		}
 		else
 		{
-			DebugLog( __FILE__ , __LINE__ , "tcpdaemon_LF_worker(%ld) | accept ok , [%d]accept[%d]" , p_env->index , p_env->listen_sock , accept_sock );
+			DebugLog( __FILE__ , __LINE__ , "tcpdaemon_LF_worker(%ld) | accept ok , [%d]accept[%d]" , p_env->index , p_env->listen_sock , accepted_sock );
 		}
 		
-		if( p_env->p_para->tcp_nodelay > 0 )
-		{
-			setsockopt( accept_sock , IPPROTO_TCP , TCP_NODELAY , (void*) & (p_env->p_para->tcp_nodelay) , sizeof(int) );
-		}
-		
-		if( p_env->p_para->tcp_linger > 0 )
-		{
-			struct linger	lg ;
-			lg.l_onoff = 1 ;
-			lg.l_linger = p_env->p_para->tcp_linger - 1 ;
-			setsockopt( accept_sock , SOL_SOCKET , SO_LINGER , (void *) & lg , sizeof(struct linger) );
-		}
+		/* 设置socket属性 */
+		SetAcceptedSocketOptions( p_env , accepted_sock );
 		
 #if ( defined __linux__ ) || ( defined __unix )
 		/* 离开临界区 */
@@ -169,8 +191,8 @@ static unsigned int WINAPI tcpdaemon_LF_worker( void *pv )
 		DebugLog( __FILE__ , __LINE__ , "tcpdaemon_LF_worker(%ld) | leave accept mutex ok" , p_env->index );
 		
 		/* 调用通讯数据协议及应用处理回调函数 */
-		InfoLog( __FILE__ , __LINE__ , "tcpdaemon_LF_worker(%ld) | call tcpmain sock[%d]" , p_env->index , accept_sock );
-		nret = p_env->pfunc_tcpmain( p_env , accept_sock , & accept_addr ) ;
+		InfoLog( __FILE__ , __LINE__ , "tcpdaemon_LF_worker(%ld) | call tcpmain sock[%d]" , p_env->index , accepted_sock );
+		nret = p_env->pfunc_tcpmain( p_env , accepted_sock , & accepted_addr ) ;
 		if( nret < 0 )
 		{
 			ErrorLog( __FILE__ , __LINE__ , "tcpdaemon_LF_worker(%ld) | tcpmain return[%d]" , p_env->index , nret );
@@ -186,8 +208,8 @@ static unsigned int WINAPI tcpdaemon_LF_worker( void *pv )
 		}
 		
 		/* 关闭客户端连接 */
-		CLOSESOCKET( accept_sock );
-		DebugLog( __FILE__ , __LINE__ , "tcpdaemon_LF_worker(%ld) | close[%d]" , p_env->index , accept_sock );
+		CLOSESOCKET( accepted_sock );
+		DebugLog( __FILE__ , __LINE__ , "tcpdaemon_LF_worker(%ld) | close[%d]" , p_env->index , accepted_sock );
 		
 		/* 检查工作进程处理数量 */
 		p_env->requests_per_process++;
@@ -215,7 +237,7 @@ static unsigned int WINAPI tcpdaemon_LF_worker( void *pv )
 #endif
 	DebugLog( __FILE__ , __LINE__ , "tcpdaemon_LF_worker(%ld) | leave accept mutex finally ok" , p_env->index );
 	
-	DebugLog( __FILE__ , __LINE__ , "tcpdaemon_LF_worker(%ld) | end" );
+	DebugLog( __FILE__ , __LINE__ , "tcpdaemon_LF_worker(%ld) | end" , p_env->index );
 	
 #if ( defined __linux__ ) || ( defined __unix )
 	return 0;
@@ -295,17 +317,17 @@ static unsigned int tcpdaemon_MPIO_worker( void *pv )
 				/* 可读事件 */
 				if( p_event->events & EPOLLIN )
 				{
-					int			accept_sock ;
-					struct sockaddr		accept_addr ;
-					SOCKLEN_T		accept_addr_len ;
+					int			accepted_sock ;
+					struct sockaddr		accepted_addr ;
+					SOCKLEN_T		accepted_addr_len ;
 					
 					while(1)
 					{
 						/* 接受新连接 */
-						memset( & accept_addr , 0x00 , sizeof(struct sockaddr_in) );
-						accept_addr_len = sizeof(struct sockaddr) ;
-						accept_sock = accept( p_env->listen_sock , (struct sockaddr *) & accept_addr , & accept_addr_len ) ;
-						if( accept_sock == -1 )
+						memset( & accepted_addr , 0x00 , sizeof(struct sockaddr_in) );
+						accepted_addr_len = sizeof(struct sockaddr) ;
+						accepted_sock = accept( p_env->listen_sock , (struct sockaddr *) & accepted_addr , & accepted_addr_len ) ;
+						if( accepted_sock == -1 )
 						{
 							if( errno == EAGAIN )
 								break;
@@ -314,8 +336,10 @@ static unsigned int tcpdaemon_MPIO_worker( void *pv )
 						}
 						
 						/* 调用接受通讯连接回调函数 */
-						InfoLog( __FILE__ , __LINE__ , "tcpdaemon_MPIO_worker(%ld) | call tcpmain on OnAcceptingSocket , sock[%d]" , p_env->index , accept_sock );
-						nret = p_env->pfunc_tcpmain( p_env , accept_sock , & accept_addr ) ;
+						InfoLog( __FILE__ , __LINE__ , "tcpdaemon_MPIO_worker(%ld) | call tcpmain on OnAcceptingSocket , sock[%d]" , p_env->index , accepted_sock );
+						p_env->is_on_accepting = 1 ;
+						nret = p_env->pfunc_tcpmain( p_env , accepted_sock , & accepted_addr ) ;
+						p_env->is_on_accepting = 0 ;
 						if( nret < 0 )
 						{
 							ErrorLog( __FILE__ , __LINE__ , "tcpdaemon_MPIO_worker(%ld) | tcpmain return[%d]" , p_env->index , nret );
@@ -495,7 +519,7 @@ static int InitDaemonEnv( struct TcpdaemonServerEnvirment *p_env )
 	p_env->listen_sock = -1 ;
 	
 	/* 得到通讯数据协议及应用处理回调函数指针 */
-	if( p_env->p_para->call_mode == TCPDAEMON_CALLMODE_CALLBACK )
+	if( p_env->p_para->so_pathfilename[0] )
 	{
 #if ( defined __linux__ ) || ( defined __unix )
 		p_env->so_handle = dlopen( p_env->p_para->so_pathfilename , RTLD_LAZY ) ;
@@ -506,6 +530,10 @@ static int InitDaemonEnv( struct TcpdaemonServerEnvirment *p_env )
 		{
 			ErrorLog( __FILE__ , __LINE__ , "dlopen[%s]failed[%s]" , p_env->p_para->so_pathfilename , DLERROR );
 			return -1;
+		}
+		else
+		{
+			InfoLog( __FILE__ , __LINE__ , "dlopen[%s]ok" , p_env->p_para->so_pathfilename );
 		}
 		
 #if ( defined __linux__ ) || ( defined __unix )
@@ -518,17 +546,17 @@ static int InitDaemonEnv( struct TcpdaemonServerEnvirment *p_env )
 			ErrorLog( __FILE__ , __LINE__ , "dlsym[%s]failed[%s]" , TCPMAIN , DLERROR );
 			return -1;
 		}
-	}
-	else if( p_env->p_para->call_mode == TCPDAEMON_CALLMODE_MAIN )
-	{
-		p_env->pfunc_tcpmain = p_env->p_para->pfunc_tcpmain ;
-		p_env->param_tcpmain = p_env->p_para->param_tcpmain ;
+		else
+		{
+			InfoLog( __FILE__ , __LINE__ , "dlsym[%s]ok" , TCPMAIN );
+		}
 	}
 	else
 	{
-		ErrorLog( __FILE__ , __LINE__ , "call_mode[%d]invalid" , p_env->p_para->call_mode );
-		return -1;
+		p_env->pfunc_tcpmain = p_env->p_para->pfunc_tcpmain ;
 	}
+	
+	p_env->param_tcpmain = p_env->p_para->param_tcpmain ;
 	
 	/* 创建侦听socket */
 	p_env->listen_sock = socket( AF_INET , SOCK_STREAM , IPPROTO_TCP ) ;
@@ -544,12 +572,7 @@ static int InitDaemonEnv( struct TcpdaemonServerEnvirment *p_env )
 		setsockopt( p_env->listen_sock , SOL_SOCKET , SO_REUSEADDR , (void *) & on , sizeof(on) );
 	}
 	
-	/* 设置侦听端口关闭nagle算法 */
-	{
-		int	onoff = 1 ;
-		setsockopt( p_env->listen_sock , IPPROTO_TCP , TCP_NODELAY , (void*) & onoff , sizeof(int) );
-	}
-	
+	/* 绑定侦听socket */
 	{
 	memset( & (p_env->listen_addr) , 0x00 , sizeof(struct sockaddr_in) );
 	p_env->listen_addr.sin_family = AF_INET ;
@@ -563,6 +586,7 @@ static int InitDaemonEnv( struct TcpdaemonServerEnvirment *p_env )
 	}
 	}
 	
+	/* 开始侦听 */
 	nret = listen( p_env->listen_sock , p_env->p_para->process_count * 2 ) ;
 	if( nret == -1 )
 	{
@@ -570,6 +594,7 @@ static int InitDaemonEnv( struct TcpdaemonServerEnvirment *p_env )
 		return -1;
 	}
 	
+	/* 切换用户 */
 #if ( defined __linux__ ) || ( defined __unix )
 	if( STRCMP( p_env->p_para->work_user , != , "" ) )
 	{
@@ -583,6 +608,7 @@ static int InitDaemonEnv( struct TcpdaemonServerEnvirment *p_env )
 	}
 #endif
 	
+	/* 切换工作目录 */
 	if( STRCMP( p_env->p_para->work_path , != , "" ) )
 	{
 		CHDIR( p_env->p_para->work_path );
@@ -594,16 +620,13 @@ static int InitDaemonEnv( struct TcpdaemonServerEnvirment *p_env )
 /* 清理守护环境 */
 static int CleanDaemonEnv( struct TcpdaemonServerEnvirment *p_env )
 {
-	if( p_env->p_para->call_mode == TCPDAEMON_CALLMODE_CALLBACK )
+	if( p_env->so_handle )
 	{
-		if( p_env->so_handle )
-		{
 #if ( defined __linux__ ) || ( defined __unix )
-			dlclose( p_env->so_handle );
+		dlclose( p_env->so_handle );
 #elif ( defined _WIN32 )
-			FreeLibrary( p_env->so_handle );
+		FreeLibrary( p_env->so_handle );
 #endif
-		}
 	}
 	
 	if( p_env->listen_sock != -1 )
@@ -636,9 +659,9 @@ int tcpdaemon_IF( struct TcpdaemonServerEnvirment *p_env )
 	fd_set			readfds ;
 	struct timeval		tv ;
 	
-	struct sockaddr		accept_addr ;
-	socklen_t		accept_addrlen ;
-	int			accept_sock ;
+	struct sockaddr		accepted_addr ;
+	socklen_t		accepted_addrlen ;
+	int			accepted_sock ;
 	
 	PID_T			pid ;
 	int			status ;
@@ -717,10 +740,10 @@ _DO_SELECT :
 		
 		/* 接受新客户端连接 */
 _DO_ACCEPT :
-		accept_addrlen = sizeof(struct sockaddr) ;
-		memset( & accept_addr , 0x00 , accept_addrlen );
-		accept_sock = accept( p_env->listen_sock , & accept_addr , & accept_addrlen ) ;
-		if( accept_sock == -1 )
+		accepted_addrlen = sizeof(struct sockaddr) ;
+		memset( & accepted_addr , 0x00 , accepted_addrlen );
+		accepted_sock = accept( p_env->listen_sock , & accepted_addr , & accepted_addrlen ) ;
+		if( accepted_sock == -1 )
 		{
 			if( ERRNO == EINTR )
 			{
@@ -742,28 +765,18 @@ _DO_ACCEPT :
 		else
 		{
 			
-			DebugLog( __FILE__ , __LINE__ , "accept ok , [%d]accept[%d]" , p_env->listen_sock , accept_sock );
+			DebugLog( __FILE__ , __LINE__ , "accept ok , [%d]accept[%d]" , p_env->listen_sock , accepted_sock );
 		}
 		
 		if( p_env->p_para->process_count != 0 && p_env->process_count + 1 > p_env->p_para->process_count )
 		{
 			ErrorLog( __FILE__ , __LINE__ , "too many sockets" );
-			CLOSE( accept_sock );
+			CLOSE( accepted_sock );
 			continue;
 		}
 		
-		if( p_env->p_para->tcp_nodelay > 0 )
-		{
-			setsockopt( accept_sock , IPPROTO_TCP , TCP_NODELAY , (void*) & (p_env->p_para->tcp_nodelay) , sizeof(int) );
-		}
-		
-		if( p_env->p_para->tcp_linger > 0 )
-		{
-			struct linger	lg ;
-			lg.l_onoff = 1 ;
-			lg.l_linger = p_env->p_para->tcp_linger - 1 ;
-			setsockopt( accept_sock , SOL_SOCKET , SO_LINGER , (void *) & lg , sizeof(struct linger) );
-		}
+		/* 设置socket属性 */
+		SetAcceptedSocketOptions( p_env , accepted_sock );
 		
 		/* 创建子进程 */
 _DO_FORK :
@@ -784,7 +797,7 @@ _DO_FORK :
 			else
 			{
 				ErrorLog( __FILE__ , __LINE__ , "fork failed , ERRNO[%d]" , ERRNO );
-				CLOSE( accept_sock );
+				CLOSE( accepted_sock );
 				continue;
 			}
 		}
@@ -796,8 +809,8 @@ _DO_FORK :
 			CLOSESOCKET( p_env->listen_sock );
 			
 			/* 调用通讯数据协议及应用处理回调函数 */
-			InfoLog( __FILE__ , __LINE__ , "call tcpmain sock[%d]" , accept_sock );
-			nret = p_env->pfunc_tcpmain( p_env , accept_sock , & accept_addr ) ;
+			InfoLog( __FILE__ , __LINE__ , "call tcpmain sock[%d]" , accepted_sock );
+			nret = p_env->pfunc_tcpmain( p_env , accepted_sock , & accepted_addr ) ;
 			if( nret < 0 )
 			{
 				ErrorLog( __FILE__ , __LINE__ , "tcpmain return[%d]" , nret );
@@ -812,8 +825,8 @@ _DO_FORK :
 			}
 			
 			/* 关闭客户端连接 */
-			CLOSESOCKET( accept_sock );
-			DebugLog( __FILE__ , __LINE__ , "CLOSE[%d]" , accept_sock );
+			CLOSESOCKET( accepted_sock );
+			DebugLog( __FILE__ , __LINE__ , "close[%d]" , accepted_sock );
 			
 			/* 子进程退出 */
 			DebugLog( __FILE__ , __LINE__ , "child exit" );
@@ -821,7 +834,7 @@ _DO_FORK :
 		}
 		else
 		{
-			CLOSESOCKET( accept_sock );
+			CLOSESOCKET( accepted_sock );
 			p_env->process_count++;
 		}
 	}
@@ -985,7 +998,7 @@ int tcpdaemon_LF( struct TcpdaemonServerEnvirment *p_env )
 		SLEEP(1);
 	}
 	
-	InfoLog( __FILE__ , __LINE__ , "create tcpdaemon_LF_worker pool ended" );
+	InfoLog( __FILE__ , __LINE__ , "create tcpdaemon_LF_worker pool ok" );
 	
 	/* 监控工作进程池 */
 	InfoLog( __FILE__ , __LINE__ , "monitoring all children starting" );
@@ -1054,7 +1067,7 @@ int tcpdaemon_LF( struct TcpdaemonServerEnvirment *p_env )
 		}
 	}
 	
-	InfoLog( __FILE__ , __LINE__ , "monitoring all children ended" );
+	InfoLog( __FILE__ , __LINE__ , "monitoring all children ok" );
 	
 	sigaction( SIGTERM , & oldact , NULL );
 	
@@ -1510,9 +1523,200 @@ int tcpdaemon_WIN_TLF( struct TcpdaemonServerEnvirment *p_env )
 
 #endif
 
+#if ( defined __linux__ ) || ( defined __unix )
+
+/* 转换为守护进程 */
+static int BindDaemonServer( func_tcpdaemon *tcpdaemon , struct TcpdaemonEntryParameter	*p_para )
+{
+	pid_t		pid ;
+	
+	pid = fork() ;
+	if( pid == -1 )
+	{
+		return -1;
+	}
+	else if( pid > 0 )
+	{
+		exit(0);
+	}
+	
+	setsid();
+	signal( SIGHUP,SIG_IGN );
+	
+	pid = fork() ;
+	if( pid == -1 )
+	{
+		return -2;
+	}
+	else if( pid > 0 )
+	{
+		exit(0);
+	}
+	
+	setuid( getpid() ) ;
+	
+	umask( 0 ) ;
+	
+	return tcpdaemon( p_para );
+}
+
+#elif ( defined _WIN32 )
+
+STARTUPINFO		g_si ;
+PROCESS_INFORMATION	g_li ;
+	
+static int (* _iRTF_g_pfControlMain)(long lControlStatus) ;
+SERVICE_STATUS		_gssServiceStatus ;
+SERVICE_STATUS_HANDLE	_gsshServiceStatusHandle ;
+HANDLE			_ghServerHandle ;
+void			*_gfServerParameter ;
+char			_gacServerName[257] ;
+int			(* _gfServerMain)( void *pv ) ;
+
+static void WINAPI ServiceCtrlHandler( DWORD dwControl )
+{
+	switch ( dwControl )
+	{
+		case SERVICE_CONTROL_STOP :
+		case SERVICE_CONTROL_SHUTDOWN :
+			
+			_gssServiceStatus.dwCurrentState = SERVICE_STOP_PENDING ;
+			SetServiceStatus( _gsshServiceStatusHandle , &_gssServiceStatus ) ;
+			_gssServiceStatus.dwCurrentState = SERVICE_STOPPED ;
+			SetServiceStatus( _gsshServiceStatusHandle , &_gssServiceStatus) ;
+			break;
+			
+		case SERVICE_CONTROL_PAUSE :
+			
+			_gssServiceStatus.dwCurrentState = SERVICE_PAUSE_PENDING ;
+			SetServiceStatus( _gsshServiceStatusHandle , &_gssServiceStatus ) ;
+			_gssServiceStatus.dwCurrentState = SERVICE_PAUSED ;
+			SetServiceStatus( _gsshServiceStatusHandle , &_gssServiceStatus) ;
+			break;
+		
+		case SERVICE_CONTROL_CONTINUE :
+			
+			_gssServiceStatus.dwCurrentState = SERVICE_CONTINUE_PENDING ;
+			SetServiceStatus( _gsshServiceStatusHandle , &_gssServiceStatus ) ;
+			_gssServiceStatus.dwCurrentState = SERVICE_RUNNING ;
+			SetServiceStatus( _gsshServiceStatusHandle , &_gssServiceStatus) ;
+			break;
+			
+		case SERVICE_CONTROL_INTERROGATE :
+			
+			_gssServiceStatus.dwCurrentState = SERVICE_RUNNING ;
+			SetServiceStatus( _gsshServiceStatusHandle , &_gssServiceStatus) ;
+			break;
+			
+		default:
+			
+			break;
+			
+	}
+	
+	if( _iRTF_g_pfControlMain )
+		(* _iRTF_g_pfControlMain)( dwControl );
+	
+	return;
+}
+
+static void WINAPI ServiceMainProc( DWORD argc , LPTSTR *argv )
+{
+	_gssServiceStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS ;
+	_gssServiceStatus.dwCurrentState = SERVICE_START_PENDING ;
+	_gssServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP ;
+	_gssServiceStatus.dwWin32ExitCode = 0 ;
+	_gssServiceStatus.dwServiceSpecificExitCode = 0 ;
+	_gssServiceStatus.dwCheckPoint = 0 ;
+	_gssServiceStatus.dwWaitHint = 0 ;
+	
+	_gsshServiceStatusHandle = RegisterServiceCtrlHandler( _gacServerName , ServiceCtrlHandler ) ;
+	if( _gsshServiceStatusHandle == (SERVICE_STATUS_HANDLE)0 )
+		return;
+	
+	_gssServiceStatus.dwCheckPoint = 0 ;
+	_gssServiceStatus.dwWaitHint = 0 ;
+	_gssServiceStatus.dwCurrentState = SERVICE_RUNNING ;
+	
+	SetServiceStatus( _gsshServiceStatusHandle , &_gssServiceStatus );
+	
+	_gfServerMain( _gfServerParameter );
+	
+	return;
+}
+
+static int BindDaemonServer( char *pcServerName , int (* ServerMain)( void *pv ) , void *pv , int (* pfuncControlMain)(long lControlStatus) )
+{
+	SERVICE_TABLE_ENTRY ste[] =
+	{
+		{ _gacServerName , ServiceMainProc },
+		{ NULL , NULL }
+	} ;
+	
+	BOOL		bret ;
+	
+	memset( _gacServerName , 0x00 , sizeof( _gacServerName ) );
+	if( pcServerName )
+	{
+		strncpy( _gacServerName , pcServerName , sizeof( _gacServerName ) - 1 );
+	}
+	
+	_ghServerHandle = GetCurrentProcess() ;
+	_gfServerMain = ServerMain ;
+	_gfServerParameter = pv ;
+	_iRTF_g_pfControlMain = pfuncControlMain ;
+	
+	bret = StartServiceCtrlDispatcher( ste ) ;
+	if( bret != TRUE )
+		return -1;
+	
+	return 0;
+}
+
+static int monitor( void *command_line )
+{
+	BOOL			bret = TRUE ;
+	
+	/* 创建子进程，并监控其结束事件，重启之 */
+	while(1)
+	{
+		memset( & g_si , 0x00 , sizeof(STARTUPINFO) );
+		g_si.dwFlags = STARTF_USESHOWWINDOW ;
+		g_si.wShowWindow = SW_HIDE ;
+		memset( & g_li , 0x00 , sizeof(LPPROCESS_INFORMATION) );
+		bret = CreateProcess( NULL , (char*)command_line , NULL , NULL , TRUE , 0 , NULL , NULL , & g_si , & g_li ) ;
+		if( bret != TRUE )
+		{
+			fprintf( stderr , "CreateProcess failed , errno[%d]\n" , GetLastError() );
+			return 1;
+		}
+		
+		CloseHandle( g_li.hThread );
+		
+		WaitForSingleObject( g_li.hProcess , INFINITE );
+		CloseHandle( g_li.hProcess );
+		
+		Sleep(10*1000);
+	}
+	
+	return 0;
+}
+
+static int control( long control_status )
+{
+	/* 当收到WINDOWS服务结束事件，先结束子进程 */
+	if( control_status == SERVICE_CONTROL_STOP || control_status == SERVICE_CONTROL_SHUTDOWN )
+	{
+		TerminateProcess( g_li.hProcess , 0 );
+	}
+	
+	return 0;
+}
+
+#endif
+
 /* 主入口函数 */
-func_tcpdaemon tcpdaemon ;
-int tcpdaemon( struct TcpdaemonEntryParameter *p_para )
+static int _tcpdaemon( struct TcpdaemonEntryParameter *p_para )
 {
 	struct TcpdaemonServerEnvirment	se ;
 	
@@ -1561,37 +1765,118 @@ int tcpdaemon( struct TcpdaemonEntryParameter *p_para )
 	return nret;
 }
 
-void *GetTcpmainParameter( struct TcpdaemonServerEnvirment *p_env )
+func_tcpdaemon tcpdaemon ;
+int tcpdaemon( struct TcpdaemonEntryParameter *p_para )
+{
+	int		nret = 0 ;
+	
+	if( p_para->daemon_level == 1 )
+	{
+#if ( defined __unix ) || ( defined __linux__ )
+		/* 转换为守护进程 */
+		nret = BindDaemonServer( & _tcpdaemon , p_para ) ;
+		if( nret )
+		{
+			ErrorLog( __FILE__ , __LINE__ , "convert to daemon failed[%d]" , nret );
+			return nret;
+		}
+		else
+		{
+			return 0;
+		}
+#elif ( defined _WIN32 )
+		long		c , len ;
+		char		command_line[ 256 + 1 ] ;
+		
+		/* 父进程，转化为服务 */
+		memset( command_line , 0x00 , sizeof(command_line) );
+		len = SNPRINTF( command_line , sizeof(command_line) , "%s" , "tcpdaemon.exe" ) ;
+		for( c = 1 ; c < argc ; c++ )
+		{
+			if( STRCMP( argv[c] , != , "--install-winservice" ) && STRCMP( argv[c] , != , "--uninstall-winservice" ) && STRCMP( argv[c] , != , "--daemon-level" ) )
+			{
+				if( strchr( argv[c] , ' ' ) || strchr( argv[c] , '\t' ) )
+					len += SNPRINTF( command_line + len , sizeof(command_line)-1 - len , " \"%s\"" , argv[c] ) ;
+				else
+					len += SNPRINTF( command_line + len , sizeof(command_line)-1 - len , " %s" , argv[c] ) ;
+			}
+		}
+		
+		nret = BindDaemonServer( "TcpDaemon" , monitor , command_line , & control ) ;
+		if( nret )
+		{
+			ErrorLog( __FILE__ , __LINE__ , "convert to daemon failed[%d]" , nret );
+			return nret;
+		}
+		else
+		{
+			return 0;
+		}
+#endif
+	}
+	else
+	{
+#if ( defined __unix ) || ( defined __linux__ )
+		/* 调用tcpdaemon函数 */
+		return _tcpdaemon( p_para );
+#elif ( defined _WIN32 )
+		/* 子进程，干活 */
+		{
+		WSADATA		wsd;
+		if( WSAStartup( MAKEWORD(2,2) , & wsd ) != 0 )
+			return 1;
+		}
+		
+		/* 调用tcpdaemon函数 */
+		nret = _tcpdaemon( & para ) ;
+		WSACleanup();
+		retutn nret;
+#endif
+	}
+}
+
+void *TDGetTcpmainParameter( struct TcpdaemonServerEnvirment *p_env )
 {
 	return p_env->param_tcpmain;
 }
 
-int GetListenSocket( struct TcpdaemonServerEnvirment *p_env )
+int TDGetListenSocket( struct TcpdaemonServerEnvirment *p_env )
 {
 	return p_env->listen_sock;
 }
 
-int *GetListenSocketPtr( struct TcpdaemonServerEnvirment *p_env )
+int *TDGetListenSocketPtr( struct TcpdaemonServerEnvirment *p_env )
 {
 	return &(p_env->listen_sock);
 }
 
-struct sockaddr_in GetListenAddress( struct TcpdaemonServerEnvirment *p_env )
+struct sockaddr_in TDGetListenAddress( struct TcpdaemonServerEnvirment *p_env )
 {
 	return p_env->listen_addr;
 }
 
-struct sockaddr_in *GetListenAddressPtr( struct TcpdaemonServerEnvirment *p_env )
+struct sockaddr_in *TDGetListenAddressPtr( struct TcpdaemonServerEnvirment *p_env )
 {
 	return &(p_env->listen_addr);
 }
 
-int GetProcessCount( struct TcpdaemonServerEnvirment *p_env )
+int TDGetProcessCount( struct TcpdaemonServerEnvirment *p_env )
 {
 	return p_env->p_para->process_count;
 }
 
-int *GetEpollArrayBase( struct TcpdaemonServerEnvirment *p_env )
+int *TDGetEpollArrayBase( struct TcpdaemonServerEnvirment *p_env )
 {
 	return p_env->epoll_array;
 }
+
+int TDGetThisEpoll( struct TcpdaemonServerEnvirment *p_env )
+{
+	return p_env->epoll_array[p_env->index];
+}
+
+int TDIsOnAcceptingSocket( struct TcpdaemonServerEnvirment *p_env )
+{
+	return p_env->is_on_accepting;
+}
+

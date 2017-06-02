@@ -8,11 +8,18 @@
 ###### 源文件配置区
 #@ c_FILE
 c_FILE		=	\
-			test.c \
-			testso.c \
+			test_callback_http_echo.c \
+			test_callback_http_echo_nonblock.c \
+			test_main_IF.c \
+			test_main_LF.c \
+			test_main_MPIO.c \
 
 ###### 目标文件、安装目录配置区
-NOINST_OBJ	=	testso.so test
+NOINST_OBJ	=	test_callback_http_echo.so \
+			test_callback_http_echo_nonblock.so \
+			test_main_IF \
+			test_main_LF \
+			test_main_MPIO \
 
 ###### 编译选项
 CFLAGS		=	-I. \
@@ -28,16 +35,22 @@ CLEAN_ADDITION	=
 ###### 加载mktpl模板库
 #@ make_all
 #@ make_clean
-#@ make_install
-#@ make_install_BININST
-#@ make_install_DFTHDERINST
 
 include $(MKTPLDIR)/makeobj_$(MKTPLOS).inc
 
 ###### 目标文件依赖关系
-testso.so:	testso.o
-	$(CC) $(SOFLAGS) -o $@ testso.o $(LFLAGS)
+test_callback_http_echo.so:	test_callback_http_echo.o
+	$(CC) $(SOFLAGS) -o $@ test_callback_http_echo.o $(LFLAGS)
 
-test	:	test.o
-	$(CC) $(ESOFLAGS) -o $@ test.o $(LFLAGS) -ltcpdaemon
+test_callback_http_echo_nonblock.so:	test_callback_http_echo_nonblock.o
+	$(CC) $(SOFLAGS) -o $@ test_callback_http_echo_nonblock.o $(LFLAGS)
+
+test_main_IF	:	test_main_IF.o test_callback_http_echo.o
+	$(CC) $(ESOFLAGS) -o $@ test_main_IF.o test_callback_http_echo.o $(LFLAGS) -ltcpdaemon
+
+test_main_LF	:	test_main_LF.o
+	$(CC) $(ESOFLAGS) -o $@ test_main_LF.o $(LFLAGS) -ltcpdaemon
+
+test_main_MPIO	:	test_main_MPIO.o test_callback_http_echo_nonblock.o
+	$(CC) $(ESOFLAGS) -o $@ test_main_MPIO.o test_callback_http_echo_nonblock.o $(LFLAGS) -ltcpdaemon
 
