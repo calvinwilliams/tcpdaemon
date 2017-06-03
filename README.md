@@ -15,9 +15,9 @@ tcpdaemon提供了三种与使用者代码对接方式：(注意：.exe只是为
 
 | 链接模式 | 链接关系 | 说明 |
 | ---- | ----- | -- |
-| 模式1 | tcpdaemon.exe + user.so(tcpmain) | 可执行程序tcpdaemon通过启动命令行参数挂接用户动态库，获得动态库中函数tcpmain指针。当建立TCP连接后 或 IO多路复用模式下当可读可写事件发生时 调用回调函数tcpmain |
-| 模式2 | user.exe(main,tcpmain) + libtcpdaemon.a(tcpdaemon) | 用户可执行程序user.exe隐式链接库libtcpdaemon.a。用户函数main(user.exe)初始化tcpdaemon参数结构体，并设置回调函数tcpmain，调用函数tcpdaemon(libtcpdaemon.so)。当建立TCP连接后 或 IO多路复用模式下当可读可写事件发生时 调用回调函数tcpmain |
-| 模式3 | user.exe(main) + libtcpdaemon.a(tcpdaemon) + user.so(tcpmain) | 同上，区别在于用户函数main不直接设置回调函数tcpmain而设置user.so文件名。函数tcpdaemon负责挂接动态库user.so并获得函数tcpmain指针 |
+| 模式1 | tcpdaemon.exe+user.so(tcpmain) | 可执行程序tcpdaemon通过启动命令行参数挂接用户动态库，获得动态库中函数tcpmain指针。当建立TCP连接后 或 IO多路复用模式下当可读可写事件发生时 调用回调函数tcpmain |
+| 模式2 | user.exe(main,tcpmain)+libtcpdaemon.a(tcpdaemon) | 用户可执行程序user.exe隐式链接库libtcpdaemon.a。用户函数main(user.exe)初始化tcpdaemon参数结构体，并设置回调函数tcpmain，调用函数tcpdaemon(libtcpdaemon.so)。当建立TCP连接后 或 IO多路复用模式下当可读可写事件发生时 调用回调函数tcpmain |
+| 模式3 | user.exe(main)+libtcpdaemon.a(tcpdaemon) + user.so(tcpmain) | 同上，区别在于用户函数main不直接设置回调函数tcpmain而设置user.so文件名。函数tcpdaemon负责挂接动态库user.so并获得函数tcpmain指针 |
 
 一般简单情况下，使用者采用模式1即可，只要编写一个动态库user.so（内含回调函数tcpmain）被可执行程序tcpdaemon挂接上去运行。如果使用者想订制一些自定义处理，如初始化环境，可以采用模式2，并把自定义参数传递给tcpdaemon穿透给tcpmain。如果想实现运行时选择回调函数tcpmain则可以采用模式3。
 
@@ -313,6 +313,6 @@ tcpdaemon提供了三种与使用者代码对接方式：(注意：.exe只是为
 
 tcpdaemon提供了多种服务模型和链接模式，旨在协助使用者快速构建TCP应用服务器，有兴趣的话可以使用本人的另一个开源项目HTTP解析器fasterhttp以百行以内代码构建出一个完整的Web服务器。
 
-tcpdaemon源码托管在[开源中国码云](http://git.oschina.net/calvinwilliams/tcpdaemon)，你也可以通过[邮箱](calvinwilliams@163.com)联系到作者
+tcpdaemon源码托管在 [开源中国码云](http://git.oschina.net/calvinwilliams/tcpdaemon)，你也可以通过 [邮箱](calvinwilliams@163.com) 联系到作者
 
 能帮助到您是我的荣幸 ^_^
