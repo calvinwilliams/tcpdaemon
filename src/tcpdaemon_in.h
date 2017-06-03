@@ -9,14 +9,16 @@
  * Licensed under the LGPL v2.1, see the file LICENSE in base directory.
  */
 
+#include "LOGC.h"
+
 #include "tcpdaemon.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/* EPOLL */
-#define MAX_EPOLL_EVENTS		1024
+/* IOMP */
+#define MAX_IOMP_EVENTS			1024
 
 /* 信号量值结构 */
 union semun
@@ -57,7 +59,7 @@ struct TcpdaemonServerEnvirment
 	
 	/* 在MultiplexIO进程池模型使用 */
 	int				*epoll_array ;
-	int				is_on_accepting ;
+	unsigned char			io_multiplex_event ;
 	
 	/* 在Leader-Follow线程池模型使用 */
 	THANDLE_T			*thandles ;

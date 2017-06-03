@@ -8,10 +8,10 @@ int main()
 	
 	memset( & ep , 0x00 , sizeof(struct TcpdaemonEntryParameter) );
 	
-	snprintf( ep.log_pathfilename , sizeof(ep.log_pathfilename) , "%s/log/test_main_MPIO.log" , getenv("HOME") );
+	snprintf( ep.log_pathfilename , sizeof(ep.log_pathfilename) , "%s/log/test_main_IOMP.log" , getenv("HOME") );
 	ep.log_level = LOGLEVEL_DEBUG ;
 	
-	strcpy( ep.server_model , "MPIO" );
+	strcpy( ep.server_model , "IOMP" );
 	strcpy( ep.ip , "0" );
 	ep.port = 9527 ;
 	

@@ -1,3 +1,7 @@
+1.2.0	2017-06-03	calvin
+	* Reforming code
+	* Add IOMP model ( linux only )
+
 1.1.2	2017-05-29	calvin
 	* Reforming code
 

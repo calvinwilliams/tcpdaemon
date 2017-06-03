@@ -34,14 +34,14 @@ c_FILE		=	\
 			test_callback_http_echo_nonblock.c \
 			test_main_IF.c \
 			test_main_LF.c \
-			test_main_MPIO.c \
+			test_main_IOMP.c \
 
 ###### 目标文件、安装目录配置区
 NOINST_OBJ	=	test_callback_http_echo.so \
 			test_callback_http_echo_nonblock.so \
 			test_main_IF \
 			test_main_LF \
-			test_main_MPIO \
+			test_main_IOMP \
 
 ###### 编译选项
 CFLAGS		=	-I. \
@@ -50,6 +50,8 @@ CFLAGS		=	-I. \
 ###### 链接选项
 LFLAGS		=	-L. \
 			-L$(HOME)/lib \
+			-lpthread \
+			-ldl \
 
 ###### 额外宏定义区
 CLEAN_ADDITION	=
@@ -90,6 +92,6 @@ test_main_IF	:	test_main_IF.o test_callback_http_echo.o
 test_main_LF	:	test_main_LF.o
 	$(CC) $(ESOFLAGS) -o $@ test_main_LF.o $(LFLAGS) -ltcpdaemon
 
-test_main_MPIO	:	test_main_MPIO.o test_callback_http_echo_nonblock.o
-	$(CC) $(ESOFLAGS) -o $@ test_main_MPIO.o test_callback_http_echo_nonblock.o $(LFLAGS) -ltcpdaemon
+test_main_IOMP	:	test_main_IOMP.o test_callback_http_echo_nonblock.o
+	$(CC) $(ESOFLAGS) -o $@ test_main_IOMP.o test_callback_http_echo_nonblock.o $(LFLAGS) -ltcpdaemon
 

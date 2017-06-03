@@ -49,8 +49,6 @@
 #include <direct.h>
 #endif
 
-#include "LOGC.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -147,7 +145,7 @@ typedef int func_tcpmain( struct TcpdaemonServerEnvirment *p_env , int sock , vo
 								p_env , int accepted_sock , struct sockaddr *accepted_addr
 				LF
 								p_env , int accepted_sock , struct sockaddr *accepted_addr
-				MPIO
+				IOMP
 					OnAcceptingSocket	p_env , int accepted_sock , struct sockaddr *accepted_addr
 					OnClosingSocket		p_env , int events , void *custem_data_ptr
 					OnSendingSocket		p_env , int events , void *custem_data_ptr
@@ -206,7 +204,13 @@ struct sockaddr_in *TDGetListenAddressPtr( struct TcpdaemonServerEnvirment *p_en
 int TDGetProcessCount( struct TcpdaemonServerEnvirment *p_env );
 int *TDGetEpollArrayBase( struct TcpdaemonServerEnvirment *p_env );
 int TDGetThisEpoll( struct TcpdaemonServerEnvirment *p_env );
-int TDIsOnAcceptingSocket( struct TcpdaemonServerEnvirment *p_env );
+
+#define IOMP_ON_ACCEPTING_SOCKET	1
+#define IOMP_ON_CLOSING_SOCKET		2
+#define IOMP_ON_RECEIVING_SOCKET	3
+#define IOMP_ON_SENDING_SOCKET		4
+
+int TDGetIoMultiplexEvent( struct TcpdaemonServerEnvirment *p_env );
 
 #ifdef __cplusplus
 }
