@@ -1,0 +1,353 @@
+tcpdaemon - TCP connection management daemon
+
+1.Overview
+
+Tcpdaemon is similar to the xinetd TCP daemon service, which provides a variety of packaging common TCP connection management model (instant derived, pre-derived process pool, etc.), users only need to write the TCP communications data exchange protocol and application processing code, can quickly completely construct their own TCP application server.
+Using tcpdaemon can make you avoid writing complex TCP connection management code and processes thread model, such as maintenance of connection pool, tcpdaemon provide rich model (classic models of server service in the UNP) is called by your application, you only need to use the model.
+Not only can use tcpdaemon like xinetd, interface pattern also provides a variety of other applications interface modes, such as to implement the 'main' function and processes the entrance, adapt to a variety of code structures.
+
+tcpdaemon compared with xientd
+* Application affinity : xinetd used to system services layer of the TCP services, mainly for tcpdaemon is oriented to application layer 
+* TCP connection management model : xinetd only support instant derived process model, tcpdaemon also support pre-derived process pool model(leader-Followers) and other high-performance model.
+* Interface pattern : xinetd only supports the main guardian mode, tcpdaemon also support the function call mode.
+* Cross-platform : xinetd is a UNIX software, tcpdaemon is cross-platform software, support UNIX liked , Linux, WINDOWS and other mainstream operating system (waiting for realize).
+
+Tcpdaemon provides two TCP connection management model
+* Instant derived process model : after accept a connection , and derived a process for processing
+* Leader-Follower process pool model : derived a process pool, adaptive to accept new connections 
+* Leader-Follower thread pool model ( for WINDOWS ) : derived a thread pool, adaptive to accept new connections 
+In the future will also support more models, such as thread model.
+
+tcpdaemon provides two application interface modes
+* Main guardian mode : traditional mode like xinetd, initiate a TCP daemon and custom part in an executable program or dynamic library way to hook up on it 
+* Call function mode : the master framework to function invocation pattern called tcpdaemon, link into separate application 
+Three application interface pattern is enough to adapt to almost all applications interface.
+
+2.Compiling and installation
+
+for example, Linux
+[code]
+$ make -f makefile.Linux install
+make[1]: Entering directory `~/src/tcpdaemon-1.1.0/src'
+make[2]: Entering directory `~/src/tcpdaemon-1.1.0/src'
+gcc -g -fPIC -Wall -Werror -O2 -I.  -c tcpdaemon.c
+gcc -g -fPIC -Wall -Werror -O2 -I.  -c worker.c
+gcc -g -fPIC -Wall -Werror -O2 -I.  -c LOGC.c
+gcc -g -fPIC -Wall -Werror -O2 -I.  -c service.c
+gcc -g -fPIC -Wall -Werror -O2 -shared -o libtcpdaemon.so tcpdaemon.o worker.o LOGC.o service.o -L. -lpthread -ldl
+gcc -g -fPIC -Wall -Werror -O2 -I.  -c main.c
+gcc -g -fPIC -Wall -Werror -O2  -o tcpdaemon util.o main.o tcpdaemon.o worker.o LOGC.o service.o -L. -lpthread -ldl
+make[2]: Leaving directory `~/src/tcpdaemon-1.1.0/src'
+cp -f tcpdaemon ~/bin/
+cp -f libtcpdaemon.so ~/lib/
+cp -f tcpdaemon.h ~/include/
+make[1]: Leaving directory `~/src/tcpdaemon-1.1.0/src'
+make[1]: Entering directory `~/src/tcpdaemon-1.1.0/test'
+make[2]: Entering directory `~/src/tcpdaemon-1.1.0/test'
+gcc -Wall -Werror -O2 -fno-strict-aliasing -g -fPIC -I. -I~/include  -c testso.c
+gcc -Wall -Werror -O2 -fno-strict-aliasing -g -fPIC -shared -o testso.so testso.o -L.
+gcc -Wall -Werror -O2 -fno-strict-aliasing -g -fPIC -I. -I~/include  -c test.c
+gcc -Wall -Werror -O2 -fno-strict-aliasing -g -fPIC  -o test test.o ~/lib/libtcpdaemon.so -L.
+make[2]: Leaving directory `~/src/tcpdaemon-1.1.0/test'
+make[1]: Leaving directory `~/src/tcpdaemon-1.1.0/test'
+[/code]
+
+3.A examples
+[code]
+$ cd test
+$ cat testso.c
+#include "tcpdaemon.h"
+int tcpmain( void *param_tcpmain , int sock , struct sockaddr *addr )
+{
+	write( sock , "hello tcpdaemon\n" , 16 );
+	return 0;
+}
+$ make -f makefile.Linux
+gcc -Wall -Werror -O2 -fno-strict-aliasing -g -fPIC -I. -I~/include  -c testso.c
+gcc -Wall -Werror -O2 -fno-strict-aliasing -g -fPIC -shared -o testso.so testso.o
+$ tcpdaemon -m LF -c 10 -l 127.0.0.1:7879 -s testso.so
+tcpdaemon startup
+$ ps -ef | grep tcpdaemon
+502      13692     1  0 12:12 ?        00:00:00 tcpdaemon -m LF -c 10 -l 127.0.0.1:7879 -s testso.so
+502      13693 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -c 10 -l 127.0.0.1:7879 -s testso.so
+502      13694 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -c 10 -l 127.0.0.1:7879 -s testso.so
+502      13695 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -c 10 -l 127.0.0.1:7879 -s testso.so
+502      13696 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -c 10 -l 127.0.0.1:7879 -s testso.so
+502      13697 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -c 10 -l 127.0.0.1:7879 -s testso.so
+502      13698 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -c 10 -l 127.0.0.1:7879 -s testso.so
+502      13699 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -c 10 -l 127.0.0.1:7879 -s testso.so
+502      13700 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -c 10 -l 127.0.0.1:7879 -s testso.so
+502      13701 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -c 10 -l 127.0.0.1:7879 -s testso.so
+502      13702 13692  0 12:12 ?        00:00:00 tcpdaemon -m LF -c 10 -l 127.0.0.1:7879 -s testso.so
+$ telnet 127.0.0.1 7879
+Trying 127.0.0.1...
+Connected to localhost.localdomain (127.0.0.1).
+Escape character is '^]'.
+hello tcpdaemon
+Connection closed by foreign host.
+$ kill 13692
+[/code]
+
+notice :
+test case in Directory test/ simulate HTTP response
+[code]
+$ cat test.c
+#include "tcpdaemon.h"
+int tcpmain( void *param_tcpmain , int sock , struct sockaddr *addr )
+{
+#if 0
+	write( sock , "hello tcpdaemon\n" , 16 );
+	return 0;
+#endif
+#if 1
+	char	http_buffer[ 4096 + 1 ] ;
+	long	http_len ;
+	long	len ;
+	memset( http_buffer , 0x00 , sizeof(http_buffer) );
+	http_len = 0 ;
+	while( sizeof(http_buffer)-1 - http_len > 0 )
+	{
+		len = read( sock , http_buffer + http_len , sizeof(http_buffer)-1 - http_len ) ;
+		if( len == -1 || len == 0 )
+			return 0;
+		if( strstr( http_buffer , "\r\n\r\n" ) )
+			break;
+		http_len += len ;
+	}
+	if( sizeof(http_buffer)-1 - http_len <= 0 )
+	{
+		return -1;
+	}
+	memset( http_buffer , 0x00 , sizeof(http_buffer) );
+	http_len = 0 ;
+	http_len = sprintf( http_buffer , "HTTP/1.0 200 OK\r\n\r\n" ) ;
+	write( sock , http_buffer , http_len );
+	return 0;
+#endif
+}
+[/code]
+use apache performance testing tools
+[code]
+$ ab -c 10 -n 100000 http://localhost:7879/index.html
+[/code]
+
+4.Tcpdaemon main daemon command line parameters
+
+[code]
+$ tcpdaemon
+USAGE : tcpdaemon -m LF -n process_count [ -r max_requests_per_process ] -l ip:port -s so_pathfilename
+                  -m IF [ -n max_process_count ] -l ip:port -s so_pathfilename
+        other options :
+                  [ --loglevel-(debug|info|warn|error|fatal) ] [ --tcp-nodelay ] [ --tcp-linger linger ]
+[/code]
+-m	TCP connection management model 
+	LF : Leader-Follower process pool model
+	IF : Instant derived process model
+	WIN-TLF : Leader-Follower thread pool model
+-c	work process amount on Leader-Follower process pool model
+	maximum work process amount on instant derived process model
+-n	work process maximum application processing times on Leader-Follower process pool model , create a new process of alternative work process
+-l	local listen IP and PORT, such as "127.0.0.1:7879"
+-s	file name of dynamic link library
+-v	show version
+--daemon-level		convert a daemon on startup
+--work-user work_user	set the start users
+--work-path work_path	set the initial directory
+--loglevel-(debug|info|warn|error|fatal) log level, the log file name defaults to "$HOME/log/tcpdaemon log" 
+--tcp-nodelay		Enable TCP_NODELAY option
+--tcp-linger		Enable TCP_LINGER option , The actual setting value = parameter values - 1
+--install-winservice	install a windows service
+--uninstall-winservice	uninstall this service
+
+5.TCP connection management model
+
+5.1.Instant derived process model
+
+Tcpdaemon run only a listener, on a new connection came in, derived a child process is responsible for transfer to the application.
+
+5.2.Leader-Follower process pool model
+
+Tcpdaemon will start a management process and a work process pool, work process competition to accept new connections, and synchronization to application. 
+
+5.2.Leader-Follower thread pool model(for WINDOWS)
+
+Tcpdaemon will start a monitoring process and a working process, monitoring process monitoring and restart working process. Work process to create a monitoring thread and a group of worker threads, monitoring thread monitoring and restart workering thread. Working thread group competition to accept new connections and synchronous handed over to the application.
+
+6.Application interface pattern
+
+In order to adapt to dock with applications, tcpdaemon provides two modes.
+
+6.1.Main guardian mode
+
+Which is the most commonly used mode , tcpdaemon framework provides a daemon responsible for process, runtime explicitly articulated application provides dynamic library to deal with data communication protocol and application logic.
+tcpdaemon.exe(main->tcpdaemon) -> xxx.so(tcpmain)
+Note: the application wants to convert daemon, must be deal with itself. 
+
+Write to handle data communications protocol and application logic of xxx.c
+[code]
+#include "tcpdaemon.h"
+int tcpmain( void *param_tcpmain , int sock , struct sockaddr *addr )
+{
+	/* ...Deal with data communication protocol and application logic... */
+	return 0;
+}
+[/code]
+The return value is less than 0 will cause the process end.
+
+Compile links into xxx.so can be used by the daemon explicitly articulated
+[code]
+$ gcc -Wall -Werror -O2 -fno-strict-aliasing -g -fPIC -I. -I~/include -c xxx.c
+$ gcc -Wall -Werror -O2 -fno-strict-aliasing -g -fPIC -shared -o xxx.so xxx.o
+[/code]
+
+running
+[code]
+$ tcpdaemon -m LF -c 10 -l 127.0.0.1:7879 -s xxx.so
+[/code]
+
+This pattern is used to make tcpdaemon bring daemon responsible for platform, application only needs to provide the dynamic library into the occasion.
+
+6.2.Call function mode
+
+Application itself is responsible for implementing the main function, the control process framework, ready to call a function after tcpdaemon (link in the chain of implicit libtcpdaemon.so library) implemented TCP connection management.
+xxx.exe(main) -> libtcpdaemon.so(tcpdaemon) -> xxx.exe(tcpmain)
+Under UNIX executable file extensions, here I write xxx.exe illustrative purposes
+
+Write to handle data communications protocol and application logic of xxx.c
+[code]
+#include "tcpdaemon.h"
+int tcpmain( void *param_tcpmain , int sock , struct sockaddr *addr )
+{
+	/* ...Deal with data communication protocol and application logic... */
+	return 0;
+}
+int main()
+{
+       struct TcpdaemonEntryParam	ep ;
+
+       memset( & ep , 0x00 , sizeof(struct TcpdaemonEntryParam) );
+       ep.call_mode = TCPDAEMON_CALLMODE_MAIN ;
+       strcpy( ep.server_model , "LF" );
+       ep.max_process_count = 10 ;
+       ep.max_requests_per_process = 0 ; /* 可选选项也可以不赋值 */
+       strcpy( ep.ip , "127.0.0.1" );
+       ep.port = 7879 ;
+       strcpy( ep.so_pathfilename , "testso.so" );
+       ep.pfunc_tcpmain = & tcpmain ;
+       ep.param_tcpmain = NULL ;
+       ep.log_level = LOGLEVEL_INFO ;
+
+#if ( defined _WIN32 )
+	{
+	WSADATA		wsd;
+	if( WSAStartup( MAKEWORD(2,2) , & wsd ) != 0 )
+		return 1;
+	}
+#endif
+	
+       return -tcpdaemon( & ep );
+}
+[/code]
+
+Structure TcpdaemonEntryParam description see tcpdaemon.h
+[code]
+struct TcpdaemonEntryParam
+{
+	int		daemon_level ;	/* Whether into daemon service 1:YES 0:NO(DEFAULT) */
+	
+	char		log_pathfilename[ MAXLEN_FILENAME + 1 ] ;	/* default to standard output  */
+	int		log_level ;	/* default the DEBUG level */
+	
+	int		call_mode ;	/* Application interface pattern
+					   TCPDAEMON_CALLMODE_DAEMON:Main guardian mode
+					   TCPDAEMON_CALLMODE_MAIN:Call function mode
+					*/
+	
+	char		server_model[ 10 + 1 ] ;	/* TCP connection management model
+							LF:Leader-Follower process pool model for UNIX,Linux
+							IF:Instant derived process model for UNIX,Linux
+							WIN-TLF:Leader-Follower thread pool model for win32
+							*/
+	long		max_process_count ;	/* work process amount on Leader-Follower process pool model , or maximum work process amount on instant derived process model */
+	long		max_requests_per_process ;	/* work process maximum application processing times on Leader-Follower process pool model */
+	char		ip[ 20 + 1 ] ;	/* local listen IP */
+	long		port ;	/* local listen PORT */
+	char		so_pathfilename[ MAXLEN_FILENAME + 1 ] ;	/* file name of dynamic link library */
+	
+	func_tcpmain	*pfunc_tcpmain ;	/* tcpmain function pointer */
+	void		*param_tcpmain ;	/* tcpmain function parameter */
+	
+	int		tcp_nodelay ;	/* Enable TCP_NODELAY option 1:enable 0:disable(DEFAULT) */
+	int		tcp_linger ;	/* Enable TCP_LINGER option 1:enable 0:disable(DEFAULT) */
+	
+	/* The following for internal use */
+	int		install_winservice ;
+	int		uninstall_winservice ;
+} ;
+[/code]
+
+Compile xxx.c and libtcpdaemon.so link together into xxx.exe 
+[code]
+$ gcc -Wall -Werror -O2 -fno-strict-aliasing -g -fPIC -I. -I~/include  -c xxx.c
+$ gcc -Wall -Werror -O2 -fno-strict-aliasing -g -fPIC  -o xxx xxx.o ~/lib/libtcpdaemon.so
+[/code]
+
+running
+[code]
+$ ./xxx
+[/code]
+
+This model can be used for application wants to master guardian without using tcpdaemon guardian of the occasion.
+
+6.3.Mixed model
+
+is similar to the main guardian pattern, but the main function in tcpdaemon.so, only link into a complete executable program rather than borrow tcpdaemon do guard
+tcpdaemon.so(main->tcpdaemon) -> xxx.exe(tcpmain)
+
+Write to handle data communications protocol and application logic of xxx.c
+[code]
+#include "tcpdaemon.h"
+int tcpmain( void *param_tcpmain , int sock , struct sockaddr *addr )
+{
+	/* ...Deal with data communication protocol and application logic... */
+	return 0;
+}
+func_tcpmain	*g_pfunc_tcpmain = & tcpmain ;
+void		*g_param_tcpmain = NULL ;
+[/code]
+
+Compile xxx.c and tcpdaemon.so link together into xxx.exe 
+[code]
+$ gcc -Wall -Werror -O2 -fno-strict-aliasing -g -fPIC -I. -I~/include  -c xxx.c
+$ gcc -Wall -Werror -O2 -fno-strict-aliasing -g -fPIC  -o xxx xxx.o ~/lib/tcpdaemon.so
+[/code]
+
+running
+[code]
+$ ./xxx
+[/code]
+
+This model can be used for application wants to master guardian but don't want to achieve the main function of parsing command line parameters.
+
+7.Subsequent expansion plan
+
+* Nothing.
+
+8.The last
+
+Welcome to use ^_^
+Homepage : https://github.com/calvinwilliams/tcpdaemon
+Contact me by calvinwilliams.c@gmail.com
+
+
+
+
+
+
+
+
+
+
+
+
+

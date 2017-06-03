@@ -76,7 +76,7 @@ extern "C" {
 #define NEWLINE		"\r\n"
 #endif
 
-/* 简单日志函数 */
+/* 日志等级 */
 #ifndef LOGLEVEL_DEBUG
 #define LOGLEVEL_DEBUG		0
 #define LOGLEVEL_INFO		1
@@ -85,6 +85,7 @@ extern "C" {
 #define LOGLEVEL_FATAL		4
 #endif
 
+/* 简单日志函数 */
 void SetLogFile( char *format , ... );
 void SetLogLevel( int log_level );
 

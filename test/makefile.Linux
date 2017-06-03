@@ -1,4 +1,5 @@
 # 此文件由makelocal.sh自动生成
+MAKEFILE_POSTFIX=.Linux
 # 此文件由makeobj.sh自动生成
 ############################################################
 # 项目名 : 
@@ -14,7 +15,8 @@ SOFLAGS		=	-shared
 ESOFLAGS	=	
 
 # c源代码文件宏及推导规则
-CC		=	gcc -Wall -Werror -O2 -fno-strict-aliasing -g -fPIC
+CC		=	gcc -g -fPIC -O2 -Wall -Werror -fno-strict-aliasing
+CC_NOWARN	=	gcc -g -fPIC -O2
 
 c_FILE_o	=	$(c_FILE:.c=.o)
 c_FILE2_o	=	$(c_FILE2:.c=.o)
@@ -28,36 +30,45 @@ c_FILE_CLEAN	=	$(c_FILE_o) $(c_FILE2_o) $(c_FILE3_o) $(c_FILE4_o) $(c_FILE5_o)
 	$(CC) $(CFLAGS) -c $<
 
 c_FILE		=	\
-			test.c \
-			testso.c \
+			test_callback_http_echo.c \
+			test_callback_http_echo_nonblock.c \
+			test_main_IF.c \
+			test_main_LF.c \
+			test_main_IOMP.c \
 
 ###### 目标文件、安装目录配置区
-NOINST_OBJ	=	testso.so test
+NOINST_OBJ	=	test_callback_http_echo.so \
+			test_callback_http_echo_nonblock.so \
+			test_main_IF \
+			test_main_LF \
+			test_main_IOMP \
 
 ###### 编译选项
 CFLAGS		=	-I. \
-			-I$(HOME)/include \
+			-I$(HOME)/include/tcpdaemon \
 
 ###### 链接选项
 LFLAGS		=	-L. \
 			-L$(HOME)/lib \
+			-lpthread \
+			-ldl \
 
 ###### 额外宏定义区
 CLEAN_ADDITION	=
 
 ###### 加载mktpl模板库
 # 最终目标列表
-all	:	$(BIN) $(BIN2) $(LIB) $(LIB2) $(OBJ) $(OBJ2) $(SQL) $(NOCLEAN_OBJ) $(NOINST_OBJ)
+all	:	$(OBJ) $(OBJ2) $(LIB) $(LIB2) $(SQL) $(NOINST_OBJ) $(BIN) $(BIN2)
 
 # 文件系统宏
 CD		=	cd
 RM		=	rm -f
-CP		=	cp -f
+CP		=	cp -rf
 MV		=	mv -f
 MKDIR		=	mkdir -p
 
 # 预定义源文件清理删除关联宏
-_FILE_CLEAN	=	$(c_FILE_CLEAN) $(cpp_FILE_CLEAN) $(SQC_FILE_CLEAN) $(csm_FILE_CLEAN) $(c_html_FILE_CLEAN) $(cui_FILE_CLEAN) $(dtd_FILE_CLEAN) $(prt_FILE_CLEAN) $(fmd_FILE_CLEAN) $(smd_FILE_CLEAN) $(def_FILE_CLEAN) $(act_FILE_CLEAN)
+_FILE_CLEAN	=	$(c_FILE_CLEAN) $(cpp_FILE_CLEAN) $(SQC_FILE_CLEAN) $(ec_FILE_CLEAN) $(ec_FILE2_CLEAN) $(csm_FILE_CLEAN) $(c_html_FILE_CLEAN) $(cui_FILE_CLEAN) $(dtd_FILE_CLEAN) $(prt_FILE_CLEAN) $(fmd_FILE_CLEAN) $(smd_FILE_CLEAN) $(def_FILE_CLEAN) $(act_FILE_CLEAN) $(sml2c_FILE_CLEAN)
 
 # 清理删除规则
 .PHONY:clean
@@ -68,20 +79,20 @@ clean		:
 	done
 
 
-# 预定义源代码缺省头文件宏
-DFTHDER		=	$(csm_FILE_DFTHDER) $(cui_FILE_DFTHDER) $(dtd_FILE_DFTHDER) $(prt_FILE_DFTHDER) $(fmd_FILE_DFTHDER) $(smd_FILE_DFTHDER) $(def_FILE_DFTHDER) $(act_FILE_DFTHDER)
-
-# 提交安装规则
-.PHONY:install
-install		:
-	@make -f makefile.Linux
-
-
 
 ###### 目标文件依赖关系
-testso.so:	testso.o
-	$(CC) $(SOFLAGS) -o $@ testso.o $(LFLAGS)
+test_callback_http_echo.so:	test_callback_http_echo.o
+	$(CC) $(SOFLAGS) -o $@ test_callback_http_echo.o $(LFLAGS)
 
-test	:	test.o
-	$(CC) $(ESOFLAGS) -o $@ test.o $(LFLAGS) -ltcpdaemon
+test_callback_http_echo_nonblock.so:	test_callback_http_echo_nonblock.o
+	$(CC) $(SOFLAGS) -o $@ test_callback_http_echo_nonblock.o $(LFLAGS)
+
+test_main_IF	:	test_main_IF.o test_callback_http_echo.o
+	$(CC) $(ESOFLAGS) -o $@ test_main_IF.o test_callback_http_echo.o $(LFLAGS) -ltcpdaemon
+
+test_main_LF	:	test_main_LF.o
+	$(CC) $(ESOFLAGS) -o $@ test_main_LF.o $(LFLAGS) -ltcpdaemon
+
+test_main_IOMP	:	test_main_IOMP.o test_callback_http_echo_nonblock.o
+	$(CC) $(ESOFLAGS) -o $@ test_main_IOMP.o test_callback_http_echo_nonblock.o $(LFLAGS) -ltcpdaemon
 
