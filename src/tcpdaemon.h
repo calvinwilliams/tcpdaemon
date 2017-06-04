@@ -53,10 +53,12 @@
 extern "C" {
 #endif
 
+#ifndef _WINDLL_FUNC
 #if ( defined __unix ) || ( defined __linux__ )
 #define _WINDLL_FUNC
 #elif ( defined _WIN32 )
 #define _WINDLL_FUNC		_declspec(dllexport)
+#endif
 #endif
 
 /* 公共宏 */
@@ -115,11 +117,11 @@ extern "C" {
 
 /* 日志等级 */
 #ifndef LOGLEVEL_DEBUG
-#define LOGLEVEL_DEBUG		0
-#define LOGLEVEL_INFO		1
-#define LOGLEVEL_WARN		2
-#define LOGLEVEL_ERROR		3
-#define LOGLEVEL_FATAL		4
+#define LOGLEVEL_DEBUG		1
+#define LOGLEVEL_INFO		2
+#define LOGLEVEL_WARN		3
+#define LOGLEVEL_ERROR		4
+#define LOGLEVEL_FATAL		5
 #endif
 
 /* 版本号字符串 */
@@ -139,7 +141,7 @@ extern char		*__TCPDAEMON_VERSION ;
 struct TcpdaemonEntryParameter ;
 struct TcpdaemonServerEnvirment ;
 typedef int func_tcpdaemon( struct TcpdaemonEntryParameter *p_para );
-typedef int func_tcpmain( struct TcpdaemonServerEnvirment *p_env , int sock , void *addr );
+typedef int func_tcpmain( struct TcpdaemonServerEnvirment *p_env , int sock , void *p_addr );
 				/*
 				IF
 								p_env , int accepted_sock , struct sockaddr *accepted_addr

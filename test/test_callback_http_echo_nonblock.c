@@ -13,10 +13,13 @@ struct AcceptedSession
 _WINDLL_FUNC int tcpmain( struct TcpdaemonServerEnvirment *p_env , int sock , void *p_addr )
 {
 	struct AcceptedSession	*p_accepted_session = NULL ;
+	int			epoll_fd ;
 	struct epoll_event	event ;
 	int			len ;
 	
 	int			nret = 0 ;
+	
+	epoll_fd = TDGetThisEpoll(p_env) ;
 	
 	switch( TDGetIoMultiplexEvent(p_env) )
 	{
@@ -32,7 +35,7 @@ _WINDLL_FUNC int tcpmain( struct TcpdaemonServerEnvirment *p_env , int sock , vo
 			memset( & event , 0x00 , sizeof(struct epoll_event) );
 			event.events = EPOLLIN | EPOLLERR ;
 			event.data.ptr = p_accepted_session ;
-			nret = epoll_ctl( TDGetThisEpoll(p_env) , EPOLL_CTL_ADD , p_accepted_session->sock , & event ) ;
+			nret = epoll_ctl( epoll_fd , EPOLL_CTL_ADD , p_accepted_session->sock , & event ) ;
 			if( nret == -1 )
 				return -1;
 			
@@ -41,7 +44,7 @@ _WINDLL_FUNC int tcpmain( struct TcpdaemonServerEnvirment *p_env , int sock , vo
 		case IOMP_ON_CLOSING_SOCKET :
 			p_accepted_session = (struct AcceptedSession *) p_addr ;
 			
-			epoll_ctl( TDGetThisEpoll(p_env) , EPOLL_CTL_DEL , p_accepted_session->sock , NULL );
+			epoll_ctl( epoll_fd , EPOLL_CTL_DEL , p_accepted_session->sock , NULL );
 			close( p_accepted_session->sock );
 			free( p_accepted_session );
 			
@@ -68,7 +71,7 @@ _WINDLL_FUNC int tcpmain( struct TcpdaemonServerEnvirment *p_env , int sock , vo
 				memset( & event , 0x00 , sizeof(struct epoll_event) );
 				event.events = EPOLLOUT | EPOLLERR ;
 				event.data.ptr = p_accepted_session ;
-				nret = epoll_ctl( TDGetThisEpoll(p_env) , EPOLL_CTL_MOD , p_accepted_session->sock , & event ) ;
+				nret = epoll_ctl( epoll_fd , EPOLL_CTL_MOD , p_accepted_session->sock , & event ) ;
 				if( nret == -1 )
 					return -1;
 				

@@ -311,7 +311,7 @@ tcpdaemon提供了三种与使用者代码对接方式：(注意：.exe只是为
 
 # 4.总结 #
 
-tcpdaemon提供了多种服务模型和链接模式，旨在协助使用者快速构建TCP应用服务器，有兴趣的话可以使用本人的另一个开源项目HTTP解析器fasterhttp以百行以内代码构建出一个完整的Web服务器。
+tcpdaemon提供了多种服务模型和链接模式，旨在协助使用者快速构建TCP应用服务器，比如可以使用本人的另一个开源项目 [HTTP解析器fasterhttp](http://git.oschina.net/calvinwilliams/fasterhttp) 以百行以内代码构建出一个完整的Web服务器，还有一个完整的应用案例可参阅本人的另一个开源项目 [分布式发号器](http://git.oschina.net/calvinwilliams/coconut) ，经过tcpdaemon改造后应用代码缩短了一半。
 
 tcpdaemon源码托管在 [开源中国码云](http://git.oschina.net/calvinwilliams/tcpdaemon)，你也可以通过 [邮箱](calvinwilliams@163.com) 联系到作者
 
