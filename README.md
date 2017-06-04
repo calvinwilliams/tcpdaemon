@@ -13,12 +13,14 @@ tcpdaemon
 		long	len ;
 		
 		len = recv( sock , buffer , sizeof(buffer) , 0 ) ;
-		if( len <= 0 )
-			return len;
+		if( len == 0 )
+			return 1;
+		else if( len < 0 )
+			return -1;
         
 		len = send( sock , buffer , len , 0 ) ;
 		if( len < 0 )
-			return len;
+			return -1;
 		
 		return 0;
 	}
