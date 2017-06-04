@@ -41,8 +41,6 @@ static int ParseCommandParameter( int argc , char *argv[] , struct TcpdaemonEntr
 {
 	int		c ;
 	
-	p_para->tcp_linger = -1 ;
-	
 	/* 解析命令行参数 */
 	for( c = 1 ; c < argc ; c++ )
 	{
