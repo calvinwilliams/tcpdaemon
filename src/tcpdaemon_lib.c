@@ -77,7 +77,7 @@ static void SetAcceptedSocketOptions( struct TcpdaemonServerEnvirment *p_env , i
 	}
 	
 	/* ÉèÖÃÕìÌý¶Ë¿ÚlingerÖµ */
-	if( p_env->p_para->tcp_linger >= 0 )
+	if( p_env->p_para->tcp_linger > 0 )
 	{
 		struct linger	lg ;
 		lg.l_onoff = 1 ;

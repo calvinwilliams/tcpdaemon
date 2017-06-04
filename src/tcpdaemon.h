@@ -149,9 +149,9 @@ typedef int func_tcpmain( struct TcpdaemonServerEnvirment *p_env , int sock , vo
 								p_env , int accepted_sock , struct sockaddr *accepted_addr
 				IOMP
 					OnAcceptingSocket	p_env , int accepted_sock , struct sockaddr *accepted_addr
-					OnClosingSocket		p_env , int events , void *custem_data_ptr
-					OnSendingSocket		p_env , int events , void *custem_data_ptr
-					OnReceivingSocket	p_env , int events , void *custem_data_ptr
+					OnClosingSocket		p_env , 0 , void *custem_data_ptr
+					OnSendingSocket		p_env , 0 , void *custem_data_ptr
+					OnReceivingSocket	p_env , 0 , void *custem_data_ptr
 					OnClosingSocket		p_env , 0 , void *custem_data_ptr
 				WIN-TLF
 								p_env , int accepted_sock , struct sockaddr *accepted_addr
@@ -164,14 +164,14 @@ struct TcpdaemonEntryParameter
 	int		daemon_level ;	/* 是否转化为守护服务 1:转化 0:不转化（缺省） */
 	
 	char		log_pathfilename[ 256 + 1 ] ;	/* 日志输出文件名，不设置则输出到标准输出上 */
-	int		log_level ;	/* 日志等级，不设置则缺省DEBUG等级 */
+	int		log_level ;	/* 日志等级 */
 	
 	char		server_model[ 10 + 1 ] ;	/* TCP连接管理模型
 							LF:领导者-追随者预派生进程池模型 for UNIX,Linux
 							IF:即时派生进程模型 for UNIX,Linux
 							WIN-TLF:领导者-追随者预派生线程池模型 for win32
 							*/
-	int		process_count ;	/* 当为领导者-追随者预派生进程池模型时为工作进程池进程数量，当为即时派生进程模型时为最大子进程数量 */
+	int		process_count ;	/* 当为领导者-追随者预派生进程池模型时为工作进程池进程数量，当为即时派生进程模型时为最大子进程数量，当为IO多路复用模型时为工作进程池进程数量 */
 	int		max_requests_per_process ;	/* 当为领导者-追随者预派生进程池模型时为单个工作进程最大处理应用次数 */
 	char		ip[ 20 + 1 ] ;	/* 本地侦听IP */
 	int		port ;	/* 本地侦听PORT */
@@ -184,7 +184,7 @@ struct TcpdaemonEntryParameter
 	void		*param_tcpmain ;	/* 当函数调用模式时，指向把TCP连接交给应用入口函数的参数指针。特别注意：自己保证线程安全 */
 	
 	int		tcp_nodelay ;	/* 启用TCP_NODELAY选项 1:启用 0:不启用（缺省）。可选 */
-	int		tcp_linger ;	/* 启用TCP_LINGER选项 1:启用并设置成参数值-1值 0:不启用（缺省）。可选 */
+	int		tcp_linger ;	/* 启用TCP_LINGER选项 >=1:启用并设置成参数值 0:不启用（缺省）。可选 */
 	
 	/* 以下为内部使用 */
 	int		install_winservice ;
