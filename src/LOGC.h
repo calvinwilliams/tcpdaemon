@@ -78,11 +78,11 @@ extern "C" {
 
 /* 日志等级 */
 #ifndef LOGLEVEL_DEBUG
-#define LOGLEVEL_DEBUG		0
-#define LOGLEVEL_INFO		1
-#define LOGLEVEL_WARN		2
-#define LOGLEVEL_ERROR		3
-#define LOGLEVEL_FATAL		4
+#define LOGLEVEL_DEBUG		1
+#define LOGLEVEL_INFO		2
+#define LOGLEVEL_WARN		3
+#define LOGLEVEL_ERROR		4
+#define LOGLEVEL_FATAL		5
 #endif
 
 /* 简单日志函数 */
