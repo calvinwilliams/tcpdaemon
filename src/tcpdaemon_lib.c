@@ -9,8 +9,8 @@
  */
 
 /* °æ±¾×Ö·û´® */
-char		__TCPDAEMON_VERSION_1_1_0[] = "1.1.0" ;
-char		*__TCPDAEMON_VERSION = __TCPDAEMON_VERSION_1_1_0 ;
+char		__TCPDAEMON_VERSION_1_2_1[] = "1.2.1" ;
+char		*__TCPDAEMON_VERSION = __TCPDAEMON_VERSION_1_2_1 ;
 
 static struct TcpdaemonServerEnvirment	*g_p_env = NULL ;
 static int				g_EXIT_flag = 0 ;
