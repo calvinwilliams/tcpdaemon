@@ -10,7 +10,7 @@ tcpdaemon
 	_WINDLL_FUNC int tcpmain( struct TcpdaemonServerEnvirment *p_env , int sock , void *p_addr )
 	{
 		char	buffer[ 4096 ] ;
-		long	len ;
+		int	len ;
 		
 		len = recv( sock , buffer , sizeof(buffer) , 0 ) ;
 		if( len == 0 )
