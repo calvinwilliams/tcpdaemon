@@ -14,7 +14,7 @@ tcpdaemon
 		
 		len = recv( sock , buffer , sizeof(buffer) , 0 ) ;
 		if( len == 0 )
-			return 1;
+			return 0;
 		else if( len < 0 )
 			return -1;
         
