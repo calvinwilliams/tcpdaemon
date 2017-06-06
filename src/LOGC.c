@@ -22,7 +22,7 @@
 TLS char	g_log_pathfilename[ MAXLEN_FILENAME + 1 ] = "" ;
 TLS int		g_log_level = LOGLEVEL_INFO ;
 
-const char log_level_itoa[][6] = { "DEBUG" , "INFO" , "WARN" , "ERROR" , "FATAL" } ;
+const char log_level_itoa[][6] = { "" , "DEBUG" , "INFO" , "WARN" , "ERROR" , "FATAL" } ;
 
 /* 设置日志文件名 */
 void SetLogFile( char *format , ... )

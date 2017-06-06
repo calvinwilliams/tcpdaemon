@@ -140,23 +140,31 @@ extern char		*__TCPDAEMON_VERSION ;
 /* 通讯数据协议及应用处理回调函数原型 */
 struct TcpdaemonEntryParameter ;
 struct TcpdaemonServerEnvirment ;
-typedef int func_tcpdaemon( struct TcpdaemonEntryParameter *p_para );
-typedef int func_tcpmain( struct TcpdaemonServerEnvirment *p_env , int sock , void *p_addr );
-				/*
-				IF
-								p_env , int accepted_sock , struct sockaddr *accepted_addr
-				LF
-								p_env , int accepted_sock , struct sockaddr *accepted_addr
-				IOMP
-					OnAcceptingSocket	p_env , int accepted_sock , struct sockaddr *accepted_addr
-					OnClosingSocket		p_env , 0 , void *custem_data_ptr
-					OnSendingSocket		p_env , 0 , void *custem_data_ptr
-					OnReceivingSocket	p_env , 0 , void *custem_data_ptr
-					OnClosingSocket		p_env , 0 , void *custem_data_ptr
-				WIN-TLF
-								p_env , int accepted_sock , struct sockaddr *accepted_addr
-				*/
 
+typedef int func_tcpdaemon( struct TcpdaemonEntryParameter *p_para );
+
+typedef int func_tcpmain( struct TcpdaemonServerEnvirment *p_env , int sock , void *p_addr );
+/* 参数说明 */
+	/*
+	IF
+					p_env , int accepted_sock , struct sockaddr *accepted_addr
+	LF
+					p_env , int accepted_sock , struct sockaddr *accepted_addr
+	IOMP
+		OnAcceptingSocket	p_env , int accepted_sock , struct sockaddr *accepted_addr
+		OnClosingSocket		p_env , 0 , void *custem_data_ptr
+		OnSendingSocket		p_env , 0 , void *custem_data_ptr
+		OnReceivingSocket	p_env , 0 , void *custem_data_ptr
+		OnClosingSocket		p_env , 0 , void *custem_data_ptr
+	WIN-TLF
+					p_env , int accepted_sock , struct sockaddr *accepted_addr
+	*/
+/* 返回值说明 */
+#define TCPMAIN_RETURN_CLOSE			0
+#define TCPMAIN_RETURN_WAITINGFOR_RECEIVING	1	
+#define TCPMAIN_RETURN_WAITINGFOR_SENDING	2	
+#define TCPMAIN_RETURN_WAITINGFOR_NEXT		3	
+#define TCPMAIN_RETURN_ERROR			-1
 
 /* 主入口参数结构 */
 struct TcpdaemonEntryParameter
@@ -186,6 +194,8 @@ struct TcpdaemonEntryParameter
 	int		tcp_nodelay ;	/* 启用TCP_NODELAY选项 1:启用 0:不启用（缺省）。可选 */
 	int		tcp_linger ;	/* 启用TCP_LINGER选项 >=1:启用并设置成参数值 0:不启用（缺省）。可选 */
 	
+	int		timeout_seconds ; /* 超时时间，单位：秒；目前只对IO-Multiplex模型有效 */
+	
 	/* 以下为内部使用 */
 	int		install_winservice ;
 	int		uninstall_winservice ;
@@ -213,6 +223,7 @@ int TDGetThisEpoll( struct TcpdaemonServerEnvirment *p_env );
 #define IOMP_ON_SENDING_SOCKET		4
 
 int TDGetIoMultiplexEvent( struct TcpdaemonServerEnvirment *p_env );
+void TDSetIoMultiplexDataPtr( struct TcpdaemonServerEnvirment *p_env , void *io_multiplex_data_ptr );
 
 #ifdef __cplusplus
 }

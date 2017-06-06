@@ -14,15 +14,15 @@ tcpdaemon
 		
 		len = recv( sock , buffer , sizeof(buffer) , 0 ) ;
 		if( len == 0 )
-			return 0;
+			return TCPMAIN_RETURN_CLOSE;
 		else if( len < 0 )
-			return -1;
+			return TCPMAIN_RETURN_ERROR;
         
 		len = send( sock , buffer , len , 0 ) ;
 		if( len < 0 )
-			return -1;
+			return TCPMAIN_RETURN_ERROR;
 		
-		return 0;
+		return TCPMAIN_RETURN_WAITINGFOR_NEXT;
 	}
 
 他编译链接成动态库test_callback_echo.so，最后用tcpdaemon直接挂接执行
@@ -83,39 +83,41 @@ tcpdaemon提供了三种与使用者代码对接方式：(注意：.exe只是为
 使用者只需编写一个函数tcpmain，实现同步的接收HTTP请求报文然后发送HTTP响应报文回去
 
     $ vi test_callback_http_echo.c
-	#include "tcpdaemon.h"
-	
-	_WINDLL_FUNC int tcpmain( struct TcpdaemonServerEnvirment *p_env , int sock , void *p_addr )
-	{
-		char	http_buffer[ 4096 + 1 ] ;
-		long	http_len ;
-		long	len ;
-		
-		memset( http_buffer , 0x00 , sizeof(http_buffer) );
-		http_len = 0 ;
-		
-		while( sizeof(http_buffer)-1 - http_len > 0 )
-		{
-			len = RECV( sock , http_buffer + http_len , sizeof(http_buffer)-1 - http_len , 0 ) ;
-			if( len == -1 || len == 0 )
-				return 0;
-			if( strstr( http_buffer , "\r\n\r\n" ) )
-				break;
-			http_len += len ;
-		}
-		if( sizeof(http_buffer)-1 - http_len <= 0 )
-		{
-			return -1;
-		}
-		
-		memset( http_buffer , 0x00 , sizeof(http_buffer) );
-		http_len = 0 ;
-		
-		http_len = sprintf( http_buffer , "HTTP/1.0 200 OK\r\nContent-length: 17\r\n\r\nHello Tcpdaemon\r\n" ) ;
-		SEND( sock , http_buffer , http_len , 0 );
-		
-		return 0;
-	}
+    #include "tcpdaemon.h"
+    
+    _WINDLL_FUNC int tcpmain( struct TcpdaemonServerEnvirment *p_env , int sock , void *p_addr )
+    {
+    	char	http_buffer[ 4096 + 1 ] ;
+    	long	http_len ;
+    	long	len ;
+    	
+    	/* 接收HTTP请求 */
+    	memset( http_buffer , 0x00 , sizeof(http_buffer) );
+    	http_len = 0 ;
+    	while( sizeof(http_buffer)-1 - http_len > 0 )
+    	{
+    		len = RECV( sock , http_buffer + http_len , sizeof(http_buffer)-1 - http_len , 0 ) ;
+    		if( len == 0 )
+    			return TCPMAIN_RETURN_CLOSE;
+    		if( len == -1 )
+    			return TCPMAIN_RETURN_ERROR;
+    		if( strstr( http_buffer , "\r\n\r\n" ) )
+    			break;
+    		http_len += len ;
+    	}
+    	if( sizeof(http_buffer)-1 - http_len <= 0 )
+    	{
+    		return TCPMAIN_RETURN_ERROR;
+    	}
+    	
+    	/* 发送HTTP响应 */
+    	memset( http_buffer , 0x00 , sizeof(http_buffer) );
+    	http_len = 0 ;
+    	http_len = sprintf( http_buffer , "HTTP/1.0 200 OK\r\nContent-length: 17\r\n\r\nHello Tcpdaemon\r\n" ) ;
+    	SEND( sock , http_buffer , http_len , 0 );
+    	
+    	return TCPMAIN_RETURN_CLOSE;
+    }
 
 编译链接成test_callback_http_echo.so
 
@@ -166,6 +168,7 @@ tcpdaemon提供了三种与使用者代码对接方式：(注意：.exe只是为
     	ep.log_level = LOGLEVEL_DEBUG ;
     	
     	strcpy( ep.server_model , "IOMP" );
+        ep.timeout_seconds = 60 ;
     	strcpy( ep.ip , "0" );
     	ep.port = 9527 ;
         ep.tcp_nodelay = 1 ;
@@ -207,6 +210,8 @@ tcpdaemon提供了三种与使用者代码对接方式：(注意：.exe只是为
     	int		tcp_nodelay ;	/* 启用TCP_NODELAY选项 1:启用 0:不启用（缺省）。可选 */
     	int		tcp_linger ;	/* 启用TCP_LINGER选项 >=1:启用并设置成参数值 0:不启用（缺省）。可选 */
     	
+        int     timeout_seconds ; /* 超时时间，单位：秒；目前只对IO-Multiplex模型有效 */
+        
     	/* 以下为内部使用 */
     	int		install_winservice ;
     	int		uninstall_winservice ;
@@ -220,103 +225,102 @@ tcpdaemon提供了三种与使用者代码对接方式：(注意：.exe只是为
     
     struct AcceptedSession
     {
-    	int		sock ;
-    	struct sockaddr	addr ;
-    	char		http_buffer[ 4096 + 1 ] ;
-    	int		read_len ;
-    	int		write_len ;
-    	int		wrote_len ;
+    	int		sock ; /* socket描述字 */
+    	struct sockaddr	addr ; /* socket地址 */
+    	
+    	char	http_buffer[ 4096 + 1 ] ; /* HTTP收发缓冲区 */
+    	int		read_len ; /* 读了多少字节 */
+    	int		write_len ; /* 将要写多少字节 */
+    	int		wrote_len ; /* 写了多少字节 */
     } ;
     
     _WINDLL_FUNC int tcpmain( struct TcpdaemonServerEnvirment *p_env , int sock , void *p_addr )
     {
     	struct AcceptedSession	*p_accepted_session = NULL ;
-    	struct epoll_event	event ;
     	int			len ;
-    	
-    	int			nret = 0 ;
     	
     	switch( TDGetIoMultiplexEvent(p_env) )
     	{
+    		/* 接受新连接事件 */
     		case IOMP_ON_ACCEPTING_SOCKET :
+    			/* 申请内存以存放已连接会话 */
     			p_accepted_session = (struct AcceptedSession *)malloc( sizeof(struct AcceptedSession) ) ;
     			if( p_accepted_session == NULL )
-    				return -1;
+    				return TCPMAIN_RETURN_ERROR;
     			memset( p_accepted_session , 0x00 , sizeof(struct AcceptedSession) );
     			
     			p_accepted_session->sock = sock ;
-    			memcpy( & (p_accepted_session->addr) , p_addr , sizeof(struct AcceptedSession) );
+    			memcpy( & (p_accepted_session->addr) , p_addr , sizeof(struct sockaddr) );
     			
-    			memset( & event , 0x00 , sizeof(struct epoll_event) );
-    			event.events = EPOLLIN | EPOLLERR ;
-    			event.data.ptr = p_accepted_session ;
-    			nret = epoll_ctl( TDGetThisEpoll(p_env) , EPOLL_CTL_ADD , p_accepted_session->sock , & event ) ;
-    			if( nret == -1 )
-    				return -1;
+    			/* 设置已连接会话数据结构 */
+    			TDSetIoMultiplexDataPtr( p_env , p_accepted_session );
     			
-    			break;
+    			/* 等待读事件 */
+    			return TCPMAIN_RETURN_WAITINGFOR_RECEIVING;
     			
+    		/* 关闭连接事件 */
     		case IOMP_ON_CLOSING_SOCKET :
+    			/* 释放已连接会话 */
     			p_accepted_session = (struct AcceptedSession *) p_addr ;
-    			
-    			epoll_ctl( TDGetThisEpoll(p_env) , EPOLL_CTL_DEL , p_accepted_session->sock , NULL );
-    			close( p_accepted_session->sock );
     			free( p_accepted_session );
     			
-    			break;
+    			/* 等待下一任意事件 */
+    			return TCPMAIN_RETURN_WAITINGFOR_NEXT;
     			
+    		/* 通讯接收事件 */
     		case IOMP_ON_RECEIVING_SOCKET :
     			p_accepted_session = (struct AcceptedSession *) p_addr ;
     			
+    			/* 非堵塞接收通讯数据 */
     			len = RECV( p_accepted_session->sock , p_accepted_session->http_buffer+p_accepted_session->read_len , sizeof(p_accepted_session->http_buffer)-1-p_accepted_session->read_len , 0 ) ;
     			if( len == 0 )
-    				return 1;
+    				return TCPMAIN_RETURN_CLOSE;
     			else if( len == -1 )
-    				return 1;
+    				return TCPMAIN_RETURN_ERROR;
     			
+    			/* 已接收数据长度累加 */
     			p_accepted_session->read_len += len ;
     			
+    			/* 如果已收完 */
     			if( strstr( p_accepted_session->http_buffer , "\r\n\r\n" ) )
     			{
+    				/* 组织响应报文 */
     				p_accepted_session->write_len = sprintf( p_accepted_session->http_buffer , "HTTP/1.0 200 OK\r\n"
     											"Content-length: 17\r\n"
     											"\r\n"
     											"Hello Tcpdaemon\r\n" ) ;
-    				
-    				memset( & event , 0x00 , sizeof(struct epoll_event) );
-    				event.events = EPOLLOUT | EPOLLERR ;
-    				event.data.ptr = p_accepted_session ;
-    				nret = epoll_ctl( TDGetThisEpoll(p_env) , EPOLL_CTL_MOD , p_accepted_session->sock , & event ) ;
-    				if( nret == -1 )
-    					return -1;
-    				
-    				return 0;
+    				return TCPMAIN_RETURN_WAITINGFOR_SENDING;
     			}
     			
+    			/* 如果缓冲区收满了还没收完 */
     			if( p_accepted_session->read_len == sizeof(p_accepted_session->http_buffer)-1 )
-    				return 1;
+    				return TCPMAIN_RETURN_ERROR;
     			
-    			break;
+    			/* 等待下一任意事件 */
+    			return TCPMAIN_RETURN_WAITINGFOR_NEXT;
     			
+    		/* 通讯发送事件 */
     		case IOMP_ON_SENDING_SOCKET :
     			p_accepted_session = (struct AcceptedSession *) p_addr ;
     			
+    			/* 非堵塞发送通讯数据 */
     			len = SEND( p_accepted_session->sock , p_accepted_session->http_buffer+p_accepted_session->wrote_len , p_accepted_session->write_len-p_accepted_session->wrote_len , 0 ) ;
     			if( len == -1 )
-    				return 1;
+    				return TCPMAIN_RETURN_ERROR;
     			
+    			/* 已发送数据长度累加 */
     			p_accepted_session->wrote_len += len ;
     			
+    			/* 如果已发完 */
     			if( p_accepted_session->wrote_len == p_accepted_session->write_len )
-    				return 1;
+    				return TCPMAIN_RETURN_CLOSE;
     			
-    			break;
+    			/* 等待下一任意事件 */
+    			return TCPMAIN_RETURN_WAITINGFOR_NEXT;
     			
     		default :
-    			break;
+    			return TCPMAIN_RETURN_ERROR;
     	}
-    	
-    	return 0;
     }
     
 编译成test_main_IOMP
@@ -341,7 +345,14 @@ tcpdaemon提供了三种与使用者代码对接方式：(注意：.exe只是为
 **所有代码在源码安装包的test目录里下可以找到**
 
 # 4.参考 #
-## 4.1.TcpdaemonServerEnvirment环境函数集 ##
+## 4.1.回调函数tcpmain ##
+tcpdaemon会在合适时机回调用户层指定函数tcpmain。
+
+当服务模型为Forking或Leader-Follow或WindowsThreads Leader-Follow时，回调函数tcpmain在连接被接受后调用。返回TCPMAIN_RETURN_CLOSE或TCPMAIN_RETURN_ERROR都将关闭通讯连接。
+
+当服务模型为IO-Multiplex时，回调函数tcpmain在通讯连接被接受时、通讯连接被关闭时、通讯数据可接收/发送时调用，因为是非堵塞处理，返回TCPMAIN_RETURN_CLOSE或TCPMAIN_RETURN_ERROR会关闭通讯连接，返回TCPMAIN_RETURN_WAITINGFOR_RECEIVING会切换等待可读事件，返回TCPMAIN_RETURN_WAITINGFOR_SENDING会切换等待可写事件，返回TCPMAIN_RETURN_WAITINGFOR_NEXT会继续等待其它事件。（注意：通讯连接被接受时的tcpmain里必须调用TDSetIoMultiplexDataPtr设置通讯数据会话结构）
+
+## 4.2.TcpdaemonServerEnvirment环境函数集 ##
 
 | 函数名 | TDGetTcpmainParameter |
 | --:|:-- |
