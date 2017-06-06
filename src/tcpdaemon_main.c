@@ -26,6 +26,7 @@ static void usage()
 #elif ( defined _WIN32 )
 	printf( "                  [ --logfile log_pathfilename --loglevel-(debug|info|warn|error|fatal) ]\n" );
 	printf( "                  [ --tcp-nodelay ] [ --tcp-linger linger ]\n" );
+	printf( "                  [ --timeout (seconds) ]\n" );
 	printf( "                  [ --install-winservice ] [ --uninstall-winservice ]\n" );
 #endif
 }
@@ -131,6 +132,11 @@ static int ParseCommandParameter( int argc , char *argv[] , struct TcpdaemonEntr
 		else if( STRCMP( argv[c] , == , "--tcp-linger" ) && c + 1 < argc )
 		{
 			p_para->tcp_linger = atoi(argv[c+1]) ;
+			c++;
+		}
+		else if( STRCMP( argv[c] , == , "--timeout" ) && c + 1 < argc )
+		{
+			p_para->timeout_seconds = atoi(argv[c+1]) ;
 			c++;
 		}
 #if ( defined _WIN32 )

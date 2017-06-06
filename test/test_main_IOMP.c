@@ -12,6 +12,7 @@ int main()
 	ep.log_level = LOGLEVEL_DEBUG ;
 	
 	strcpy( ep.server_model , "IOMP" );
+	ep.timeout_seconds = 60 ;
 	strcpy( ep.ip , "0" );
 	ep.port = 9527 ;
 	

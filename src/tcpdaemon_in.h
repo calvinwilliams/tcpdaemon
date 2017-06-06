@@ -9,6 +9,7 @@
  * Licensed under the LGPL v2.1, see the file LICENSE in base directory.
  */
 
+#include "rbtree.h"
 #include "LOGC.h"
 
 #include "tcpdaemon.h"
@@ -35,6 +36,18 @@ typedef struct
 	int		fd[ 2 ] ;
 } PIPE_T ;
 
+struct TcpdaemonAcceptedSession
+{
+	int		sock ;
+	struct sockaddr	addr ;
+	
+	void		*io_multiplex_data_ptr ;
+	struct rb_node	io_multiplex_data_ptr_rbnode ;
+	
+	int		begin_timestamp ;
+	struct rb_node	begin_timestamp_rbnode ;
+} ;
+
 struct TcpdaemonServerEnvirment
 {
 	struct TcpdaemonEntryParameter	*p_para ;
@@ -57,14 +70,29 @@ struct TcpdaemonServerEnvirment
 	int				index ; /* 工作进程序号 */
 	int				requests_per_process ; /* 工作进程当前处理数量 */
 	
-	/* 在MultiplexIO进程池模型使用 */
+	/* 在IO-Multiplex进程池模型使用 */
 	int				*epoll_array ;
+	int				this_epoll_fd ;
 	unsigned char			io_multiplex_event ;
+	void				*io_multiplex_data_ptr ;
+	struct rb_root			session_io_multiplex_data_ptr_rbtree ;
+	struct rb_root			session_begin_timestamp_rbtree ;
 	
 	/* 在Leader-Follow线程池模型使用 */
 	THANDLE_T			*thandles ;
 	TID_T				*tids ;
 } ;
+
+int LinkTcpdaemonAcceptedSessionDataPtrTreeNode( struct TcpdaemonServerEnvirment *p_env , struct TcpdaemonAcceptedSession *p_session );
+struct TcpdaemonAcceptedSession *QueryTcpdaemonAcceptedSessionDataPtrTreeNode( struct TcpdaemonServerEnvirment *p_env , struct TcpdaemonAcceptedSession *p_session );
+void UnlinkTcpdaemonAcceptedSessionDataPtrTreeNode( struct TcpdaemonServerEnvirment *p_env , struct TcpdaemonAcceptedSession *p_session );
+
+int LinkTcpdaemonAcceptedSessionBeginTimestampTreeNode( struct TcpdaemonServerEnvirment *p_env , struct TcpdaemonAcceptedSession *p_session );
+struct TcpdaemonAcceptedSession *GetTimeoutAcceptedSession( struct TcpdaemonServerEnvirment *p_env , int now_timestamp );
+void UnlinkTcpdaemonAcceptedSessionBeginTimestampTreeNode( struct TcpdaemonServerEnvirment *p_env , struct TcpdaemonAcceptedSession *p_session );
+
+void DestroyTcpdaemonAcceptedSessionTree( struct TcpdaemonServerEnvirment *p_env );
+
 
 #ifdef __cplusplus
 }

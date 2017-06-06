@@ -10,6 +10,10 @@
 c_FILE		=	\
 			LOGC.c \
 			tcpdaemon_lib.c \
+			rbtree.c \
+			rbtree_ins.c \
+
+c_FILE2		=	\
 			tcpdaemon_main.c \
 
 ###### 目标文件、安装目录配置区
@@ -48,9 +52,9 @@ CLEAN_ADDITION	=
 include $(MKTPLDIR)/makeobj_$(MKTPLOS).inc
 
 ###### 目标文件依赖关系
-libtcpdaemon.a	:	tcpdaemon_lib.o LOGC.o
-	$(AR) $(ARFLAGS) $@ tcpdaemon_lib.o LOGC.o
+libtcpdaemon.a	:	${c_FILE_o}
+	$(AR) $(ARFLAGS) $@ ${c_FILE_o}
 
-tcpdaemon	:	tcpdaemon_main.o tcpdaemon_lib.o LOGC.o
-	$(CC) $(ESOFLAGS) -o $@ tcpdaemon_main.o tcpdaemon_lib.o LOGC.o $(LFLAGS)
+tcpdaemon	:	${c_FILE_o} ${c_FILE2_o}
+	$(CC) $(ESOFLAGS) -o $@ ${c_FILE_o} ${c_FILE2_o} $(LFLAGS)
 
