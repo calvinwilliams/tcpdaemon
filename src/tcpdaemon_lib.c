@@ -9,8 +9,8 @@
  */
 
 /* 版本字符串 */
-char		__TCPDAEMON_VERSION_1_2_1[] = "1.2.1" ;
-char		*__TCPDAEMON_VERSION = __TCPDAEMON_VERSION_1_2_1 ;
+char		__TCPDAEMON_VERSION_1_2_3[] = "1.2.3" ;
+char		*__TCPDAEMON_VERSION = __TCPDAEMON_VERSION_1_2_3 ;
 
 static struct TcpdaemonServerEnvirment	*g_p_env = NULL ;
 static int				g_EXIT_flag = 0 ;
@@ -470,21 +470,23 @@ static unsigned int tcpdaemon_IOMP_worker( void *pv )
 						if( j >= p_env->p_para->process_count )
 							j = 0 ;
 						
+						/*
 						epoll_ctl( p_env->this_epoll_fd , EPOLL_CTL_DEL , p_env->listen_sock , NULL );
 						DebugLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | epoll_ctl[%d] remove listen sock[%d] ok" , p_env->index , p_env->this_epoll_fd , p_env->listen_sock );
+						*/
 						
 						memset( & event , 0x00 , sizeof(struct epoll_event) );
-						event.events = EPOLLIN | EPOLLERR ;
+						event.events = EPOLLIN | EPOLLERR | EPOLLONESHOT;
 						event.data.ptr = & (p_env->listen_sock) ;
-						nret = epoll_ctl( p_env->epoll_array[j] , EPOLL_CTL_ADD , p_env->listen_sock , & event ) ;
+						nret = epoll_ctl( p_env->epoll_array[j] , EPOLL_CTL_MOD , p_env->listen_sock , & event ) ;
 						if( nret == -1 )
 						{
-							ErrorLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | epoll_ctl[%d] add listen sock failed , errno[%d]" , p_env->index , p_env->this_epoll_fd , errno );
+							ErrorLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | [%d]epoll_ctl[%d] modify listen sock failed , errno[%d]" , p_env->index , j , p_env->epoll_array[j] , errno );
 							return 1;
 						}
 						else
 						{
-							DebugLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | epoll_ctl[%d] add listen sock[%d] ok" , p_env->index , p_env->this_epoll_fd , p_env->listen_sock );
+							DebugLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | [%d]epoll_ctl[%d] modify listen sock[%d] ok" , p_env->index , j , p_env->epoll_array[j] , p_env->listen_sock );
 						}
 					}
 				}
@@ -1341,18 +1343,43 @@ static int InitDaemonEnv_IOMP( struct TcpdaemonServerEnvirment *p_env )
 	}
 	
 	/* 加入侦听可读事件到epoll */
-	memset( & event , 0x00 , sizeof(struct epoll_event) );
-	event.events = EPOLLIN | EPOLLERR ;
-	event.data.ptr = & (p_env->listen_sock) ;
-	nret = epoll_ctl( p_env->epoll_array[0] , EPOLL_CTL_ADD , p_env->listen_sock , & event ) ;
-	if( nret == -1 )
+	if( p_env->p_para->process_count > 1 )
 	{
-		ErrorLog( __FILE__ , __LINE__ , "epoll_ctl[%d] add listen_session failed , errno[%d]" , p_env->epoll_array[0] , errno );
-		return -1;
+		for( i = 0 ; i < p_env->p_para->process_count ; i++ )
+		{
+			memset( & event , 0x00 , sizeof(struct epoll_event) );
+			if( i == 0 )
+				event.events = EPOLLIN | EPOLLERR | EPOLLONESHOT ;
+			else
+				event.events = EPOLLERR ;
+			event.data.ptr = & (p_env->listen_sock) ;
+			nret = epoll_ctl( p_env->epoll_array[i] , EPOLL_CTL_ADD , p_env->listen_sock , & event ) ;
+			if( nret == -1 )
+			{
+				ErrorLog( __FILE__ , __LINE__ , "[%d]epoll_ctl[%d] add listen_session failed , errno[%d]" , i , p_env->epoll_array[i] , errno );
+				return -1;
+			}
+			else
+			{
+				InfoLog( __FILE__ , __LINE__ , "[%d]epoll_ctl[%d] add listen_session[%d] ok" , i , p_env->epoll_array[i] , p_env->listen_sock );
+			}
+		}
 	}
 	else
 	{
-		InfoLog( __FILE__ , __LINE__ , "epoll_ctl[%d] add listen_session[%d] ok" , p_env->epoll_array[0] , p_env->listen_sock );
+		memset( & event , 0x00 , sizeof(struct epoll_event) );
+		event.events = EPOLLIN | EPOLLERR ;
+		event.data.ptr = & (p_env->listen_sock) ;
+		nret = epoll_ctl( p_env->epoll_array[0] , EPOLL_CTL_ADD , p_env->listen_sock , & event ) ;
+		if( nret == -1 )
+		{
+			ErrorLog( __FILE__ , __LINE__ , "epoll_ctl[%d] add listen_session failed , errno[%d]" , p_env->epoll_array[0] , errno );
+			return -1;
+		}
+		else
+		{
+			InfoLog( __FILE__ , __LINE__ , "epoll_ctl[%d] add listen_session[%d] ok" , p_env->epoll_array[0] , p_env->listen_sock );
+		}
 	}
 	
 	return 0;

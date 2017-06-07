@@ -1,3 +1,6 @@
+1.2.3	2017-06-07	calvin
+	* IO多路复用模型当多进程并发时使用EPOLLONESHOT切换
+
 1.2.2	2017-06-06	calvin
 	* 封装更多的IO多路复用代码进tcpdaemon，使用者用tcpmain返回值设置等待事件
 	* IO多路复用模型新增超时机制
