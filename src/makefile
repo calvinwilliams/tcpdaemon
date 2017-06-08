@@ -8,10 +8,11 @@
 ###### 源文件配置区
 #@ c_FILE
 c_FILE		=	\
-			LOGC.c \
-			tcpdaemon_lib.c \
+			list.c \
 			rbtree.c \
 			rbtree_ins.c \
+			LOGC.c \
+			tcpdaemon_lib.c \
 
 c_FILE2		=	\
 			tcpdaemon_main.c \
