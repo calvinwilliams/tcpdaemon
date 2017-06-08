@@ -66,28 +66,6 @@ int CheckCommandParameter( struct TcpdaemonEntryParameter *p_para )
 	return -2;
 }
 
-/* 设置socket属性 */
-static void SetAcceptedSocketOptions( struct TcpdaemonServerEnvirment *p_env , int accepted_sock )
-{
-	/* 设置侦听端口关闭nagle算法 */
-	if( p_env->p_para->tcp_nodelay == 1 )
-	{
-		int	onoff = 1 ;
-		setsockopt( accepted_sock , IPPROTO_TCP , TCP_NODELAY , (void*) & onoff , sizeof(int) );
-	}
-	
-	/* 设置侦听端口linger值 */
-	if( p_env->p_para->tcp_linger > 0 )
-	{
-		struct linger	lg ;
-		lg.l_onoff = 1 ;
-		lg.l_linger = p_env->p_para->tcp_linger ;
-		setsockopt( accepted_sock , SOL_SOCKET , SO_LINGER , (void *) & lg , sizeof(struct linger) );
-	}
-	
-	return;
-}
-
 #if ( defined __unix ) || ( defined __linux__ )
 static unsigned int tcpdaemon_LF_worker( void *pv )
 #elif ( defined _WIN32 )
@@ -170,8 +148,21 @@ static unsigned int WINAPI tcpdaemon_LF_worker( void *pv )
 			DebugLog( __FILE__ , __LINE__ , "tcpdaemon_LF_worker(%d) | accept ok , [%d]accept[%d]" , p_env->index , p_env->listen_sock , accepted_sock );
 		}
 		
-		/* 设置socket属性 */
-		SetAcceptedSocketOptions( p_env , accepted_sock );
+		/* 设置侦听端口关闭nagle算法 */
+		if( p_env->p_para->tcp_nodelay == 1 )
+		{
+			int	onoff = 1 ;
+			setsockopt( accepted_sock , IPPROTO_TCP , TCP_NODELAY , (void*) & onoff , sizeof(int) );
+		}
+		
+		/* 设置侦听端口linger值 */
+		if( p_env->p_para->tcp_linger > 0 )
+		{
+			struct linger	lg ;
+			lg.l_onoff = 1 ;
+			lg.l_linger = p_env->p_para->tcp_linger ;
+			setsockopt( accepted_sock , SOL_SOCKET , SO_LINGER , (void *) & lg , sizeof(struct linger) );
+		}
 		
 #if ( defined __linux__ ) || ( defined __unix )
 		/* 离开临界区 */
@@ -366,6 +357,27 @@ static unsigned int tcpdaemon_IOMP_worker( void *pv )
 							return 1;
 						}
 						
+						/* 设置非堵塞 */
+						{
+							fcntl( accepted_sock , F_SETFL , fcntl(accepted_sock,F_GETFL) | O_NONBLOCK );
+						}
+						
+						/* 设置侦听端口关闭nagle算法 */
+						if( p_env->p_para->tcp_nodelay == 1 )
+						{
+							int	onoff = 1 ;
+							setsockopt( accepted_sock , IPPROTO_TCP , TCP_NODELAY , (void*) & onoff , sizeof(int) );
+						}
+						
+						/* 设置侦听端口linger值 */
+						if( p_env->p_para->tcp_linger > 0 )
+						{
+							struct linger	lg ;
+							lg.l_onoff = 1 ;
+							lg.l_linger = p_env->p_para->tcp_linger ;
+							setsockopt( accepted_sock , SOL_SOCKET , SO_LINGER , (void *) & lg , sizeof(struct linger) );
+						}
+						
 						/* 调用接受通讯连接回调函数 */
 						InfoLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | call tcpmain on OnAcceptingSocket , sock[%d]" , p_env->index , accepted_sock );
 						p_env->io_multiplex_data_ptr = NULL ;
@@ -437,7 +449,6 @@ static unsigned int tcpdaemon_IOMP_worker( void *pv )
 						}
 						memset( p_session , 0x00 , sizeof(struct TcpdaemonAcceptedSession) );
 						p_session->sock = accepted_sock ;
-						memcpy( & (p_session->addr) , & accepted_addr , sizeof(struct sockaddr) );
 						p_session->io_multiplex_data_ptr = p_env->io_multiplex_data_ptr ;
 						p_session->begin_timestamp = time(NULL) ;
 						
@@ -963,8 +974,21 @@ _DO_ACCEPT :
 			continue;
 		}
 		
-		/* 设置socket属性 */
-		SetAcceptedSocketOptions( p_env , accepted_sock );
+		/* 设置侦听端口关闭nagle算法 */
+		if( p_env->p_para->tcp_nodelay == 1 )
+		{
+			int	onoff = 1 ;
+			setsockopt( accepted_sock , IPPROTO_TCP , TCP_NODELAY , (void*) & onoff , sizeof(int) );
+		}
+		
+		/* 设置侦听端口linger值 */
+		if( p_env->p_para->tcp_linger > 0 )
+		{
+			struct linger	lg ;
+			lg.l_onoff = 1 ;
+			lg.l_linger = p_env->p_para->tcp_linger ;
+			setsockopt( accepted_sock , SOL_SOCKET , SO_LINGER , (void *) & lg , sizeof(struct linger) );
+		}
 		
 		/* 创建子进程 */
 _DO_FORK :
@@ -1295,10 +1319,7 @@ static int InitDaemonEnv_IOMP( struct TcpdaemonServerEnvirment *p_env )
 	
 	/* 设置侦听端口非堵塞 */
 	{
-		int	opts;
-		opts = fcntl( p_env->listen_sock , F_GETFL );
-		opts |= O_NONBLOCK ;
-		fcntl( p_env->listen_sock , F_SETFL , opts );
+		fcntl( p_env->listen_sock , F_SETFL , fcntl(p_env->listen_sock,F_GETFL) | O_NONBLOCK );
 	}
 	
 	/* 创建pid跟踪信息数组 */

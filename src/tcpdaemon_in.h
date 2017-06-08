@@ -39,7 +39,6 @@ typedef struct
 struct TcpdaemonAcceptedSession
 {
 	int		sock ;
-	struct sockaddr	addr ;
 	
 	void		*io_multiplex_data_ptr ;
 	struct rb_node	io_multiplex_data_ptr_rbnode ;
