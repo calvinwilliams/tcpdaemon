@@ -1,0 +1,9 @@
+fs.file-max=10485760
+net.ipv4.tcp_rmem=1024
+net.ipv4.tcp_wmem=1024
+net.ipv4.ip_local_port_range=1024 65535
+net.ipv4.tcp_max_tw_buckets=819200
+net.ipv4.tcp_timestamps=1
+net.ipv4.tcp_tw_reuse=1
+net.ipv4.tcp_tw_recycle=1
+

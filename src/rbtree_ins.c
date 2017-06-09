@@ -10,9 +10,6 @@
 
 #include "rbtree_tpl.h"
 
-LINK_RBTREENODE_PTR( LinkTcpdaemonAcceptedSessionDataPtrTreeNode , struct TcpdaemonServerEnvirment , session_io_multiplex_data_ptr_rbtree , struct TcpdaemonAcceptedSession , io_multiplex_data_ptr_rbnode , io_multiplex_data_ptr )
-QUERY_RBTREENODE_PTR( QueryTcpdaemonAcceptedSessionDataPtrTreeNode , struct TcpdaemonServerEnvirment , session_io_multiplex_data_ptr_rbtree , struct TcpdaemonAcceptedSession , io_multiplex_data_ptr_rbnode , io_multiplex_data_ptr )
-UNLINK_RBTREENODE( UnlinkTcpdaemonAcceptedSessionDataPtrTreeNode , struct TcpdaemonServerEnvirment , session_io_multiplex_data_ptr_rbtree , struct TcpdaemonAcceptedSession , io_multiplex_data_ptr_rbnode )
 LINK_RBTREENODE_INT_ALLOWDUPLICATE( LinkTcpdaemonAcceptedSessionBeginTimestampTreeNode , struct TcpdaemonServerEnvirment , session_begin_timestamp_rbtree , struct TcpdaemonAcceptedSession , begin_timestamp_rbnode , begin_timestamp )
 struct TcpdaemonAcceptedSession *GetTimeoutAcceptedSession( struct TcpdaemonServerEnvirment *p_env , int now_timestamp )
 {
