@@ -1,1 +1,2 @@
-* MPIO模式增加超时控制
+* add BindCpuAffinity
+* change command parameter to like --log-debug
