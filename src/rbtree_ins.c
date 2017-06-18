@@ -10,8 +10,8 @@
 
 #include "rbtree_tpl.h"
 
-LINK_RBTREENODE_INT_ALLOWDUPLICATE( LinkTcpdaemonAcceptedSessionBeginTimestampTreeNode , struct TcpdaemonServerEnvirment , session_begin_timestamp_rbtree , struct TcpdaemonAcceptedSession , begin_timestamp_rbnode , begin_timestamp )
-struct TcpdaemonAcceptedSession *GetTimeoutAcceptedSession( struct TcpdaemonServerEnvirment *p_env , int now_timestamp )
+LINK_RBTREENODE_INT_ALLOWDUPLICATE( LinkTcpdaemonAcceptedSessionBeginTimestampTreeNode , struct TcpdaemonServerEnvironment , session_begin_timestamp_rbtree , struct TcpdaemonAcceptedSession , begin_timestamp_rbnode , begin_timestamp )
+struct TcpdaemonAcceptedSession *GetTimeoutAcceptedSession( struct TcpdaemonServerEnvironment *p_env , int now_timestamp )
 {
 	struct rb_node			*p_curr = NULL ;
 	struct TcpdaemonAcceptedSession	*p_session = NULL ;
@@ -26,6 +26,6 @@ struct TcpdaemonAcceptedSession *GetTimeoutAcceptedSession( struct TcpdaemonServ
 	
 	return NULL;
 }
-UNLINK_RBTREENODE( UnlinkTcpdaemonAcceptedSessionBeginTimestampTreeNode , struct TcpdaemonServerEnvirment , session_begin_timestamp_rbtree , struct TcpdaemonAcceptedSession , begin_timestamp_rbnode )
-DESTROY_RBTREE( DestroyTcpdaemonAcceptedSessionTree , struct TcpdaemonServerEnvirment , session_io_multiplex_data_ptr_rbtree , struct TcpdaemonAcceptedSession , io_multiplex_data_ptr_rbnode , NULL )
+UNLINK_RBTREENODE( UnlinkTcpdaemonAcceptedSessionBeginTimestampTreeNode , struct TcpdaemonServerEnvironment , session_begin_timestamp_rbtree , struct TcpdaemonAcceptedSession , begin_timestamp_rbnode )
+DESTROY_RBTREE( DestroyTcpdaemonAcceptedSessionTree , struct TcpdaemonServerEnvironment , session_io_multiplex_data_ptr_rbtree , struct TcpdaemonAcceptedSession , io_multiplex_data_ptr_rbnode , NULL )
 

@@ -11,7 +11,7 @@ struct AcceptedSession
 	int		wrote_len ; /* 写了多少字节 */
 } ;
 
-_WINDLL_FUNC int tcpmain( struct TcpdaemonServerEnvirment *p_env , int sock , void *p_addr )
+_WINDLL_FUNC int tcpmain( struct TcpdaemonServerEnvironment *p_env , int sock , void *p_addr )
 {
 	struct AcceptedSession	*p_accepted_session = NULL ;
 	int			len ;

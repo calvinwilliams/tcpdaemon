@@ -59,7 +59,7 @@ struct TcpdaemonAcceptedSessionArray
 	struct list_head		prealloc_node ;
 } ;
 
-struct TcpdaemonServerEnvirment
+struct TcpdaemonServerEnvironment
 {
 	struct TcpdaemonEntryParameter	*p_para ;
 	
@@ -96,11 +96,11 @@ struct TcpdaemonServerEnvirment
 	TID_T				*tids ;
 } ;
 
-int LinkTcpdaemonAcceptedSessionBeginTimestampTreeNode( struct TcpdaemonServerEnvirment *p_env , struct TcpdaemonAcceptedSession *p_session );
-struct TcpdaemonAcceptedSession *GetTimeoutAcceptedSession( struct TcpdaemonServerEnvirment *p_env , int now_timestamp );
-void UnlinkTcpdaemonAcceptedSessionBeginTimestampTreeNode( struct TcpdaemonServerEnvirment *p_env , struct TcpdaemonAcceptedSession *p_session );
+int LinkTcpdaemonAcceptedSessionBeginTimestampTreeNode( struct TcpdaemonServerEnvironment *p_env , struct TcpdaemonAcceptedSession *p_session );
+struct TcpdaemonAcceptedSession *GetTimeoutAcceptedSession( struct TcpdaemonServerEnvironment *p_env , int now_timestamp );
+void UnlinkTcpdaemonAcceptedSessionBeginTimestampTreeNode( struct TcpdaemonServerEnvironment *p_env , struct TcpdaemonAcceptedSession *p_session );
 
-void DestroyTcpdaemonAcceptedSessionTree( struct TcpdaemonServerEnvirment *p_env );
+void DestroyTcpdaemonAcceptedSessionTree( struct TcpdaemonServerEnvironment *p_env );
 
 
 #ifdef __cplusplus

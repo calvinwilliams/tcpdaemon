@@ -1,13 +1,13 @@
 tcpdaemon
 =========
 
-# 0.å¿«é€Ÿå¼€å§‹ #
-è€å¸ˆäº¤ç»™å°æ˜ä¸€ä¸ªå¼€å‘ä»»åŠ¡ï¼Œå®ç°ä¸€ä¸ªTCPç½‘ç»œè¿­ä»£å¹¶å‘æœåŠ¡å™¨ï¼Œç”¨äºå›å°„ä»»ä½•æ¥æ”¶åˆ°çš„é€šè®¯æ•°æ®ã€‚å°æ˜å¾ˆæ‡’ï¼Œä»–åœ¨å¼€æºä¸­å›½é¡¹ç›®åº“é‡Œæœåˆ°äº†å¼€æºåº“tcpdaemonæ¥å¸®åŠ©ä»–å¿«é€Ÿå®Œæˆä»»åŠ¡ã€‚é¦–å…ˆä»–å®‰è£…å¥½tcpdaemonï¼Œç„¶åå†™äº†ä¸€ä¸ªCç¨‹åºæ–‡ä»¶test_callback_echo.c
+# 0.¿ìËÙ¿ªÊ¼ #
+ÀÏÊ¦½»¸øĞ¡Ã÷Ò»¸ö¿ª·¢ÈÎÎñ£¬ÊµÏÖÒ»¸öTCPÍøÂçµü´ú²¢·¢·şÎñÆ÷£¬ÓÃÓÚ»ØÉäÈÎºÎ½ÓÊÕµ½µÄÍ¨Ñ¶Êı¾İ¡£Ğ¡Ã÷ºÜÀÁ£¬ËûÔÚ¿ªÔ´ÖĞ¹úÏîÄ¿¿âÀïËÑµ½ÁË¿ªÔ´¿âtcpdaemonÀ´°ïÖúËû¿ìËÙÍê³ÉÈÎÎñ¡£Ê×ÏÈËû°²×°ºÃtcpdaemon£¬È»ºóĞ´ÁËÒ»¸öC³ÌĞòÎÄ¼ştest_callback_echo.c
 
     $ vi test_callback_echo.c
 	#include "tcpdaemon.h"
 	
-	_WINDLL_FUNC int tcpmain( struct TcpdaemonServerEnvirment *p_env , int sock , void *p_addr )
+	_WINDLL_FUNC int tcpmain( struct TcpdaemonServerEnvironment *p_env , int sock , void *p_addr )
 	{
 		char	buffer[ 4096 ] ;
 		int	len ;
@@ -25,34 +25,34 @@ tcpdaemon
 		return TCPMAIN_RETURN_WAITINGFOR_NEXT;
 	}
 
-ä»–ç¼–è¯‘é“¾æ¥æˆåŠ¨æ€åº“test_callback_echo.soï¼Œæœ€åç”¨tcpdaemonç›´æ¥æŒ‚æ¥æ‰§è¡Œ
+Ëû±àÒëÁ´½Ó³É¶¯Ì¬¿âtest_callback_echo.so£¬×îºóÓÃtcpdaemonÖ±½Ó¹Ò½ÓÖ´ĞĞ
 
     $ tcpdaemon -m IF -l 0:9527 -s test_callback_echo.so -c 10 --tcp-nodelay --logfile $HOME/log/test_callback_echo.log
 
-OKï¼Œæ€»å…±èŠ±äº†äº”åˆ†é’Ÿï¼Œåœ†æ»¡å®Œæˆè€å¸ˆä½œä¸šã€‚è€å¸ˆè¯´è¿™ä¸ªå¤ªç®€å•äº†ï¼Œå°æ˜ä½ ç»™æˆ‘æ”¹æˆåƒApacheç»å…¸çš„Leader-FollowæœåŠ¡ç«¯æ¨¡å‹ï¼Œå°æ˜è¯´æ²¡é—®é¢˜ï¼Œä»–æŠŠå¯åŠ¨å‘½ä»¤å‚æ•°`-m IF`æ”¹æˆäº†`-m LF`ï¼Œå†æ¬¡æ‰§è¡Œï¼Œå®Œæˆè€å¸ˆè¦æ±‚ï¼Œæ€»å…±èŠ±äº†äº”ç§’é’Ÿã€‚è€å¸ˆé—®ä½ æ€ä¹ˆè¿™ä¹ˆå¿«å°±æ”¹å¥½äº†ï¼Œå°æ˜è¯´å…¨é å¼€æºé¡¹ç›®tcpdaemonå¸®äº†å¤§å¿™å•Š ^_^
+OK£¬×Ü¹²»¨ÁËÎå·ÖÖÓ£¬Ô²ÂúÍê³ÉÀÏÊ¦×÷Òµ¡£ÀÏÊ¦ËµÕâ¸öÌ«¼òµ¥ÁË£¬Ğ¡Ã÷Äã¸øÎÒ¸Ä³ÉÏñApache¾­µäµÄLeader-Follow·şÎñ¶ËÄ£ĞÍ£¬Ğ¡Ã÷ËµÃ»ÎÊÌâ£¬Ëû°ÑÆô¶¯ÃüÁî²ÎÊı`-m IF`¸Ä³ÉÁË`-m LF`£¬ÔÙ´ÎÖ´ĞĞ£¬Íê³ÉÀÏÊ¦ÒªÇó£¬×Ü¹²»¨ÁËÎåÃëÖÓ¡£ÀÏÊ¦ÎÊÄãÔõÃ´ÕâÃ´¿ì¾Í¸ÄºÃÁË£¬Ğ¡Ã÷ËµÈ«¿¿¿ªÔ´ÏîÄ¿tcpdaemon°ïÁË´óÃ¦°¡ ^_^
 
-# 1.æ¦‚è¿° #
-tcpdaemonæ˜¯ä¸€ä¸ªTCPé€šè®¯æœåŠ¡ç«¯å¹³å°/åº“ï¼Œå®ƒå°è£…äº†ä¼—å¤šå¸¸è§æœåŠ¡ç«¯è¿›ç¨‹/çº¿ç¨‹ç®¡ç†å’ŒTCPè¿æ¥ç®¡ç†æ¨¡å‹ï¼ˆForkingã€Leader-Followã€IO-Multiplexã€WindowsThreads Leader-Followï¼‰ï¼Œä½¿ç”¨è€…åªéœ€åŠ å…¥TCPé€šè®¯æ•°æ®æ”¶å‘å’Œåº”ç”¨é€»è¾‘ä»£ç å°±èƒ½å¿«é€Ÿæ„å»ºå‡ºå®Œæ•´çš„TCPåº”ç”¨æœåŠ¡å™¨ã€‚
+# 1.¸ÅÊö #
+tcpdaemonÊÇÒ»¸öTCPÍ¨Ñ¶·şÎñ¶ËÆ½Ì¨/¿â£¬Ëü·â×°ÁËÖÚ¶à³£¼û·şÎñ¶Ë½ø³Ì/Ïß³Ì¹ÜÀíºÍTCPÁ¬½Ó¹ÜÀíÄ£ĞÍ£¨Forking¡¢Leader-Follow¡¢IO-Multiplex¡¢WindowsThreads Leader-Follow£©£¬Ê¹ÓÃÕßÖ»Ğè¼ÓÈëTCPÍ¨Ñ¶Êı¾İÊÕ·¢ºÍÓ¦ÓÃÂß¼­´úÂë¾ÍÄÜ¿ìËÙ¹¹½¨³öÍêÕûµÄTCPÓ¦ÓÃ·şÎñÆ÷¡£
 
-| æœåŠ¡æ¨¡å‹ | æ¨¡å‹è¯´æ˜ |
+| ·şÎñÄ£ĞÍ | Ä£ĞÍËµÃ÷ |
 | ---- | ---- |
-| Forking | å•è¿›ç¨‹ä¸»å®ˆæŠ¤ï¼Œæ¯å½“ä¸€æ¡TCPæ–°è¿æ¥è¿›æ¥åï¼Œæ¥å—ä¹‹ï¼Œåˆ›å»ºå­è¿›ç¨‹è¿›å…¥å›è°ƒå‡½æ•°tcpmainå¤„ç†ä¹‹ã€‚ä¸€æ¡è¿æ¥å¯¹åº”ä¸€ä¸ªå­è¿›ç¨‹ï¼ˆçŸ­ç”Ÿå‘½å‘¨æœŸï¼‰ |
-| Leader-Follow | å•è¿›ç¨‹ç®¡ç†è¿›ç¨‹ï¼Œé¢„å…ˆåˆ›å»ºä¸€ç»„å­è¿›ç¨‹ï¼ˆé•¿ç”Ÿå‘½å‘¨æœŸï¼‰å¹¶ç›‘æ§å…¶å¼‚å¸¸é‡å¯ã€‚å­è¿›ç¨‹ç­‰å¾…å¾ªç¯äº‰æŠ¢TCPæ–°è¿æ¥è°ƒç”¨å›è°ƒå‡½æ•°tcpmainå¤„ç†ä¹‹ |
-| IO-Multiplex | å•è¿›ç¨‹ä¸»å®ˆæŠ¤ï¼ŒIOå¤šè·¯å¤ç”¨ç­‰å¾…TCPæ–°è¿æ¥è¿›æ¥äº‹ä»¶ã€TCPæ•°æ®åˆ°æ¥äº‹ä»¶ï¼ŒTCPæ•°æ®å¯å†™äº‹ä»¶ï¼Œè°ƒç”¨å›è°ƒå‡½æ•°tcpmainå¤„ç†ä¹‹ |
-| WindowsThreads Leader-Follow | åŒLeader-Followï¼ŒåŒºåˆ«åœ¨äºé¢„å…ˆåˆ›å»ºä¸€ç»„å­çº¿ç¨‹è€Œéå­è¿›ç¨‹ |
+| Forking | µ¥½ø³ÌÖ÷ÊØ»¤£¬Ã¿µ±Ò»ÌõTCPĞÂÁ¬½Ó½øÀ´ºó£¬½ÓÊÜÖ®£¬´´½¨×Ó½ø³Ì½øÈë»Øµ÷º¯Êıtcpmain´¦ÀíÖ®¡£Ò»ÌõÁ¬½Ó¶ÔÓ¦Ò»¸ö×Ó½ø³Ì£¨¶ÌÉúÃüÖÜÆÚ£© |
+| Leader-Follow | µ¥½ø³Ì¹ÜÀí½ø³Ì£¬Ô¤ÏÈ´´½¨Ò»×é×Ó½ø³Ì£¨³¤ÉúÃüÖÜÆÚ£©²¢¼à¿ØÆäÒì³£ÖØÆô¡£×Ó½ø³ÌµÈ´ıÑ­»·ÕùÇÀTCPĞÂÁ¬½Óµ÷ÓÃ»Øµ÷º¯Êıtcpmain´¦ÀíÖ® |
+| IO-Multiplex | µ¥½ø³ÌÖ÷ÊØ»¤£¬IO¶àÂ·¸´ÓÃµÈ´ıTCPĞÂÁ¬½Ó½øÀ´ÊÂ¼ş¡¢TCPÊı¾İµ½À´ÊÂ¼ş£¬TCPÊı¾İ¿ÉĞ´ÊÂ¼ş£¬µ÷ÓÃ»Øµ÷º¯Êıtcpmain´¦ÀíÖ® |
+| WindowsThreads Leader-Follow | Í¬Leader-Follow£¬Çø±ğÔÚÓÚÔ¤ÏÈ´´½¨Ò»×é×ÓÏß³Ì¶ø·Ç×Ó½ø³Ì |
 
-tcpdaemonæä¾›äº†ä¸‰ç§ä¸ä½¿ç”¨è€…ä»£ç å¯¹æ¥æ–¹å¼ï¼š(æ³¨æ„ï¼š.exeåªæ˜¯ä¸ºäº†è¯´æ˜è‡ªå·±æ˜¯å¯æ‰§è¡Œæ–‡ä»¶ï¼Œåœ¨UNIX/Linuxä¸­å¯æ‰§è¡Œæ–‡ä»¶ä¸€èˆ¬æ²¡æœ‰æ‰©å±•å)
+tcpdaemonÌá¹©ÁËÈıÖÖÓëÊ¹ÓÃÕß´úÂë¶Ô½Ó·½Ê½£º(×¢Òâ£º.exeÖ»ÊÇÎªÁËËµÃ÷×Ô¼ºÊÇ¿ÉÖ´ĞĞÎÄ¼ş£¬ÔÚUNIX/LinuxÖĞ¿ÉÖ´ĞĞÎÄ¼şÒ»°ãÃ»ÓĞÀ©Õ¹Ãû)
 
-| é“¾æ¥æ¨¡å¼ | é“¾æ¥å…³ç³» | è¯´æ˜ |
+| Á´½ÓÄ£Ê½ | Á´½Ó¹ØÏµ | ËµÃ÷ |
 | ---- | ----- | -- |
-| å›è°ƒæ¨¡å¼ | tcpdaemon.exe+user.so(tcpmain) | å¯æ‰§è¡Œç¨‹åºtcpdaemoné€šè¿‡å¯åŠ¨å‘½ä»¤è¡Œå‚æ•°æŒ‚æ¥ç”¨æˆ·åŠ¨æ€åº“ï¼Œè·å¾—åŠ¨æ€åº“ä¸­å‡½æ•°tcpmainæŒ‡é’ˆã€‚å½“å»ºç«‹TCPè¿æ¥å æˆ– IOå¤šè·¯å¤ç”¨æ¨¡å¼ä¸‹å½“å¯è¯»å¯å†™äº‹ä»¶å‘ç”Ÿæ—¶ è°ƒç”¨å›è°ƒå‡½æ•°tcpmain |
-| ä¸»è°ƒæ¨¡å¼ | user.exe(main,tcpmain)+libtcpdaemon.a(tcpdaemon) | ç”¨æˆ·å¯æ‰§è¡Œç¨‹åºuser.exeéšå¼é“¾æ¥åº“libtcpdaemon.aã€‚ç”¨æˆ·å‡½æ•°main(user.exe)åˆå§‹åŒ–tcpdaemonå‚æ•°ç»“æ„ä½“ï¼Œå¹¶è®¾ç½®å›è°ƒå‡½æ•°tcpmainï¼Œè°ƒç”¨å‡½æ•°tcpdaemon(libtcpdaemon.so)ã€‚å½“å»ºç«‹TCPè¿æ¥å æˆ– IOå¤šè·¯å¤ç”¨æ¨¡å¼ä¸‹å½“å¯è¯»å¯å†™äº‹ä»¶å‘ç”Ÿæ—¶ è°ƒç”¨å›è°ƒå‡½æ•°tcpmain |
-| ä¸»è°ƒ+å›è°ƒæ¨¡å¼ | user.exe(main)+libtcpdaemon.a(tcpdaemon) + user.so(tcpmain) | åŒä¸Šï¼ŒåŒºåˆ«åœ¨äºç”¨æˆ·å‡½æ•°mainä¸ç›´æ¥è®¾ç½®å›è°ƒå‡½æ•°tcpmainè€Œè®¾ç½®user.soæ–‡ä»¶åã€‚å‡½æ•°tcpdaemonè´Ÿè´£æŒ‚æ¥åŠ¨æ€åº“user.soå¹¶è·å¾—å‡½æ•°tcpmainæŒ‡é’ˆ |
+| »Øµ÷Ä£Ê½ | tcpdaemon.exe+user.so(tcpmain) | ¿ÉÖ´ĞĞ³ÌĞòtcpdaemonÍ¨¹ıÆô¶¯ÃüÁîĞĞ²ÎÊı¹Ò½ÓÓÃ»§¶¯Ì¬¿â£¬»ñµÃ¶¯Ì¬¿âÖĞº¯ÊıtcpmainÖ¸Õë¡£µ±½¨Á¢TCPÁ¬½Óºó »ò IO¶àÂ·¸´ÓÃÄ£Ê½ÏÂµ±¿É¶Á¿ÉĞ´ÊÂ¼ş·¢ÉúÊ± µ÷ÓÃ»Øµ÷º¯Êıtcpmain |
+| Ö÷µ÷Ä£Ê½ | user.exe(main,tcpmain)+libtcpdaemon.a(tcpdaemon) | ÓÃ»§¿ÉÖ´ĞĞ³ÌĞòuser.exeÒşÊ½Á´½Ó¿âlibtcpdaemon.a¡£ÓÃ»§º¯Êımain(user.exe)³õÊ¼»¯tcpdaemon²ÎÊı½á¹¹Ìå£¬²¢ÉèÖÃ»Øµ÷º¯Êıtcpmain£¬µ÷ÓÃº¯Êıtcpdaemon(libtcpdaemon.so)¡£µ±½¨Á¢TCPÁ¬½Óºó »ò IO¶àÂ·¸´ÓÃÄ£Ê½ÏÂµ±¿É¶Á¿ÉĞ´ÊÂ¼ş·¢ÉúÊ± µ÷ÓÃ»Øµ÷º¯Êıtcpmain |
+| Ö÷µ÷+»Øµ÷Ä£Ê½ | user.exe(main)+libtcpdaemon.a(tcpdaemon) + user.so(tcpmain) | Í¬ÉÏ£¬Çø±ğÔÚÓÚÓÃ»§º¯Êımain²»Ö±½ÓÉèÖÃ»Øµ÷º¯Êıtcpmain¶øÉèÖÃuser.soÎÄ¼şÃû¡£º¯Êıtcpdaemon¸ºÔğ¹Ò½Ó¶¯Ì¬¿âuser.so²¢»ñµÃº¯ÊıtcpmainÖ¸Õë |
 
-ä¸€èˆ¬ç®€å•æƒ…å†µä¸‹ï¼Œä½¿ç”¨è€…é‡‡ç”¨å›è°ƒæ¨¡å¼å³å¯ï¼Œåªè¦ç¼–å†™ä¸€ä¸ªåŠ¨æ€åº“user.soï¼ˆå†…å«å›è°ƒå‡½æ•°tcpmainï¼‰è¢«å¯æ‰§è¡Œç¨‹åºtcpdaemonæŒ‚æ¥ä¸Šå»è¿è¡Œã€‚å¦‚æœä½¿ç”¨è€…æƒ³è®¢åˆ¶ä¸€äº›è‡ªå®šä¹‰å¤„ç†ï¼Œå¦‚åˆå§‹åŒ–ç¯å¢ƒï¼Œå¯ä»¥é‡‡ç”¨ä¸»è°ƒæ¨¡å¼ï¼Œå®ç°å‡½æ•°mainé‡ŒæŠŠè‡ªå®šä¹‰å‚æ•°ä¼ é€’ç»™tcpdaemonç©¿é€ç»™tcpmainã€‚å¦‚æœæƒ³å®ç°è¿è¡Œæ—¶é€‰æ‹©å›è°ƒå‡½æ•°tcpmainåˆ™å¯ä»¥é‡‡ç”¨ä¸»è°ƒ+å›è°ƒæ¨¡å¼ã€‚
+Ò»°ã¼òµ¥Çé¿öÏÂ£¬Ê¹ÓÃÕß²ÉÓÃ»Øµ÷Ä£Ê½¼´¿É£¬Ö»Òª±àĞ´Ò»¸ö¶¯Ì¬¿âuser.so£¨ÄÚº¬»Øµ÷º¯Êıtcpmain£©±»¿ÉÖ´ĞĞ³ÌĞòtcpdaemon¹Ò½ÓÉÏÈ¥ÔËĞĞ¡£Èç¹ûÊ¹ÓÃÕßÏë¶©ÖÆÒ»Ğ©×Ô¶¨Òå´¦Àí£¬Èç³õÊ¼»¯»·¾³£¬¿ÉÒÔ²ÉÓÃÖ÷µ÷Ä£Ê½£¬ÊµÏÖº¯ÊımainÀï°Ñ×Ô¶¨Òå²ÎÊı´«µİ¸øtcpdaemon´©Í¸¸øtcpmain¡£Èç¹ûÏëÊµÏÖÔËĞĞÊ±Ñ¡Ôñ»Øµ÷º¯ÊıtcpmainÔò¿ÉÒÔ²ÉÓÃÖ÷µ÷+»Øµ÷Ä£Ê½¡£
 
-# 2.ç¼–è¯‘å®‰è£… #
-ä»¥Linuxæ“ä½œç³»ç»Ÿä¸ºä¾‹ï¼Œä¸‹è½½åˆ°æœ€æ–°æºç å®‰è£…åŒ…tcpdaemon-x.y.z.tar.gzåˆ°æŸç›®å½•ï¼Œè§£å‹ä¹‹
+# 2.±àÒë°²×° #
+ÒÔLinux²Ù×÷ÏµÍ³ÎªÀı£¬ÏÂÔØµ½×îĞÂÔ´Âë°²×°°ütcpdaemon-x.y.z.tar.gzµ½Ä³Ä¿Â¼£¬½âÑ¹Ö®
 
     $ tar xvzf tcpdaemon-x.y.z.tar.gz
     ...
@@ -67,7 +67,7 @@ tcpdaemonæä¾›äº†ä¸‰ç§ä¸ä½¿ç”¨è€…ä»£ç å¯¹æ¥æ–¹å¼ï¼š(æ³¨æ„ï¼š.exeåªæ˜¯ä¸º
     gcc -g -fPIC -O2 -Wall -Werror -fno-strict-aliasing -I. -I/home/calvin/include  -c tcpdaemon_lib.c
     gcc -g -fPIC -O2 -Wall -Werror -fno-strict-aliasing -I. -I/home/calvin/include  -c LOGC.c
     ar rv libtcpdaemon.a tcpdaemon_lib.o LOGC.o
-    ar: æ­£åœ¨åˆ›å»º libtcpdaemon.a
+    ar: ÕıÔÚ´´½¨ libtcpdaemon.a
     a - tcpdaemon_lib.o
     a - LOGC.o
     gcc -g -fPIC -O2 -Wall -Werror -fno-strict-aliasing -I. -I/home/calvin/include  -c tcpdaemon_main.c
@@ -76,22 +76,22 @@ tcpdaemonæä¾›äº†ä¸‰ç§ä¸ä½¿ç”¨è€…ä»£ç å¯¹æ¥æ–¹å¼ï¼š(æ³¨æ„ï¼š.exeåªæ˜¯ä¸º
     cp -rf libtcpdaemon.a /home/calvin/lib/
     cp -rf tcpdaemon.h /home/calvin/include/tcpdaemon/
 
-å¯ä»¥çœ‹åˆ°å¯æ‰§è¡Œç¨‹åºtcpdaemonå®‰è£…åˆ°$HOME/binï¼Œé™æ€åº“libtcpdaemon.aå®‰è£…åˆ°$HOME/libï¼Œå¼€å‘ç”¨çš„å¤´æ–‡ä»¶å®‰è£…åˆ°$HOME/include/tcpdaemonã€‚
+¿ÉÒÔ¿´µ½¿ÉÖ´ĞĞ³ÌĞòtcpdaemon°²×°µ½$HOME/bin£¬¾²Ì¬¿âlibtcpdaemon.a°²×°µ½$HOME/lib£¬¿ª·¢ÓÃµÄÍ·ÎÄ¼ş°²×°µ½$HOME/include/tcpdaemon¡£
 
-# 3.ä½¿ç”¨ç¤ºä¾‹ #
-## 3.1.æœåŠ¡æ¨¡å‹Forkingï¼Œé“¾æ¥æ¨¡å¼1ï¼Œæ¥æ”¶HTTPè¯·æ±‚æŠ¥æ–‡ç„¶åå‘é€HTTPå“åº”æŠ¥æ–‡ ##
-ä½¿ç”¨è€…åªéœ€ç¼–å†™ä¸€ä¸ªå‡½æ•°tcpmainï¼Œå®ç°åŒæ­¥çš„æ¥æ”¶HTTPè¯·æ±‚æŠ¥æ–‡ç„¶åå‘é€HTTPå“åº”æŠ¥æ–‡å›å»
+# 3.Ê¹ÓÃÊ¾Àı #
+## 3.1.·şÎñÄ£ĞÍForking£¬Á´½ÓÄ£Ê½1£¬½ÓÊÕHTTPÇëÇó±¨ÎÄÈ»ºó·¢ËÍHTTPÏìÓ¦±¨ÎÄ ##
+Ê¹ÓÃÕßÖ»Ğè±àĞ´Ò»¸öº¯Êıtcpmain£¬ÊµÏÖÍ¬²½µÄ½ÓÊÕHTTPÇëÇó±¨ÎÄÈ»ºó·¢ËÍHTTPÏìÓ¦±¨ÎÄ»ØÈ¥
 
     $ vi test_callback_http_echo.c
     #include "tcpdaemon.h"
     
-    _WINDLL_FUNC int tcpmain( struct TcpdaemonServerEnvirment *p_env , int sock , void *p_addr )
+    _WINDLL_FUNC int tcpmain( struct TcpdaemonServerEnvironment *p_env , int sock , void *p_addr )
     {
     	char	http_buffer[ 4096 + 1 ] ;
     	long	http_len ;
     	long	len ;
     	
-    	/* æ¥æ”¶HTTPè¯·æ±‚ */
+    	/* ½ÓÊÕHTTPÇëÇó */
     	memset( http_buffer , 0x00 , sizeof(http_buffer) );
     	http_len = 0 ;
     	while( sizeof(http_buffer)-1 - http_len > 0 )
@@ -110,7 +110,7 @@ tcpdaemonæä¾›äº†ä¸‰ç§ä¸ä½¿ç”¨è€…ä»£ç å¯¹æ¥æ–¹å¼ï¼š(æ³¨æ„ï¼š.exeåªæ˜¯ä¸º
     		return TCPMAIN_RETURN_ERROR;
     	}
     	
-    	/* å‘é€HTTPå“åº” */
+    	/* ·¢ËÍHTTPÏìÓ¦ */
     	memset( http_buffer , 0x00 , sizeof(http_buffer) );
     	http_len = 0 ;
     	http_len = sprintf( http_buffer , "HTTP/1.0 200 OK\r\nContent-length: 17\r\n\r\nHello Tcpdaemon\r\n" ) ;
@@ -119,16 +119,16 @@ tcpdaemonæä¾›äº†ä¸‰ç§ä¸ä½¿ç”¨è€…ä»£ç å¯¹æ¥æ–¹å¼ï¼š(æ³¨æ„ï¼š.exeåªæ˜¯ä¸º
     	return TCPMAIN_RETURN_CLOSE;
     }
 
-ç¼–è¯‘é“¾æ¥æˆtest_callback_http_echo.so
+±àÒëÁ´½Ó³Étest_callback_http_echo.so
 
     $ gcc -g -fPIC -O2 -Wall -Werror -fno-strict-aliasing -I. -I/home/calvin/include/tcpdaemon  -c test_callback_http_echo.c
     $ gcc -g -fPIC -O2 -Wall -Werror -fno-strict-aliasing -shared -o test_callback_http_echo.so test_callback_http_echo.o -L. -L/home/calvin/lib -lpthread -ldl 
     
-ç”¨tcpdaemonç›´æ¥æŒ‚æ¥å³å¯
+ÓÃtcpdaemonÖ±½Ó¹Ò½Ó¼´¿É
 
     $ tcpdaemon -m IF -l 0:9527 -s test_callback_http_echo.so -c 10 --tcp-nodelay --logfile $HOME/log/test_callback_http_echo.log --loglevel-debug
 
-å¯æ‰§è¡Œç¨‹åºtcpdaemonæ‰€æœ‰å‘½ä»¤è¡Œå‚æ•°å¯ä»¥ä¸å¸¦å‚æ•°çš„æ‰§è¡Œè€Œå¾—åˆ°
+¿ÉÖ´ĞĞ³ÌĞòtcpdaemonËùÓĞÃüÁîĞĞ²ÎÊı¿ÉÒÔ²»´ø²ÎÊıµÄÖ´ĞĞ¶øµÃµ½
 
     $ tcpdaemon
     USAGE : tcpdaemon -m IF -l ip:port -s so_pathfilename [ -c max_process_count ]
@@ -139,24 +139,24 @@ tcpdaemonæä¾›äº†ä¸‰ç§ä¸ä½¿ç”¨è€…ä»£ç å¯¹æ¥æ–¹å¼ï¼š(æ³¨æ„ï¼š.exeåªæ˜¯ä¸º
                       [ --work-path work_path ]
                       [ --work-user work_user ]
 
-æ‰§è¡Œåå¯åœ¨$HOME/logä¸‹å¯ä»¥çœ‹åˆ°tcpdaemonçš„æ—¥å¿—ã€‚
+Ö´ĞĞºó¿ÉÔÚ$HOME/logÏÂ¿ÉÒÔ¿´µ½tcpdaemonµÄÈÕÖ¾¡£
 
-é€šè¿‡curlå‘æµ‹è¯•è¯·æ±‚
+Í¨¹ıcurl·¢²âÊÔÇëÇó
 
     $ curl "http://localhost:9527/"
     Hello Tcpdaemon
 
-æµ‹è¯•æˆåŠŸï¼
+²âÊÔ³É¹¦£¡
 
-**æ‰€æœ‰ä»£ç åœ¨æºç å®‰è£…åŒ…çš„testç›®å½•é‡Œä¸‹å¯ä»¥æ‰¾åˆ°**
+**ËùÓĞ´úÂëÔÚÔ´Âë°²×°°üµÄtestÄ¿Â¼ÀïÏÂ¿ÉÒÔÕÒµ½**
 
-## 3.2.æœåŠ¡æ¨¡å‹IO-Multiplexï¼Œé“¾æ¥æ¨¡å¼2ï¼Œéå µå¡çš„æ¥æ”¶HTTPè¯·æ±‚æŠ¥æ–‡ç„¶åå‘é€HTTPå“åº”æŠ¥æ–‡ ##
-ä½¿ç”¨è€…ç¼–å†™ä¸€ä¸ªå‡½æ•°main
+## 3.2.·şÎñÄ£ĞÍIO-Multiplex£¬Á´½ÓÄ£Ê½2£¬·Ç¶ÂÈûµÄ½ÓÊÕHTTPÇëÇó±¨ÎÄÈ»ºó·¢ËÍHTTPÏìÓ¦±¨ÎÄ ##
+Ê¹ÓÃÕß±àĞ´Ò»¸öº¯Êımain
 
     $ test_main_IOMP.c
     #include "tcpdaemon.h"
     
-    extern int tcpmain( struct TcpdaemonServerEnvirment *p_env , int sock , void *p_addr );
+    extern int tcpmain( struct TcpdaemonServerEnvironment *p_env , int sock , void *p_addr );
     
     int main()
     {
@@ -181,69 +181,69 @@ tcpdaemonæä¾›äº†ä¸‰ç§ä¸ä½¿ç”¨è€…ä»£ç å¯¹æ¥æ–¹å¼ï¼š(æ³¨æ„ï¼š.exeåªæ˜¯ä¸º
     	return -tcpdaemon( & ep );
     }
 
-ç»“æ„ä½“TcpdaemonEntryParameteræ‰€æœ‰æˆå‘˜è¯´æ˜åœ¨tcpdaemon.hé‡Œå¯ä»¥æ‰¾åˆ°
+½á¹¹ÌåTcpdaemonEntryParameterËùÓĞ³ÉÔ±ËµÃ÷ÔÚtcpdaemon.hÀï¿ÉÒÔÕÒµ½
 
     struct TcpdaemonEntryParameter
     {
-    	int		daemon_level ;	/* æ˜¯å¦è½¬åŒ–ä¸ºå®ˆæŠ¤æœåŠ¡ 1:è½¬åŒ– 0:ä¸è½¬åŒ–ï¼ˆç¼ºçœï¼‰ */
+    	int		daemon_level ;	/* ÊÇ·ñ×ª»¯ÎªÊØ»¤·şÎñ 1:×ª»¯ 0:²»×ª»¯£¨È±Ê¡£© */
     	
-    	char		log_pathfilename[ 256 + 1 ] ;	/* æ—¥å¿—è¾“å‡ºæ–‡ä»¶åï¼Œä¸è®¾ç½®åˆ™è¾“å‡ºåˆ°æ ‡å‡†è¾“å‡ºä¸Š */
-    	int		log_level ;	/* æ—¥å¿—ç­‰çº§ */
+    	char		log_pathfilename[ 256 + 1 ] ;	/* ÈÕÖ¾Êä³öÎÄ¼şÃû£¬²»ÉèÖÃÔòÊä³öµ½±ê×¼Êä³öÉÏ */
+    	int		log_level ;	/* ÈÕÖ¾µÈ¼¶ */
     	
-    	char		server_model[ 10 + 1 ] ;	/* TCPè¿æ¥ç®¡ç†æ¨¡å‹
-    							LF:é¢†å¯¼è€…-è¿½éšè€…é¢„æ´¾ç”Ÿè¿›ç¨‹æ± æ¨¡å‹ for UNIX,Linux
-    							IF:å³æ—¶æ´¾ç”Ÿè¿›ç¨‹æ¨¡å‹ for UNIX,Linux
-    							WIN-TLF:é¢†å¯¼è€…-è¿½éšè€…é¢„æ´¾ç”Ÿçº¿ç¨‹æ± æ¨¡å‹ for win32
+    	char		server_model[ 10 + 1 ] ;	/* TCPÁ¬½Ó¹ÜÀíÄ£ĞÍ
+    							LF:Áìµ¼Õß-×·ËæÕßÔ¤ÅÉÉú½ø³Ì³ØÄ£ĞÍ for UNIX,Linux
+    							IF:¼´Ê±ÅÉÉú½ø³ÌÄ£ĞÍ for UNIX,Linux
+    							WIN-TLF:Áìµ¼Õß-×·ËæÕßÔ¤ÅÉÉúÏß³Ì³ØÄ£ĞÍ for win32
     							*/
-    	int		process_count ;	/* å½“ä¸ºé¢†å¯¼è€…-è¿½éšè€…é¢„æ´¾ç”Ÿè¿›ç¨‹æ± æ¨¡å‹æ—¶ä¸ºå·¥ä½œè¿›ç¨‹æ± è¿›ç¨‹æ•°é‡ï¼Œå½“ä¸ºå³æ—¶æ´¾ç”Ÿè¿›ç¨‹æ¨¡å‹æ—¶ä¸ºæœ€å¤§å­è¿›ç¨‹æ•°é‡ï¼Œå½“ä¸ºIOå¤šè·¯å¤ç”¨æ¨¡å‹æ—¶ä¸ºå·¥ä½œè¿›ç¨‹æ± è¿›ç¨‹æ•°é‡ */
-    	int		max_requests_per_process ;	/* å½“ä¸ºé¢†å¯¼è€…-è¿½éšè€…é¢„æ´¾ç”Ÿè¿›ç¨‹æ± æ¨¡å‹æ—¶ä¸ºå•ä¸ªå·¥ä½œè¿›ç¨‹æœ€å¤§å¤„ç†åº”ç”¨æ¬¡æ•° */
-    	char		ip[ 20 + 1 ] ;	/* æœ¬åœ°ä¾¦å¬IP */
-    	int		port ;	/* æœ¬åœ°ä¾¦å¬PORT */
-    	char		so_pathfilename[ 256 + 1 ] ;	/* ç”¨ç»å¯¹è·¯å¾„æˆ–ç›¸å¯¹è·¯å¾„è¡¨è¾¾çš„åº”ç”¨åŠ¨æ€åº“æ–‡ä»¶å */
+    	int		process_count ;	/* µ±ÎªÁìµ¼Õß-×·ËæÕßÔ¤ÅÉÉú½ø³Ì³ØÄ£ĞÍÊ±Îª¹¤×÷½ø³Ì³Ø½ø³ÌÊıÁ¿£¬µ±Îª¼´Ê±ÅÉÉú½ø³ÌÄ£ĞÍÊ±Îª×î´ó×Ó½ø³ÌÊıÁ¿£¬µ±ÎªIO¶àÂ·¸´ÓÃÄ£ĞÍÊ±Îª¹¤×÷½ø³Ì³Ø½ø³ÌÊıÁ¿ */
+    	int		max_requests_per_process ;	/* µ±ÎªÁìµ¼Õß-×·ËæÕßÔ¤ÅÉÉú½ø³Ì³ØÄ£ĞÍÊ±Îªµ¥¸ö¹¤×÷½ø³Ì×î´ó´¦ÀíÓ¦ÓÃ´ÎÊı */
+    	char		ip[ 20 + 1 ] ;	/* ±¾µØÕìÌıIP */
+    	int		port ;	/* ±¾µØÕìÌıPORT */
+    	char		so_pathfilename[ 256 + 1 ] ;	/* ÓÃ¾ø¶ÔÂ·¾¶»òÏà¶ÔÂ·¾¶±í´ïµÄÓ¦ÓÃ¶¯Ì¬¿âÎÄ¼şÃû */
     	
-    	char		work_user[ 64 + 1 ] ;	/* åˆ‡æ¢ä¸ºå…¶å®ƒç”¨æˆ·è¿è¡Œã€‚å¯é€‰ */
-    	char		work_path[ 256 + 1 ] ;	/* åˆ‡æ¢åˆ°æŒ‡å®šç›®å½•è¿è¡Œã€‚å¯é€‰ */
+    	char		work_user[ 64 + 1 ] ;	/* ÇĞ»»ÎªÆäËüÓÃ»§ÔËĞĞ¡£¿ÉÑ¡ */
+    	char		work_path[ 256 + 1 ] ;	/* ÇĞ»»µ½Ö¸¶¨Ä¿Â¼ÔËĞĞ¡£¿ÉÑ¡ */
     	
-    	func_tcpmain	*pfunc_tcpmain ;	/* å½“å‡½æ•°è°ƒç”¨æ¨¡å¼æ—¶ï¼ŒæŒ‡å‘æŠŠTCPè¿æ¥äº¤ç»™åº”ç”¨å…¥å£å‡½æ•°æŒ‡é’ˆ */
-    	void		*param_tcpmain ;	/* å½“å‡½æ•°è°ƒç”¨æ¨¡å¼æ—¶ï¼ŒæŒ‡å‘æŠŠTCPè¿æ¥äº¤ç»™åº”ç”¨å…¥å£å‡½æ•°çš„å‚æ•°æŒ‡é’ˆã€‚ç‰¹åˆ«æ³¨æ„ï¼šè‡ªå·±ä¿è¯çº¿ç¨‹å®‰å…¨ */
+    	func_tcpmain	*pfunc_tcpmain ;	/* µ±º¯Êıµ÷ÓÃÄ£Ê½Ê±£¬Ö¸Ïò°ÑTCPÁ¬½Ó½»¸øÓ¦ÓÃÈë¿Úº¯ÊıÖ¸Õë */
+    	void		*param_tcpmain ;	/* µ±º¯Êıµ÷ÓÃÄ£Ê½Ê±£¬Ö¸Ïò°ÑTCPÁ¬½Ó½»¸øÓ¦ÓÃÈë¿Úº¯ÊıµÄ²ÎÊıÖ¸Õë¡£ÌØ±ğ×¢Òâ£º×Ô¼º±£Ö¤Ïß³Ì°²È« */
     	
-    	int		tcp_nodelay ;	/* å¯ç”¨TCP_NODELAYé€‰é¡¹ 1:å¯ç”¨ 0:ä¸å¯ç”¨ï¼ˆç¼ºçœï¼‰ã€‚å¯é€‰ */
-    	int		tcp_linger ;	/* å¯ç”¨TCP_LINGERé€‰é¡¹ >=1:å¯ç”¨å¹¶è®¾ç½®æˆå‚æ•°å€¼ 0:ä¸å¯ç”¨ï¼ˆç¼ºçœï¼‰ã€‚å¯é€‰ */
+    	int		tcp_nodelay ;	/* ÆôÓÃTCP_NODELAYÑ¡Ïî 1:ÆôÓÃ 0:²»ÆôÓÃ£¨È±Ê¡£©¡£¿ÉÑ¡ */
+    	int		tcp_linger ;	/* ÆôÓÃTCP_LINGERÑ¡Ïî >=1:ÆôÓÃ²¢ÉèÖÃ³É²ÎÊıÖµ 0:²»ÆôÓÃ£¨È±Ê¡£©¡£¿ÉÑ¡ */
     	
-        int     timeout_seconds ; /* è¶…æ—¶æ—¶é—´ï¼Œå•ä½ï¼šç§’ï¼›ç›®å‰åªå¯¹IO-Multiplexæ¨¡å‹æœ‰æ•ˆ */
+        int     timeout_seconds ; /* ³¬Ê±Ê±¼ä£¬µ¥Î»£ºÃë£»Ä¿Ç°Ö»¶ÔIO-MultiplexÄ£ĞÍÓĞĞ§ */
         
-    	/* ä»¥ä¸‹ä¸ºå†…éƒ¨ä½¿ç”¨ */
+    	/* ÒÔÏÂÎªÄÚ²¿Ê¹ÓÃ */
     	int		install_winservice ;
     	int		uninstall_winservice ;
     } ;
 
 
-ä½¿ç”¨è€…å†ç¼–å†™ä¸€ä¸ªå‡½æ•°tcpmainï¼Œå®ç°éå µå¡çš„æ¥æ”¶HTTPè¯·æ±‚æŠ¥æ–‡ç„¶åå‘é€HTTPå“åº”æŠ¥æ–‡å›å»
+Ê¹ÓÃÕßÔÙ±àĞ´Ò»¸öº¯Êıtcpmain£¬ÊµÏÖ·Ç¶ÂÈûµÄ½ÓÊÕHTTPÇëÇó±¨ÎÄÈ»ºó·¢ËÍHTTPÏìÓ¦±¨ÎÄ»ØÈ¥
 
     $ vi test_callback_http_echo_nonblock.c
     #include "tcpdaemon.h"
     
     struct AcceptedSession
     {
-    	int		sock ; /* socketæè¿°å­— */
-    	struct sockaddr	addr ; /* socketåœ°å€ */
+    	int		sock ; /* socketÃèÊö×Ö */
+    	struct sockaddr	addr ; /* socketµØÖ· */
     	
-    	char	http_buffer[ 4096 + 1 ] ; /* HTTPæ”¶å‘ç¼“å†²åŒº */
-    	int		read_len ; /* è¯»äº†å¤šå°‘å­—èŠ‚ */
-    	int		write_len ; /* å°†è¦å†™å¤šå°‘å­—èŠ‚ */
-    	int		wrote_len ; /* å†™äº†å¤šå°‘å­—èŠ‚ */
+    	char	http_buffer[ 4096 + 1 ] ; /* HTTPÊÕ·¢»º³åÇø */
+    	int		read_len ; /* ¶ÁÁË¶àÉÙ×Ö½Ú */
+    	int		write_len ; /* ½«ÒªĞ´¶àÉÙ×Ö½Ú */
+    	int		wrote_len ; /* Ğ´ÁË¶àÉÙ×Ö½Ú */
     } ;
     
-    _WINDLL_FUNC int tcpmain( struct TcpdaemonServerEnvirment *p_env , int sock , void *p_addr )
+    _WINDLL_FUNC int tcpmain( struct TcpdaemonServerEnvironment *p_env , int sock , void *p_addr )
     {
     	struct AcceptedSession	*p_accepted_session = NULL ;
     	int			len ;
     	
     	switch( TDGetIoMultiplexEvent(p_env) )
     	{
-    		/* æ¥å—æ–°è¿æ¥äº‹ä»¶ */
+    		/* ½ÓÊÜĞÂÁ¬½ÓÊÂ¼ş */
     		case IOMP_ON_ACCEPTING_SOCKET :
-    			/* ç”³è¯·å†…å­˜ä»¥å­˜æ”¾å·²è¿æ¥ä¼šè¯ */
+    			/* ÉêÇëÄÚ´æÒÔ´æ·ÅÒÑÁ¬½Ó»á»° */
     			p_accepted_session = (struct AcceptedSession *)malloc( sizeof(struct AcceptedSession) ) ;
     			if( p_accepted_session == NULL )
     				return TCPMAIN_RETURN_ERROR;
@@ -252,39 +252,39 @@ tcpdaemonæä¾›äº†ä¸‰ç§ä¸ä½¿ç”¨è€…ä»£ç å¯¹æ¥æ–¹å¼ï¼š(æ³¨æ„ï¼š.exeåªæ˜¯ä¸º
     			p_accepted_session->sock = sock ;
     			memcpy( & (p_accepted_session->addr) , p_addr , sizeof(struct sockaddr) );
     			
-    			/* è®¾ç½®å·²è¿æ¥ä¼šè¯æ•°æ®ç»“æ„ */
+    			/* ÉèÖÃÒÑÁ¬½Ó»á»°Êı¾İ½á¹¹ */
     			TDSetIoMultiplexDataPtr( p_env , p_accepted_session );
     			
-    			/* ç­‰å¾…è¯»äº‹ä»¶ */
+    			/* µÈ´ı¶ÁÊÂ¼ş */
     			return TCPMAIN_RETURN_WAITINGFOR_RECEIVING;
     			
-    		/* å…³é—­è¿æ¥äº‹ä»¶ */
+    		/* ¹Ø±ÕÁ¬½ÓÊÂ¼ş */
     		case IOMP_ON_CLOSING_SOCKET :
-    			/* é‡Šæ”¾å·²è¿æ¥ä¼šè¯ */
+    			/* ÊÍ·ÅÒÑÁ¬½Ó»á»° */
     			p_accepted_session = (struct AcceptedSession *) p_addr ;
     			free( p_accepted_session );
     			
-    			/* ç­‰å¾…ä¸‹ä¸€ä»»æ„äº‹ä»¶ */
+    			/* µÈ´ıÏÂÒ»ÈÎÒâÊÂ¼ş */
     			return TCPMAIN_RETURN_WAITINGFOR_NEXT;
     			
-    		/* é€šè®¯æ¥æ”¶äº‹ä»¶ */
+    		/* Í¨Ñ¶½ÓÊÕÊÂ¼ş */
     		case IOMP_ON_RECEIVING_SOCKET :
     			p_accepted_session = (struct AcceptedSession *) p_addr ;
     			
-    			/* éå µå¡æ¥æ”¶é€šè®¯æ•°æ® */
+    			/* ·Ç¶ÂÈû½ÓÊÕÍ¨Ñ¶Êı¾İ */
     			len = RECV( p_accepted_session->sock , p_accepted_session->http_buffer+p_accepted_session->read_len , sizeof(p_accepted_session->http_buffer)-1-p_accepted_session->read_len , 0 ) ;
     			if( len == 0 )
     				return TCPMAIN_RETURN_CLOSE;
     			else if( len == -1 )
     				return TCPMAIN_RETURN_ERROR;
     			
-    			/* å·²æ¥æ”¶æ•°æ®é•¿åº¦ç´¯åŠ  */
+    			/* ÒÑ½ÓÊÕÊı¾İ³¤¶ÈÀÛ¼Ó */
     			p_accepted_session->read_len += len ;
     			
-    			/* å¦‚æœå·²æ”¶å®Œ */
+    			/* Èç¹ûÒÑÊÕÍê */
     			if( strstr( p_accepted_session->http_buffer , "\r\n\r\n" ) )
     			{
-    				/* ç»„ç»‡å“åº”æŠ¥æ–‡ */
+    				/* ×éÖ¯ÏìÓ¦±¨ÎÄ */
     				p_accepted_session->write_len = sprintf( p_accepted_session->http_buffer , "HTTP/1.0 200 OK\r\n"
     											"Content-length: 17\r\n"
     											"\r\n"
@@ -292,30 +292,30 @@ tcpdaemonæä¾›äº†ä¸‰ç§ä¸ä½¿ç”¨è€…ä»£ç å¯¹æ¥æ–¹å¼ï¼š(æ³¨æ„ï¼š.exeåªæ˜¯ä¸º
     				return TCPMAIN_RETURN_WAITINGFOR_SENDING;
     			}
     			
-    			/* å¦‚æœç¼“å†²åŒºæ”¶æ»¡äº†è¿˜æ²¡æ”¶å®Œ */
+    			/* Èç¹û»º³åÇøÊÕÂúÁË»¹Ã»ÊÕÍê */
     			if( p_accepted_session->read_len == sizeof(p_accepted_session->http_buffer)-1 )
     				return TCPMAIN_RETURN_ERROR;
     			
-    			/* ç­‰å¾…ä¸‹ä¸€ä»»æ„äº‹ä»¶ */
+    			/* µÈ´ıÏÂÒ»ÈÎÒâÊÂ¼ş */
     			return TCPMAIN_RETURN_WAITINGFOR_NEXT;
     			
-    		/* é€šè®¯å‘é€äº‹ä»¶ */
+    		/* Í¨Ñ¶·¢ËÍÊÂ¼ş */
     		case IOMP_ON_SENDING_SOCKET :
     			p_accepted_session = (struct AcceptedSession *) p_addr ;
     			
-    			/* éå µå¡å‘é€é€šè®¯æ•°æ® */
+    			/* ·Ç¶ÂÈû·¢ËÍÍ¨Ñ¶Êı¾İ */
     			len = SEND( p_accepted_session->sock , p_accepted_session->http_buffer+p_accepted_session->wrote_len , p_accepted_session->write_len-p_accepted_session->wrote_len , 0 ) ;
     			if( len == -1 )
     				return TCPMAIN_RETURN_ERROR;
     			
-    			/* å·²å‘é€æ•°æ®é•¿åº¦ç´¯åŠ  */
+    			/* ÒÑ·¢ËÍÊı¾İ³¤¶ÈÀÛ¼Ó */
     			p_accepted_session->wrote_len += len ;
     			
-    			/* å¦‚æœå·²å‘å®Œ */
+    			/* Èç¹ûÒÑ·¢Íê */
     			if( p_accepted_session->wrote_len == p_accepted_session->write_len )
     				return TCPMAIN_RETURN_CLOSE;
     			
-    			/* ç­‰å¾…ä¸‹ä¸€ä»»æ„äº‹ä»¶ */
+    			/* µÈ´ıÏÂÒ»ÈÎÒâÊÂ¼ş */
     			return TCPMAIN_RETURN_WAITINGFOR_NEXT;
     			
     		default :
@@ -323,95 +323,95 @@ tcpdaemonæä¾›äº†ä¸‰ç§ä¸ä½¿ç”¨è€…ä»£ç å¯¹æ¥æ–¹å¼ï¼š(æ³¨æ„ï¼š.exeåªæ˜¯ä¸º
     	}
     }
     
-ç¼–è¯‘æˆtest_main_IOMP
+±àÒë³Étest_main_IOMP
 
     gcc -g -fPIC -O2 -Wall -Werror -fno-strict-aliasing -I. -I/home/calvin/include/tcpdaemon  -c test_main_IOMP.c
     gcc -g -fPIC -O2 -Wall -Werror -fno-strict-aliasing -I. -I/home/calvin/include/tcpdaemon  -c test_callback_http_echo_nonblock.c
     gcc -g -fPIC -O2 -Wall -Werror -fno-strict-aliasing  -o test_main_IOMP test_main_IOMP.o test_callback_http_echo_nonblock.o -L. -L/home/calvin/lib -lpthread -ldl  -ltcpdaemon
 
-æ‰§è¡Œtest_main_IOMP
+Ö´ĞĞtest_main_IOMP
 
     $ ./test_main_IOMP
 
-æ‰§è¡Œåå¯åœ¨$HOME/logä¸‹å¯ä»¥çœ‹åˆ°test_main_IOMPçš„æ—¥å¿—ã€‚
+Ö´ĞĞºó¿ÉÔÚ$HOME/logÏÂ¿ÉÒÔ¿´µ½test_main_IOMPµÄÈÕÖ¾¡£
 
-é€šè¿‡curlå‘æµ‹è¯•è¯·æ±‚
+Í¨¹ıcurl·¢²âÊÔÇëÇó
 
     $ curl "http://localhost:9527/"
     Hello Tcpdaemon
 
-æµ‹è¯•æˆåŠŸï¼
+²âÊÔ³É¹¦£¡
 
-**æ‰€æœ‰ä»£ç åœ¨æºç å®‰è£…åŒ…çš„testç›®å½•é‡Œä¸‹å¯ä»¥æ‰¾åˆ°**
+**ËùÓĞ´úÂëÔÚÔ´Âë°²×°°üµÄtestÄ¿Â¼ÀïÏÂ¿ÉÒÔÕÒµ½**
 
-# 4.å‚è€ƒ #
-## 4.1.å›è°ƒå‡½æ•°tcpmain ##
-tcpdaemonä¼šåœ¨åˆé€‚æ—¶æœºå›è°ƒç”¨æˆ·å±‚æŒ‡å®šå‡½æ•°tcpmainã€‚
+# 4.²Î¿¼ #
+## 4.1.»Øµ÷º¯Êıtcpmain ##
+tcpdaemon»áÔÚºÏÊÊÊ±»ú»Øµ÷ÓÃ»§²ãÖ¸¶¨º¯Êıtcpmain¡£
 
-å½“æœåŠ¡æ¨¡å‹ä¸ºForkingæˆ–Leader-Followæˆ–WindowsThreads Leader-Followæ—¶ï¼Œå›è°ƒå‡½æ•°tcpmainåœ¨è¿æ¥è¢«æ¥å—åè°ƒç”¨ã€‚è¿”å›TCPMAIN_RETURN_CLOSEæˆ–TCPMAIN_RETURN_ERRORéƒ½å°†å…³é—­é€šè®¯è¿æ¥ã€‚
+µ±·şÎñÄ£ĞÍÎªForking»òLeader-Follow»òWindowsThreads Leader-FollowÊ±£¬»Øµ÷º¯ÊıtcpmainÔÚÁ¬½Ó±»½ÓÊÜºóµ÷ÓÃ¡£·µ»ØTCPMAIN_RETURN_CLOSE»òTCPMAIN_RETURN_ERROR¶¼½«¹Ø±ÕÍ¨Ñ¶Á¬½Ó¡£
 
-å½“æœåŠ¡æ¨¡å‹ä¸ºIO-Multiplexæ—¶ï¼Œå›è°ƒå‡½æ•°tcpmainåœ¨é€šè®¯è¿æ¥è¢«æ¥å—æ—¶ã€é€šè®¯è¿æ¥è¢«å…³é—­æ—¶ã€é€šè®¯æ•°æ®å¯æ¥æ”¶/å‘é€æ—¶è°ƒç”¨ï¼Œå› ä¸ºæ˜¯éå µå¡å¤„ç†ï¼Œè¿”å›TCPMAIN_RETURN_CLOSEæˆ–TCPMAIN_RETURN_ERRORä¼šå…³é—­é€šè®¯è¿æ¥ï¼Œè¿”å›TCPMAIN_RETURN_WAITINGFOR_RECEIVINGä¼šåˆ‡æ¢ç­‰å¾…å¯è¯»äº‹ä»¶ï¼Œè¿”å›TCPMAIN_RETURN_WAITINGFOR_SENDINGä¼šåˆ‡æ¢ç­‰å¾…å¯å†™äº‹ä»¶ï¼Œè¿”å›TCPMAIN_RETURN_WAITINGFOR_NEXTä¼šç»§ç»­ç­‰å¾…å…¶å®ƒäº‹ä»¶ã€‚ï¼ˆæ³¨æ„ï¼šé€šè®¯è¿æ¥è¢«æ¥å—æ—¶çš„tcpmainé‡Œå¿…é¡»è°ƒç”¨TDSetIoMultiplexDataPtrè®¾ç½®é€šè®¯æ•°æ®ä¼šè¯ç»“æ„ï¼‰
+µ±·şÎñÄ£ĞÍÎªIO-MultiplexÊ±£¬»Øµ÷º¯ÊıtcpmainÔÚÍ¨Ñ¶Á¬½Ó±»½ÓÊÜÊ±¡¢Í¨Ñ¶Á¬½Ó±»¹Ø±ÕÊ±¡¢Í¨Ñ¶Êı¾İ¿É½ÓÊÕ/·¢ËÍÊ±µ÷ÓÃ£¬ÒòÎªÊÇ·Ç¶ÂÈû´¦Àí£¬·µ»ØTCPMAIN_RETURN_CLOSE»òTCPMAIN_RETURN_ERROR»á¹Ø±ÕÍ¨Ñ¶Á¬½Ó£¬·µ»ØTCPMAIN_RETURN_WAITINGFOR_RECEIVING»áÇĞ»»µÈ´ı¿É¶ÁÊÂ¼ş£¬·µ»ØTCPMAIN_RETURN_WAITINGFOR_SENDING»áÇĞ»»µÈ´ı¿ÉĞ´ÊÂ¼ş£¬·µ»ØTCPMAIN_RETURN_WAITINGFOR_NEXT»á¼ÌĞøµÈ´ıÆäËüÊÂ¼ş¡££¨×¢Òâ£ºÍ¨Ñ¶Á¬½Ó±»½ÓÊÜÊ±µÄtcpmainÀï±ØĞëµ÷ÓÃTDSetIoMultiplexDataPtrÉèÖÃÍ¨Ñ¶Êı¾İ»á»°½á¹¹£©
 
-## 4.2.TcpdaemonServerEnvirmentç¯å¢ƒå‡½æ•°é›† ##
+## 4.2.TcpdaemonServerEnvironment»·¾³º¯Êı¼¯ ##
 
-| å‡½æ•°å | TDGetTcpmainParameter |
+| º¯ÊıÃû | TDGetTcpmainParameter |
 | --:|:-- |
-| å‡½æ•°åŸå‹ | void *TDGetTcpmainParameter( struct TcpdaemonServerEnvirment *p_env ); |
-| è¾“å…¥å‚æ•° | struct TcpdaemonServerEnvirment *p_env tcpdaemonç¯å¢ƒç»“æ„æŒ‡é’ˆ |
-| è¿”å›å€¼ | è°ƒç”¨tcpmainæ—¶ä¼ å…¥TcpdaemonEntryParameterçš„param_tcpmainåœ°å€ |
+| º¯ÊıÔ­ĞÍ | void *TDGetTcpmainParameter( struct TcpdaemonServerEnvironment *p_env ); |
+| ÊäÈë²ÎÊı | struct TcpdaemonServerEnvironment *p_env tcpdaemon»·¾³½á¹¹Ö¸Õë |
+| ·µ»ØÖµ | µ÷ÓÃtcpmainÊ±´«ÈëTcpdaemonEntryParameterµÄparam_tcpmainµØÖ· |
 
-| å‡½æ•°å | TDGetListenSocket |
+| º¯ÊıÃû | TDGetListenSocket |
 | --:|:-- |
-| å‡½æ•°åŸå‹ | int TDGetListenSocket( struct TcpdaemonServerEnvirment *p_env ); |
-| è¾“å…¥å‚æ•° | struct TcpdaemonServerEnvirment *p_env tcpdaemonç¯å¢ƒç»“æ„æŒ‡é’ˆ |
-| è¿”å›å€¼ | ä¾¦å¬ç«¯å£æè¿°å­— |
+| º¯ÊıÔ­ĞÍ | int TDGetListenSocket( struct TcpdaemonServerEnvironment *p_env ); |
+| ÊäÈë²ÎÊı | struct TcpdaemonServerEnvironment *p_env tcpdaemon»·¾³½á¹¹Ö¸Õë |
+| ·µ»ØÖµ | ÕìÌı¶Ë¿ÚÃèÊö×Ö |
 
-| å‡½æ•°å | TDGetListenSocketPtr |
+| º¯ÊıÃû | TDGetListenSocketPtr |
 | --:|:-- |
-| å‡½æ•°åŸå‹ | int *TDGetListenSocketPtr( struct TcpdaemonServerEnvirment *p_env ); |
-| è¾“å…¥å‚æ•° | struct TcpdaemonServerEnvirment *p_env tcpdaemonç¯å¢ƒç»“æ„æŒ‡é’ˆ |
-| è¿”å›å€¼ | ä¾¦å¬ç«¯å£æè¿°å­—çš„åœ°å€ |
+| º¯ÊıÔ­ĞÍ | int *TDGetListenSocketPtr( struct TcpdaemonServerEnvironment *p_env ); |
+| ÊäÈë²ÎÊı | struct TcpdaemonServerEnvironment *p_env tcpdaemon»·¾³½á¹¹Ö¸Õë |
+| ·µ»ØÖµ | ÕìÌı¶Ë¿ÚÃèÊö×ÖµÄµØÖ· |
 
-| å‡½æ•°å | TDGetListenAddress |
+| º¯ÊıÃû | TDGetListenAddress |
 | --:|:-- |
-| å‡½æ•°åŸå‹ | struct sockaddr_in TDGetListenAddress( struct TcpdaemonServerEnvirment *p_env ); |
-| è¾“å…¥å‚æ•° | struct TcpdaemonServerEnvirment *p_env tcpdaemonç¯å¢ƒç»“æ„æŒ‡é’ˆ |
-| è¿”å›å€¼ | ä¾¦å¬ç«¯å£ç½‘ç»œåœ°å€ |
+| º¯ÊıÔ­ĞÍ | struct sockaddr_in TDGetListenAddress( struct TcpdaemonServerEnvironment *p_env ); |
+| ÊäÈë²ÎÊı | struct TcpdaemonServerEnvironment *p_env tcpdaemon»·¾³½á¹¹Ö¸Õë |
+| ·µ»ØÖµ | ÕìÌı¶Ë¿ÚÍøÂçµØÖ· |
 
-| å‡½æ•°å | TDGetListenAddressPtr |
+| º¯ÊıÃû | TDGetListenAddressPtr |
 | --:|:-- |
-| å‡½æ•°åŸå‹ | struct sockaddr_in *TDGetListenAddressPtr( struct TcpdaemonServerEnvirment *p_env ); |
-| è¾“å…¥å‚æ•° | struct TcpdaemonServerEnvirment *p_env tcpdaemonç¯å¢ƒç»“æ„æŒ‡é’ˆ |
-| è¿”å›å€¼ | ä¾¦å¬ç«¯å£ç½‘ç»œåœ°å€çš„åœ°å€ |
+| º¯ÊıÔ­ĞÍ | struct sockaddr_in *TDGetListenAddressPtr( struct TcpdaemonServerEnvironment *p_env ); |
+| ÊäÈë²ÎÊı | struct TcpdaemonServerEnvironment *p_env tcpdaemon»·¾³½á¹¹Ö¸Õë |
+| ·µ»ØÖµ | ÕìÌı¶Ë¿ÚÍøÂçµØÖ·µÄµØÖ· |
 
-| å‡½æ•°å | TDGetProcessCount |
+| º¯ÊıÃû | TDGetProcessCount |
 | --:|:-- |
-| å‡½æ•°åŸå‹ | int TDGetProcessCount( struct TcpdaemonServerEnvirment *p_env ); |
-| è¾“å…¥å‚æ•° | struct TcpdaemonServerEnvirment *p_env tcpdaemonç¯å¢ƒç»“æ„æŒ‡é’ˆ |
-| è¿”å›å€¼ | é…ç½®æœ€å¤§å¹¶å‘åº¦æˆ–é™æ€è¿›ç¨‹æ± è¿›ç¨‹æ•°é‡ |
+| º¯ÊıÔ­ĞÍ | int TDGetProcessCount( struct TcpdaemonServerEnvironment *p_env ); |
+| ÊäÈë²ÎÊı | struct TcpdaemonServerEnvironment *p_env tcpdaemon»·¾³½á¹¹Ö¸Õë |
+| ·µ»ØÖµ | ÅäÖÃ×î´ó²¢·¢¶È»ò¾²Ì¬½ø³Ì³Ø½ø³ÌÊıÁ¿ |
 
-| å‡½æ•°å | TDGetEpollArrayBase |
+| º¯ÊıÃû | TDGetEpollArrayBase |
 | --:|:-- |
-| å‡½æ•°åŸå‹ | int *TDGetEpollArrayBase( struct TcpdaemonServerEnvirment *p_env ); |
-| è¾“å…¥å‚æ•° | struct TcpdaemonServerEnvirment *p_env tcpdaemonç¯å¢ƒç»“æ„æŒ‡é’ˆ |
-| è¿”å›å€¼ | IOå¤šè·¯å¤ç”¨epollæ•°ç»„ç¬¬ä¸€ä¸ªå…ƒç´ çš„åœ°å€ |
+| º¯ÊıÔ­ĞÍ | int *TDGetEpollArrayBase( struct TcpdaemonServerEnvironment *p_env ); |
+| ÊäÈë²ÎÊı | struct TcpdaemonServerEnvironment *p_env tcpdaemon»·¾³½á¹¹Ö¸Õë |
+| ·µ»ØÖµ | IO¶àÂ·¸´ÓÃepollÊı×éµÚÒ»¸öÔªËØµÄµØÖ· |
 
-| å‡½æ•°å | TDGetThisEpoll |
+| º¯ÊıÃû | TDGetThisEpoll |
 | --:|:-- |
-| å‡½æ•°åŸå‹ | int TDGetThisEpoll( struct TcpdaemonServerEnvirment *p_env ); |
-| è¾“å…¥å‚æ•° | struct TcpdaemonServerEnvirment *p_env tcpdaemonç¯å¢ƒç»“æ„æŒ‡é’ˆ |
-| è¿”å›å€¼ | å½“å‰IOå¤šè·¯å¤ç”¨epollæè¿°å­— |
+| º¯ÊıÔ­ĞÍ | int TDGetThisEpoll( struct TcpdaemonServerEnvironment *p_env ); |
+| ÊäÈë²ÎÊı | struct TcpdaemonServerEnvironment *p_env tcpdaemon»·¾³½á¹¹Ö¸Õë |
+| ·µ»ØÖµ | µ±Ç°IO¶àÂ·¸´ÓÃepollÃèÊö×Ö |
 
-| å‡½æ•°å | TDGetIoMultiplexEvent |
+| º¯ÊıÃû | TDGetIoMultiplexEvent |
 | --:|:-- |
-| å‡½æ•°åŸå‹ | int TDGetIoMultiplexEvent( struct TcpdaemonServerEnvirment *p_env ); |
-| è¾“å…¥å‚æ•° | struct TcpdaemonServerEnvirment *p_env tcpdaemonç¯å¢ƒç»“æ„æŒ‡é’ˆ |
-| è¿”å›å€¼ | å½“å‰IOå¤šè·¯å¤ç”¨epolläº‹ä»¶ IOMP_ON_ACCEPTING_SOCKET:æ¥å—æ–°è¿æ¥äº‹ä»¶ IOMP_ON_CLOSING_SOCKET:å…³é—­è¿æ¥äº‹ä»¶ IOMP_ON_RECEIVING_SOCKET:æ¥æ”¶é€šè®¯æ•°æ®äº‹ä»¶ IOMP_ON_SENDING_SOCKET:å‘é€é€šè®¯æ•°æ®äº‹ä»¶ |
+| º¯ÊıÔ­ĞÍ | int TDGetIoMultiplexEvent( struct TcpdaemonServerEnvironment *p_env ); |
+| ÊäÈë²ÎÊı | struct TcpdaemonServerEnvironment *p_env tcpdaemon»·¾³½á¹¹Ö¸Õë |
+| ·µ»ØÖµ | µ±Ç°IO¶àÂ·¸´ÓÃepollÊÂ¼ş IOMP_ON_ACCEPTING_SOCKET:½ÓÊÜĞÂÁ¬½ÓÊÂ¼ş IOMP_ON_CLOSING_SOCKET:¹Ø±ÕÁ¬½ÓÊÂ¼ş IOMP_ON_RECEIVING_SOCKET:½ÓÊÕÍ¨Ñ¶Êı¾İÊÂ¼ş IOMP_ON_SENDING_SOCKET:·¢ËÍÍ¨Ñ¶Êı¾İÊÂ¼ş |
 
-# 5.æ€»ç»“ #
+# 5.×Ü½á #
 
-tcpdaemonæä¾›äº†å¤šç§æœåŠ¡æ¨¡å‹å’Œé“¾æ¥æ¨¡å¼ï¼Œæ—¨åœ¨ååŠ©ä½¿ç”¨è€…å¿«é€Ÿæ„å»ºTCPåº”ç”¨æœåŠ¡å™¨ï¼Œæ¯”å¦‚å¯ä»¥ä½¿ç”¨æœ¬äººçš„å¦ä¸€ä¸ªå¼€æºé¡¹ç›® [HTTPè§£æå™¨fasterhttp](http://git.oschina.net/calvinwilliams/fasterhttp) ä»¥ç™¾è¡Œä»¥å†…ä»£ç æ„å»ºå‡ºä¸€ä¸ªå®Œæ•´çš„WebæœåŠ¡å™¨ï¼Œè¿˜æœ‰ä¸€ä¸ªå®Œæ•´çš„åº”ç”¨æ¡ˆä¾‹å¯å‚é˜…æœ¬äººçš„å¦ä¸€ä¸ªå¼€æºé¡¹ç›® [åˆ†å¸ƒå¼å‘å·å™¨](http://git.oschina.net/calvinwilliams/coconut) ï¼Œç»è¿‡tcpdaemonæ”¹é€ ååº”ç”¨ä»£ç ç¼©çŸ­äº†ä¸€åŠã€‚
+tcpdaemonÌá¹©ÁË¶àÖÖ·şÎñÄ£ĞÍºÍÁ´½ÓÄ£Ê½£¬Ö¼ÔÚĞ­ÖúÊ¹ÓÃÕß¿ìËÙ¹¹½¨TCPÓ¦ÓÃ·şÎñÆ÷£¬±ÈÈç¿ÉÒÔÊ¹ÓÃ±¾ÈËµÄÁíÒ»¸ö¿ªÔ´ÏîÄ¿ [HTTP½âÎöÆ÷fasterhttp](http://git.oschina.net/calvinwilliams/fasterhttp) ÒÔ°ÙĞĞÒÔÄÚ´úÂë¹¹½¨³öÒ»¸öÍêÕûµÄWeb·şÎñÆ÷£¬»¹ÓĞÒ»¸öÍêÕûµÄÓ¦ÓÃ°¸Àı¿É²ÎÔÄ±¾ÈËµÄÁíÒ»¸ö¿ªÔ´ÏîÄ¿ [·Ö²¼Ê½·¢ºÅÆ÷](http://git.oschina.net/calvinwilliams/coconut) £¬¾­¹ıtcpdaemon¸ÄÔìºóÓ¦ÓÃ´úÂëËõ¶ÌÁËÒ»°ë¡£
 
-tcpdaemonæºç æ‰˜ç®¡åœ¨ [å¼€æºä¸­å›½ç äº‘](http://git.oschina.net/calvinwilliams/tcpdaemon)ï¼Œä½ ä¹Ÿå¯ä»¥é€šè¿‡ [é‚®ç®±](calvinwilliams@163.com) è”ç³»åˆ°ä½œè€…
+tcpdaemonÔ´ÂëÍĞ¹ÜÔÚ [¿ªÔ´ÖĞ¹úÂëÔÆ](http://git.oschina.net/calvinwilliams/tcpdaemon)£¬ÄãÒ²¿ÉÒÔÍ¨¹ı [ÓÊÏä](calvinwilliams@163.com) ÁªÏµµ½×÷Õß
 
-èƒ½å¸®åŠ©åˆ°æ‚¨æ˜¯æˆ‘çš„è£å¹¸ ^_^
+ÄÜ°ïÖúµ½ÄúÊÇÎÒµÄÈÙĞÒ ^_^

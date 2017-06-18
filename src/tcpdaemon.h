@@ -139,11 +139,11 @@ extern char		*__TCPDAEMON_VERSION ;
 
 /* 通讯数据协议及应用处理回调函数原型 */
 struct TcpdaemonEntryParameter ;
-struct TcpdaemonServerEnvirment ;
+struct TcpdaemonServerEnvironment ;
 
 typedef int func_tcpdaemon( struct TcpdaemonEntryParameter *p_para );
 
-typedef int func_tcpmain( struct TcpdaemonServerEnvirment *p_env , int sock , void *p_addr );
+typedef int func_tcpmain( struct TcpdaemonServerEnvironment *p_env , int sock , void *p_addr );
 /* 参数说明 */
 	/*
 	IF
@@ -209,22 +209,22 @@ _WINDLL_FUNC int tcpdaemon( struct TcpdaemonEntryParameter *p_para );
 #define TCPDAEMON_SERVICE		"TcpDaemon Service"
 
 /* 环境结构成员 */
-void *TDGetTcpmainParameter( struct TcpdaemonServerEnvirment *p_env );
-int TDGetListenSocket( struct TcpdaemonServerEnvirment *p_env );
-int *TDGetListenSocketPtr( struct TcpdaemonServerEnvirment *p_env );
-struct sockaddr_in TDGetListenAddress( struct TcpdaemonServerEnvirment *p_env );
-struct sockaddr_in *TDGetListenAddressPtr( struct TcpdaemonServerEnvirment *p_env );
-int TDGetProcessCount( struct TcpdaemonServerEnvirment *p_env );
-int *TDGetEpollArrayBase( struct TcpdaemonServerEnvirment *p_env );
-int TDGetThisEpoll( struct TcpdaemonServerEnvirment *p_env );
+void *TDGetTcpmainParameter( struct TcpdaemonServerEnvironment *p_env );
+int TDGetListenSocket( struct TcpdaemonServerEnvironment *p_env );
+int *TDGetListenSocketPtr( struct TcpdaemonServerEnvironment *p_env );
+struct sockaddr_in TDGetListenAddress( struct TcpdaemonServerEnvironment *p_env );
+struct sockaddr_in *TDGetListenAddressPtr( struct TcpdaemonServerEnvironment *p_env );
+int TDGetProcessCount( struct TcpdaemonServerEnvironment *p_env );
+int *TDGetEpollArrayBase( struct TcpdaemonServerEnvironment *p_env );
+int TDGetThisEpoll( struct TcpdaemonServerEnvironment *p_env );
 
 #define IOMP_ON_ACCEPTING_SOCKET	1
 #define IOMP_ON_CLOSING_SOCKET		2
 #define IOMP_ON_RECEIVING_SOCKET	3
 #define IOMP_ON_SENDING_SOCKET		4
 
-int TDGetIoMultiplexEvent( struct TcpdaemonServerEnvirment *p_env );
-void TDSetIoMultiplexDataPtr( struct TcpdaemonServerEnvirment *p_env , void *io_multiplex_data_ptr );
+int TDGetIoMultiplexEvent( struct TcpdaemonServerEnvironment *p_env );
+void TDSetIoMultiplexDataPtr( struct TcpdaemonServerEnvironment *p_env , void *io_multiplex_data_ptr );
 
 #ifdef __cplusplus
 }
