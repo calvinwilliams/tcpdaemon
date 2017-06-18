@@ -195,6 +195,7 @@ struct TcpdaemonEntryParameter
 	int		tcp_linger ;	/* 启用TCP_LINGER选项 >=1:启用并设置成参数值 0:不启用（缺省）。可选 */
 	
 	int		timeout_seconds ; /* 超时时间，单位：秒；目前只对IO-Multiplex模型有效 */
+	int		cpu_affinity ; /* CPU亲缘性 */
 	
 	/* 以下为内部使用 */
 	int		install_winservice ;

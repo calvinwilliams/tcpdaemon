@@ -1,3 +1,8 @@
+#if ( defined __linux__ ) || ( defined __unix )
+#define _GNU_SOURCE
+#include <sched.h>
+#endif
+
 #include "tcpdaemon_in.h"
 
 /*
@@ -9,8 +14,8 @@
  */
 
 /* 版本字符串 */
-char		__TCPDAEMON_VERSION_1_2_4[] = "1.2.4" ;
-char		*__TCPDAEMON_VERSION = __TCPDAEMON_VERSION_1_2_4 ;
+char		__TCPDAEMON_VERSION_1_3_0[] = "1.3.0" ;
+char		*__TCPDAEMON_VERSION = __TCPDAEMON_VERSION_1_3_0 ;
 
 static struct TcpdaemonServerEnvirment	*g_p_env = NULL ;
 static int				g_EXIT_flag = 0 ;
@@ -20,6 +25,20 @@ static CRITICAL_SECTION		accept_critical_section; /* accept临界区 */
 #endif
 
 #define MAX_INT(_a_,_b_)	((_a_)>(_b_)?(_a_):(_b_))
+
+/* 绑定CPU亲缘性 */
+static int BindCpuAffinity( int processor_no )
+{
+	cpu_set_t	cpu_mask ;
+	
+	int		nret = 0 ;
+	
+	CPU_ZERO( & cpu_mask );
+	CPU_SET( processor_no , & cpu_mask );
+	nret = sched_setaffinity( 0 , sizeof(cpu_mask) , & cpu_mask ) ;
+	DebugLog( __FILE__ , __LINE__ , "sched_setaffinity[%d] return[%d]" , processor_no , nret );
+	return nret;
+}
 
 /* 检查命令行参数 */
 int CheckCommandParameter( struct TcpdaemonEntryParameter *p_para )
@@ -340,6 +359,11 @@ static unsigned int tcpdaemon_IOMP_worker( void *pv )
 	struct TcpdaemonAcceptedSession	*p_session = NULL ;
 	
 	int				nret = 0 ;
+	
+	signal( SIGTERM , SIG_DFL );
+	
+	if( p_env->p_para->cpu_affinity > 0 )
+		BindCpuAffinity( p_env->p_para->cpu_affinity+p_env->index );
 	
 	p_env->this_epoll_fd = p_env->epoll_array[p_env->index] ;
 	
@@ -1124,6 +1148,7 @@ static int InitDaemonEnv_LF( struct TcpdaemonServerEnvirment *p_env )
 {
 	int		nret = 0 ;
 	
+	/* 公共初始化环境 */
 	nret = InitDaemonEnv( p_env ) ;
 	if( nret )
 		return nret;
@@ -1362,6 +1387,15 @@ static int InitDaemonEnv_IOMP( struct TcpdaemonServerEnvirment *p_env )
 	
 	int			nret = 0 ;
 	
+	/* 创建空闲客户端会话物理结构链表 */
+	memset( & (p_env->accepted_session_array_list) , 0x00 , sizeof(struct TcpdaemonAcceptedSessionArray) );
+	INIT_LIST_HEAD( & (p_env->accepted_session_array_list.prealloc_node) );
+	
+	/* 创建空闲客户端会话结构链表 */
+	memset( & (p_env->accepted_session_unused_list) , 0x00 , sizeof(struct TcpdaemonAcceptedSession) );
+	INIT_LIST_HEAD( & (p_env->accepted_session_unused_list.unused_node) );
+	
+	/* 公共初始化环境 */
 	nret = InitDaemonEnv( p_env ) ;
 	if( nret )
 		return nret;
@@ -1459,14 +1493,6 @@ static int InitDaemonEnv_IOMP( struct TcpdaemonServerEnvirment *p_env )
 		}
 	}
 	
-	/* 创建空闲客户端会话物理结构链表 */
-	memset( & (p_env->accepted_session_array_list) , 0x00 , sizeof(struct TcpdaemonAcceptedSessionArray) );
-	INIT_LIST_HEAD( & (p_env->accepted_session_array_list.prealloc_node) );
-	
-	/* 创建空闲客户端会话结构链表 */
-	memset( & (p_env->accepted_session_unused_list) , 0x00 , sizeof(struct TcpdaemonAcceptedSession) );
-	INIT_LIST_HEAD( & (p_env->accepted_session_unused_list.unused_node) );
-	
 	/* 预分配已连接会话 */
 	nret = IncreaseTcpdaemonAcceptedSessions( p_env ) ;
 	if( nret )
@@ -1560,8 +1586,6 @@ int tcpdaemon_IOMP( struct TcpdaemonServerEnvirment *p_env )
 		}
 		else if( p_env->pids[p_env->index] == 0 )
 		{
-			signal( SIGTERM , SIG_DFL );
-			
 			CLOSE( p_env->alive_pipes[p_env->index].fd[1] );
 			tcpdaemon_IOMP_worker( p_env );
 			CLOSE( p_env->alive_pipes[p_env->index].fd[0] );
@@ -1622,8 +1646,6 @@ int tcpdaemon_IOMP( struct TcpdaemonServerEnvirment *p_env )
 				}
 				else if( p_env->pids[p_env->index] == 0 )
 				{
-					signal( SIGTERM , SIG_DFL );
-					
 					CLOSE( p_env->alive_pipes[p_env->index].fd[1] );
 					tcpdaemon_IOMP_worker( p_env );
 					CLOSE( p_env->alive_pipes[p_env->index].fd[0] );
@@ -1682,6 +1704,7 @@ static int InitDaemonEnv_WIN_TLF( struct TcpdaemonServerEnvirment *p_env )
 {
 	int		nret = 0 ;
 	
+	/* 公共初始化环境 */
 	nret = InitDaemonEnv( p_env ) ;
 	if( nret )
 		return nret;

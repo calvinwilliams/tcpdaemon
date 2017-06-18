@@ -19,12 +19,13 @@ static void usage()
 	
 	printf( "        other options :\n" );
 	printf( "                  -v\n" );
+	printf( "                  [ --logfile log_pathfilename --loglevel-(debug|info|warn|error|fatal) ]\n" );
 	printf( "                  [ --daemon-level ]\n" );
 	printf( "                  [ --work-path work_path ]\n" );
 #if ( defined __linux__ ) || ( defined __unix )
 	printf( "                  [ --work-user work_user ]\n" );
+	printf( "                  [ --cpu-affinity begin_mask ]\n" );
 #elif ( defined _WIN32 )
-	printf( "                  [ --logfile log_pathfilename --loglevel-(debug|info|warn|error|fatal) ]\n" );
 	printf( "                  [ --tcp-nodelay ] [ --tcp-linger linger ]\n" );
 	printf( "                  [ --timeout (seconds) ]\n" );
 	printf( "                  [ --install-winservice ] [ --uninstall-winservice ]\n" );
@@ -137,6 +138,11 @@ static int ParseCommandParameter( int argc , char *argv[] , struct TcpdaemonEntr
 		else if( STRCMP( argv[c] , == , "--timeout" ) && c + 1 < argc )
 		{
 			p_para->timeout_seconds = atoi(argv[c+1]) ;
+			c++;
+		}
+		else if( STRCMP( argv[c] , == , "--cpu-affinity" ) && c + 1 < argc )
+		{
+			p_para->cpu_affinity = atoi(argv[c+1]) ;
 			c++;
 		}
 #if ( defined _WIN32 )

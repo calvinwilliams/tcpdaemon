@@ -50,6 +50,7 @@ CFLAGS		=	-I. \
 ###### Á´½ÓÑ¡Ïî
 LFLAGS		=	-L. \
 			-L$(HOME)/lib \
+			-ltcpdaemon \
 			-lpthread \
 			-ldl \
 
@@ -88,11 +89,11 @@ test_callback_http_echo_nonblock.so:	test_callback_http_echo_nonblock.o
 	$(CC) $(SOFLAGS) -o $@ test_callback_http_echo_nonblock.o $(LFLAGS)
 
 test_main_IF	:	test_main_IF.o test_callback_http_echo.o
-	$(CC) $(ESOFLAGS) -o $@ test_main_IF.o test_callback_http_echo.o $(LFLAGS) -ltcpdaemon
+	$(CC) $(ESOFLAGS) -o $@ test_main_IF.o test_callback_http_echo.o $(LFLAGS)
 
 test_main_LF	:	test_main_LF.o
-	$(CC) $(ESOFLAGS) -o $@ test_main_LF.o $(LFLAGS) -ltcpdaemon
+	$(CC) $(ESOFLAGS) -o $@ test_main_LF.o $(LFLAGS)
 
 test_main_IOMP	:	test_main_IOMP.o test_callback_http_echo_nonblock.o
-	$(CC) $(ESOFLAGS) -o $@ test_main_IOMP.o test_callback_http_echo_nonblock.o $(LFLAGS) -ltcpdaemon
+	$(CC) $(ESOFLAGS) -o $@ test_main_IOMP.o test_callback_http_echo_nonblock.o $(LFLAGS)
 
