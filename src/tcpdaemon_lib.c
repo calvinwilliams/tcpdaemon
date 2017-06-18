@@ -103,6 +103,11 @@ static unsigned int WINAPI tcpdaemon_LF_worker( void *pv )
 	
 	int			nret = 0 ;
 	
+	signal( SIGTERM , SIG_DFL );
+	
+	if( p_env->p_para->cpu_affinity > 0 )
+		BindCpuAffinity( p_env->p_para->cpu_affinity+p_env->index );
+	
 	/* 设置日志环境 */
 	SetLogFile( p_env->p_para->log_pathfilename );
 	SetLogLevel( p_env->p_para->log_level );
@@ -1266,8 +1271,6 @@ int tcpdaemon_LF( struct TcpdaemonServerEnvirment *p_env )
 		}
 		else if( p_env->pids[p_env->index] == 0 )
 		{
-			signal( SIGTERM , SIG_DFL );
-			
 			CLOSE( p_env->alive_pipes[p_env->index].fd[1] );
 			tcpdaemon_LF_worker( p_env );
 			CLOSE( p_env->alive_pipes[p_env->index].fd[0] );
@@ -1328,8 +1331,6 @@ int tcpdaemon_LF( struct TcpdaemonServerEnvirment *p_env )
 				}
 				else if( p_env->pids[p_env->index] == 0 )
 				{
-					signal( SIGTERM , SIG_DFL );
-					
 					CLOSE( p_env->alive_pipes[p_env->index].fd[1] );
 					tcpdaemon_LF_worker( p_env );
 					CLOSE( p_env->alive_pipes[p_env->index].fd[0] );
