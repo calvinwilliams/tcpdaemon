@@ -1,6 +1,6 @@
 #include "tcpdaemon.h"
 
-_WINDLL_FUNC int tcpmain( struct TcpdaemonServerEnvirment *p_env , int sock , void *p_addr )
+_WINDLL_FUNC int tcpmain( struct TcpdaemonServerEnvironment *p_env , int sock , void *p_addr )
 {
 	char	http_buffer[ 4096 + 1 ] ;
 	long	http_len ;

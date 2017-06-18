@@ -1,3 +1,8 @@
+#if ( defined __linux__ ) || ( defined __unix )
+#define _GNU_SOURCE
+#include <sched.h>
+#endif
+
 #include "tcpdaemon_in.h"
 
 /*
@@ -9,10 +14,10 @@
  */
 
 /* 版本字符串 */
-char		__TCPDAEMON_VERSION_1_2_4[] = "1.2.4" ;
-char		*__TCPDAEMON_VERSION = __TCPDAEMON_VERSION_1_2_4 ;
+char		__TCPDAEMON_VERSION_1_3_0[] = "1.3.0" ;
+char		*__TCPDAEMON_VERSION = __TCPDAEMON_VERSION_1_3_0 ;
 
-static struct TcpdaemonServerEnvirment	*g_p_env = NULL ;
+static struct TcpdaemonServerEnvironment	*g_p_env = NULL ;
 static int				g_EXIT_flag = 0 ;
 
 #if ( defined _WIN32 )
@@ -20,6 +25,20 @@ static CRITICAL_SECTION		accept_critical_section; /* accept临界区 */
 #endif
 
 #define MAX_INT(_a_,_b_)	((_a_)>(_b_)?(_a_):(_b_))
+
+/* 绑定CPU亲缘性 */
+static int BindCpuAffinity( int processor_no )
+{
+	cpu_set_t	cpu_mask ;
+	
+	int		nret = 0 ;
+	
+	CPU_ZERO( & cpu_mask );
+	CPU_SET( processor_no , & cpu_mask );
+	nret = sched_setaffinity( 0 , sizeof(cpu_mask) , & cpu_mask ) ;
+	DebugLog( __FILE__ , __LINE__ , "sched_setaffinity[%d] return[%d]" , processor_no , nret );
+	return nret;
+}
 
 /* 检查命令行参数 */
 int CheckCommandParameter( struct TcpdaemonEntryParameter *p_para )
@@ -72,7 +91,7 @@ static unsigned int tcpdaemon_LF_worker( void *pv )
 static unsigned int WINAPI tcpdaemon_LF_worker( void *pv )
 #endif
 {
-	struct TcpdaemonServerEnvirment	*p_env = (struct TcpdaemonServerEnvirment *)pv ;
+	struct TcpdaemonServerEnvironment	*p_env = (struct TcpdaemonServerEnvironment *)pv ;
 #if ( defined __linux__ ) || ( defined __unix )
 	struct sembuf		sb ;
 #endif
@@ -83,6 +102,11 @@ static unsigned int WINAPI tcpdaemon_LF_worker( void *pv )
 	int			accepted_sock ;
 	
 	int			nret = 0 ;
+	
+	signal( SIGTERM , SIG_DFL );
+	
+	if( p_env->p_para->cpu_affinity > 0 )
+		BindCpuAffinity( p_env->p_para->cpu_affinity+p_env->index );
 	
 	/* 设置日志环境 */
 	SetLogFile( p_env->p_para->log_pathfilename );
@@ -236,7 +260,7 @@ static unsigned int WINAPI tcpdaemon_LF_worker( void *pv )
 }
 
 /* 预分配空闲客户端会话结构 */
-static int IncreaseTcpdaemonAcceptedSessions( struct TcpdaemonServerEnvirment *p_env )
+static int IncreaseTcpdaemonAcceptedSessions( struct TcpdaemonServerEnvironment *p_env )
 {
 	struct TcpdaemonAcceptedSessionArray	*p_accepted_session_array = NULL ;
 	struct TcpdaemonAcceptedSession		*p_accepted_session = NULL ;
@@ -262,7 +286,7 @@ static int IncreaseTcpdaemonAcceptedSessions( struct TcpdaemonServerEnvirment *p
 }
 
 /* 从预分配的空闲客户端会话结构中取出一个 */
-static struct TcpdaemonAcceptedSession *FetchTcpdaemonAcceptedSessionUnused( struct TcpdaemonServerEnvirment *p_env )
+static struct TcpdaemonAcceptedSession *FetchTcpdaemonAcceptedSessionUnused( struct TcpdaemonServerEnvironment *p_env )
 {
 	struct TcpdaemonAcceptedSession	*p_accepted_session = NULL ;
 	
@@ -286,7 +310,7 @@ static struct TcpdaemonAcceptedSession *FetchTcpdaemonAcceptedSessionUnused( str
 }
 
 /* 把当前客户端会话放回空闲链表中去 */
-static void SetTcpdaemonAcceptedSessionUnused( struct TcpdaemonServerEnvirment *p_env , struct TcpdaemonAcceptedSession *p_accepted_session )
+static void SetTcpdaemonAcceptedSessionUnused( struct TcpdaemonServerEnvironment *p_env , struct TcpdaemonAcceptedSession *p_accepted_session )
 {
 	DebugLog( __FILE__ , __LINE__ , "putback accepted session[%p]" , p_accepted_session );
 	
@@ -297,7 +321,7 @@ static void SetTcpdaemonAcceptedSessionUnused( struct TcpdaemonServerEnvirment *
 }
 
 /* 销毁所有客户端物理会话结构 */
-static void FreeAllTcpdaemonAcceptedSessionArray( struct TcpdaemonServerEnvirment *p_env )
+static void FreeAllTcpdaemonAcceptedSessionArray( struct TcpdaemonServerEnvironment *p_env )
 {
 	struct list_head			*p_curr = NULL , *p_next = NULL ;
 	struct TcpdaemonAcceptedSessionArray	*p_accepted_session_array = NULL ;
@@ -314,7 +338,7 @@ static void FreeAllTcpdaemonAcceptedSessionArray( struct TcpdaemonServerEnvirmen
 }
 
 /* 关闭连接 */
-static void CloseTcpdaemonAcceptedSession( struct TcpdaemonServerEnvirment *p_env , struct TcpdaemonAcceptedSession *p_session )
+static void CloseTcpdaemonAcceptedSession( struct TcpdaemonServerEnvironment *p_env , struct TcpdaemonAcceptedSession *p_session )
 {
 	InfoLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | close sock[%d] io multiplex data ptr[%p]" , p_env->index , p_session->sock , p_session->io_multiplex_data_ptr );
 	p_env->io_multiplex_event = IOMP_ON_CLOSING_SOCKET ;
@@ -329,7 +353,7 @@ static void CloseTcpdaemonAcceptedSession( struct TcpdaemonServerEnvirment *p_en
 
 static unsigned int tcpdaemon_IOMP_worker( void *pv )
 {
-	struct TcpdaemonServerEnvirment	*p_env = (struct TcpdaemonServerEnvirment *)pv ;
+	struct TcpdaemonServerEnvironment	*p_env = (struct TcpdaemonServerEnvironment *)pv ;
 	int				quit_flag ;
 	int				now_timestamp ;
 	struct epoll_event		event ;
@@ -340,6 +364,11 @@ static unsigned int tcpdaemon_IOMP_worker( void *pv )
 	struct TcpdaemonAcceptedSession	*p_session = NULL ;
 	
 	int				nret = 0 ;
+	
+	signal( SIGTERM , SIG_DFL );
+	
+	if( p_env->p_para->cpu_affinity > 0 )
+		BindCpuAffinity( p_env->p_para->cpu_affinity+p_env->index );
 	
 	p_env->this_epoll_fd = p_env->epoll_array[p_env->index] ;
 	
@@ -717,15 +746,15 @@ static unsigned int tcpdaemon_IOMP_worker( void *pv )
 	return 0;
 }
 
-struct TcpdaemonServerEnvirment *DuplicateServerEnv( struct TcpdaemonServerEnvirment *p_env )
+struct TcpdaemonServerEnvironment *DuplicateServerEnv( struct TcpdaemonServerEnvironment *p_env )
 {
-	struct TcpdaemonServerEnvirment	*pse_new = NULL ;
+	struct TcpdaemonServerEnvironment	*pse_new = NULL ;
 
-	pse_new = (struct TcpdaemonServerEnvirment *)malloc( sizeof(struct TcpdaemonServerEnvirment) );
+	pse_new = (struct TcpdaemonServerEnvironment *)malloc( sizeof(struct TcpdaemonServerEnvironment) );
 	if( pse_new == NULL )
 		return NULL;
 	
-	memcpy( pse_new , p_env , sizeof(struct TcpdaemonServerEnvirment) );
+	memcpy( pse_new , p_env , sizeof(struct TcpdaemonServerEnvironment) );
 	
 	return pse_new;
 }
@@ -760,7 +789,7 @@ void sigproc_SIGCHLD( int signo )
 #endif
 
 /* 初始化守护环境 */
-static int InitDaemonEnv( struct TcpdaemonServerEnvirment *p_env )
+static int InitDaemonEnv( struct TcpdaemonServerEnvironment *p_env )
 {
 	int		nret = 0 ;
 	
@@ -866,7 +895,7 @@ static int InitDaemonEnv( struct TcpdaemonServerEnvirment *p_env )
 }
 
 /* 清理守护环境 */
-static int CleanDaemonEnv( struct TcpdaemonServerEnvirment *p_env )
+static int CleanDaemonEnv( struct TcpdaemonServerEnvironment *p_env )
 {
 	if( p_env->so_handle )
 	{
@@ -888,19 +917,19 @@ static int CleanDaemonEnv( struct TcpdaemonServerEnvirment *p_env )
 #if ( defined __linux__ ) || ( defined __unix )
 
 /* Instance-Fork进程模型 初始化守护环境 */
-static int InitDaemonEnv_IF( struct TcpdaemonServerEnvirment *p_env )
+static int InitDaemonEnv_IF( struct TcpdaemonServerEnvironment *p_env )
 {
 	return InitDaemonEnv( p_env );
 }
 
 /* Instance-Fork进程模型 清理守护环境 */
-static int CleanDaemonEnv_IF( struct TcpdaemonServerEnvirment *p_env )
+static int CleanDaemonEnv_IF( struct TcpdaemonServerEnvironment *p_env )
 {
 	return CleanDaemonEnv( p_env );
 }
 
 /* Instance-Fork进程模型 入口函数 */
-int tcpdaemon_IF( struct TcpdaemonServerEnvirment *p_env )
+int tcpdaemon_IF( struct TcpdaemonServerEnvironment *p_env )
 {
 	struct sigaction	act , oldact ;
 	
@@ -1120,10 +1149,11 @@ _DO_FORK :
 }
 
 /* Leader-Follower进程池模型 初始化守护环境 */
-static int InitDaemonEnv_LF( struct TcpdaemonServerEnvirment *p_env )
+static int InitDaemonEnv_LF( struct TcpdaemonServerEnvironment *p_env )
 {
 	int		nret = 0 ;
 	
+	/* 公共初始化环境 */
 	nret = InitDaemonEnv( p_env ) ;
 	if( nret )
 		return nret;
@@ -1169,7 +1199,7 @@ static int InitDaemonEnv_LF( struct TcpdaemonServerEnvirment *p_env )
 }
 
 /* Leader-Follower进程池模型 清理守护环境 */
-static int CleanDaemonEnv_LF( struct TcpdaemonServerEnvirment *p_env )
+static int CleanDaemonEnv_LF( struct TcpdaemonServerEnvironment *p_env )
 {
 	/* 释放内存 */
 	if( p_env->accept_mutex )
@@ -1191,7 +1221,7 @@ static int CleanDaemonEnv_LF( struct TcpdaemonServerEnvirment *p_env )
 }
 
 /* Leader-Follow进程池模型 入口函数 */
-int tcpdaemon_LF( struct TcpdaemonServerEnvirment *p_env )
+int tcpdaemon_LF( struct TcpdaemonServerEnvironment *p_env )
 {
 	PID_T			pid ;
 	int			status ;
@@ -1241,8 +1271,6 @@ int tcpdaemon_LF( struct TcpdaemonServerEnvirment *p_env )
 		}
 		else if( p_env->pids[p_env->index] == 0 )
 		{
-			signal( SIGTERM , SIG_DFL );
-			
 			CLOSE( p_env->alive_pipes[p_env->index].fd[1] );
 			tcpdaemon_LF_worker( p_env );
 			CLOSE( p_env->alive_pipes[p_env->index].fd[0] );
@@ -1303,8 +1331,6 @@ int tcpdaemon_LF( struct TcpdaemonServerEnvirment *p_env )
 				}
 				else if( p_env->pids[p_env->index] == 0 )
 				{
-					signal( SIGTERM , SIG_DFL );
-					
 					CLOSE( p_env->alive_pipes[p_env->index].fd[1] );
 					tcpdaemon_LF_worker( p_env );
 					CLOSE( p_env->alive_pipes[p_env->index].fd[0] );
@@ -1355,13 +1381,22 @@ int tcpdaemon_LF( struct TcpdaemonServerEnvirment *p_env )
 }
 
 /* IOMultiplex进程池模型 初始化守护环境 */
-static int InitDaemonEnv_IOMP( struct TcpdaemonServerEnvirment *p_env )
+static int InitDaemonEnv_IOMP( struct TcpdaemonServerEnvironment *p_env )
 {
 	struct epoll_event	event ;
 	int			i ;
 	
 	int			nret = 0 ;
 	
+	/* 创建空闲客户端会话物理结构链表 */
+	memset( & (p_env->accepted_session_array_list) , 0x00 , sizeof(struct TcpdaemonAcceptedSessionArray) );
+	INIT_LIST_HEAD( & (p_env->accepted_session_array_list.prealloc_node) );
+	
+	/* 创建空闲客户端会话结构链表 */
+	memset( & (p_env->accepted_session_unused_list) , 0x00 , sizeof(struct TcpdaemonAcceptedSession) );
+	INIT_LIST_HEAD( & (p_env->accepted_session_unused_list.unused_node) );
+	
+	/* 公共初始化环境 */
 	nret = InitDaemonEnv( p_env ) ;
 	if( nret )
 		return nret;
@@ -1459,14 +1494,6 @@ static int InitDaemonEnv_IOMP( struct TcpdaemonServerEnvirment *p_env )
 		}
 	}
 	
-	/* 创建空闲客户端会话物理结构链表 */
-	memset( & (p_env->accepted_session_array_list) , 0x00 , sizeof(struct TcpdaemonAcceptedSessionArray) );
-	INIT_LIST_HEAD( & (p_env->accepted_session_array_list.prealloc_node) );
-	
-	/* 创建空闲客户端会话结构链表 */
-	memset( & (p_env->accepted_session_unused_list) , 0x00 , sizeof(struct TcpdaemonAcceptedSession) );
-	INIT_LIST_HEAD( & (p_env->accepted_session_unused_list.unused_node) );
-	
 	/* 预分配已连接会话 */
 	nret = IncreaseTcpdaemonAcceptedSessions( p_env ) ;
 	if( nret )
@@ -1479,7 +1506,7 @@ static int InitDaemonEnv_IOMP( struct TcpdaemonServerEnvirment *p_env )
 }
 
 /* IOMultiplex进程池模型 清理守护环境 */
-static int CleanDaemonEnv_IOMP( struct TcpdaemonServerEnvirment *p_env )
+static int CleanDaemonEnv_IOMP( struct TcpdaemonServerEnvironment *p_env )
 {
 	int		i ;
 	
@@ -1510,7 +1537,7 @@ static int CleanDaemonEnv_IOMP( struct TcpdaemonServerEnvirment *p_env )
 }
 
 /* IOMultiplex进程池模型 入口函数 */
-int tcpdaemon_IOMP( struct TcpdaemonServerEnvirment *p_env )
+int tcpdaemon_IOMP( struct TcpdaemonServerEnvironment *p_env )
 {
 	PID_T			pid ;
 	int			status ;
@@ -1560,8 +1587,6 @@ int tcpdaemon_IOMP( struct TcpdaemonServerEnvirment *p_env )
 		}
 		else if( p_env->pids[p_env->index] == 0 )
 		{
-			signal( SIGTERM , SIG_DFL );
-			
 			CLOSE( p_env->alive_pipes[p_env->index].fd[1] );
 			tcpdaemon_IOMP_worker( p_env );
 			CLOSE( p_env->alive_pipes[p_env->index].fd[0] );
@@ -1622,8 +1647,6 @@ int tcpdaemon_IOMP( struct TcpdaemonServerEnvirment *p_env )
 				}
 				else if( p_env->pids[p_env->index] == 0 )
 				{
-					signal( SIGTERM , SIG_DFL );
-					
 					CLOSE( p_env->alive_pipes[p_env->index].fd[1] );
 					tcpdaemon_IOMP_worker( p_env );
 					CLOSE( p_env->alive_pipes[p_env->index].fd[0] );
@@ -1678,10 +1701,11 @@ int tcpdaemon_IOMP( struct TcpdaemonServerEnvirment *p_env )
 #if ( defined _WIN32 )
 
 /* Leader-Follower线程池模型 初始化守护环境 */
-static int InitDaemonEnv_WIN_TLF( struct TcpdaemonServerEnvirment *p_env )
+static int InitDaemonEnv_WIN_TLF( struct TcpdaemonServerEnvironment *p_env )
 {
 	int		nret = 0 ;
 	
+	/* 公共初始化环境 */
 	nret = InitDaemonEnv( p_env ) ;
 	if( nret )
 		return nret;
@@ -1710,7 +1734,7 @@ static int InitDaemonEnv_WIN_TLF( struct TcpdaemonServerEnvirment *p_env )
 }
 
 /* Leader-Follower线程池模型 清理守护环境 */
-static int CleanDaemonEnv_WIN_TLF( struct TcpdaemonServerEnvirment *p_env )
+static int CleanDaemonEnv_WIN_TLF( struct TcpdaemonServerEnvironment *p_env )
 {
 	/* 初始化临界区 */
 	DeleteCriticalSection( & accept_critical_section );
@@ -1730,9 +1754,9 @@ static int CleanDaemonEnv_WIN_TLF( struct TcpdaemonServerEnvirment *p_env )
 }
 
 /* Leader-Follow线程池模型for win32 入口函数 */
-int tcpdaemon_WIN_TLF( struct TcpdaemonServerEnvirment *p_env )
+int tcpdaemon_WIN_TLF( struct TcpdaemonServerEnvironment *p_env )
 {
-	struct TcpdaemonServerEnvirment	*pse_new = NULL ;
+	struct TcpdaemonServerEnvironment	*pse_new = NULL ;
 	unsigned long			index ;
 	
 	int				nret = 0 ;
@@ -2031,11 +2055,11 @@ static int control( long control_status )
 /* 主入口函数 */
 static int _tcpdaemon( struct TcpdaemonEntryParameter *p_para )
 {
-	struct TcpdaemonServerEnvirment	env ;
+	struct TcpdaemonServerEnvironment	env ;
 	
 	int				nret = 0 ;
 	
-	memset( & env , 0x00 , sizeof(struct TcpdaemonServerEnvirment) );
+	memset( & env , 0x00 , sizeof(struct TcpdaemonServerEnvironment) );
 	env.p_para = p_para ;
 	g_p_env = & env ;
 	
@@ -2148,52 +2172,52 @@ int tcpdaemon( struct TcpdaemonEntryParameter *p_para )
 	}
 }
 
-void *TDGetTcpmainParameter( struct TcpdaemonServerEnvirment *p_env )
+void *TDGetTcpmainParameter( struct TcpdaemonServerEnvironment *p_env )
 {
 	return p_env->param_tcpmain;
 }
 
-int TDGetListenSocket( struct TcpdaemonServerEnvirment *p_env )
+int TDGetListenSocket( struct TcpdaemonServerEnvironment *p_env )
 {
 	return p_env->listen_sock;
 }
 
-int *TDGetListenSocketPtr( struct TcpdaemonServerEnvirment *p_env )
+int *TDGetListenSocketPtr( struct TcpdaemonServerEnvironment *p_env )
 {
 	return &(p_env->listen_sock);
 }
 
-struct sockaddr_in TDGetListenAddress( struct TcpdaemonServerEnvirment *p_env )
+struct sockaddr_in TDGetListenAddress( struct TcpdaemonServerEnvironment *p_env )
 {
 	return p_env->listen_addr;
 }
 
-struct sockaddr_in *TDGetListenAddressPtr( struct TcpdaemonServerEnvirment *p_env )
+struct sockaddr_in *TDGetListenAddressPtr( struct TcpdaemonServerEnvironment *p_env )
 {
 	return &(p_env->listen_addr);
 }
 
-int TDGetProcessCount( struct TcpdaemonServerEnvirment *p_env )
+int TDGetProcessCount( struct TcpdaemonServerEnvironment *p_env )
 {
 	return p_env->p_para->process_count;
 }
 
-int *TDGetEpollArrayBase( struct TcpdaemonServerEnvirment *p_env )
+int *TDGetEpollArrayBase( struct TcpdaemonServerEnvironment *p_env )
 {
 	return p_env->epoll_array;
 }
 
-int TDGetThisEpoll( struct TcpdaemonServerEnvirment *p_env )
+int TDGetThisEpoll( struct TcpdaemonServerEnvironment *p_env )
 {
 	return p_env->epoll_array[p_env->index];
 }
 
-int TDGetIoMultiplexEvent( struct TcpdaemonServerEnvirment *p_env )
+int TDGetIoMultiplexEvent( struct TcpdaemonServerEnvironment *p_env )
 {
 	return p_env->io_multiplex_event;
 }
 
-void TDSetIoMultiplexDataPtr( struct TcpdaemonServerEnvirment *p_env , void *io_multiplex_data_ptr )
+void TDSetIoMultiplexDataPtr( struct TcpdaemonServerEnvironment *p_env , void *io_multiplex_data_ptr )
 {
 	p_env->io_multiplex_data_ptr = io_multiplex_data_ptr ;
 	return;

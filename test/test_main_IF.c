@@ -1,6 +1,6 @@
 #include "tcpdaemon.h"
 
-extern int tcpmain( struct TcpdaemonServerEnvirment *p_env , int sock , void *p_addr );
+extern int tcpmain( struct TcpdaemonServerEnvironment *p_env , int sock , void *p_addr );
 
 int main()
 {
