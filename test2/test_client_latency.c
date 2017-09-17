@@ -9,12 +9,11 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/wait.h>
+#include <sys/time.h>
 #include <sys/socket.h>
 #include <netinet/tcp.h>
 
 #include "IDL_hello_world.dsc.h"
-
-#define DEBUG			0
 
 struct NetAddress
 {
@@ -35,9 +34,11 @@ struct NetAddress
 
 #define COMM_HEAD_LEN		4
 
-static int requester( int processing_count )
+static int test_client_latency()
 {
-	int			i ;
+	struct timeval		begin_timestamp ;
+	struct timeval		end_timestamp ;
+	long			diff_us ;
 	
 	struct NetAddress	netaddr ;
 	hello_world		st ;
@@ -57,8 +58,11 @@ static int requester( int processing_count )
 	netaddr.port = 9527 ;
 	SETNETADDRESS( netaddr );
 	
-	for( i = 0 ; i < processing_count ; i++ )
+	while(1)
 	{
+		/* 得到开始时间戳 */
+		gettimeofday( & begin_timestamp , NULL );
+		
 		/* 组织报文 */
 		memset( & st , 0x00 , sizeof(hello_world) );
 		strcpy( st.message , "hello world" );
@@ -156,67 +160,25 @@ static int requester( int processing_count )
 			return -1;
 		}
 		
-#if DEBUG
-		printf( "message[%s]\n" , st.message );
-#endif
+		/* 得到开始时间戳 */
+		gettimeofday( & end_timestamp , NULL );
+		
+		/* 计算时间差 */
+		diff_us = (end_timestamp.tv_sec-begin_timestamp.tv_sec)*1000000 + (end_timestamp.tv_usec-begin_timestamp.tv_usec) ;
+		
+		/* 输出统计信息 */
+		printf( "message[%s] latency[%ld]us\n" , st.message , diff_us );
+		
+		sleep(1);
 	}
 	
 	return 0;
-}
-
-static int test_client( int processor_count , int processing_count )
-{
-	int		i ;
-	pid_t		pid ;
-	int		status ;
-	
-	signal( SIGCLD , SIG_DFL );
-	signal( SIGCHLD , SIG_DFL );
-	
-	for( i = 0 ; i < processor_count ; i++ )
-	{
-		pid = fork() ;
-		if( pid == -1 )
-		{
-			printf( "fork failed , errno[%d]\n" , errno );
-			return -1;
-		}
-		else if( pid == 0 )
-		{
-			printf( "fork ok , pid[%d]\n" , getpid() );
-			exit(-requester(processing_count));
-		}
-	}
-	
-	for( i = 0 ; i < processor_count ; i++ )
-	{
-		pid = waitpid( -1 , & status , 0 ) ;
-		if( pid == -1 )
-		{
-			printf( "waitpid failed , errno[%d]\n" , errno );
-			return -1;
-		}
-	}
-	
-	return 0;
-}
-
-static void usage()
-{
-	printf( "USAGE : test_client processor_count processing_count\n" );
-	return;
 }
 
 int main( int argc , char *argv[] )
 {
-	if( argc != 1 + 2 )
-	{
-		usage();
-		exit(7);
-	}
-	
 	setbuf( stdout , NULL );
 	
-	return -test_client( atoi(argv[1]) , atoi(argv[2]) );
+	return -test_client_latency() ;
 }
 
