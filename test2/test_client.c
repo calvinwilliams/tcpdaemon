@@ -18,7 +18,7 @@
 
 #define COMM_HEAD_LEN		4
 
-static int requester( int processing_count )
+static int requester( char *ip , int port , int processing_count )
 {
 	int			i ;
 	
@@ -54,7 +54,7 @@ static int requester( int processing_count )
 		recv_len = sizeof(comm_buffer) ;
 		timeout.tv_sec = 60 ;
 		timeout.tv_usec = 0 ;
-		nret = TDHBCall( "" , 9527 , COMM_HEAD_LEN , comm_buffer , & send_len , & recv_len , & timeout ) ;
+		nret = TDHBCall( ip , port , COMM_HEAD_LEN , comm_buffer , & send_len , & recv_len , & timeout ) ;
 		if( nret )
 		{
 			printf( "TDHBCall failed[%d]\n" , nret );
@@ -79,7 +79,7 @@ static int requester( int processing_count )
 	return 0;
 }
 
-static int test_client( int processor_count , int processing_count )
+static int test_client( char *ip , int port , int processor_count , int processing_count )
 {
 	int		i ;
 	pid_t		pid ;
@@ -99,7 +99,7 @@ static int test_client( int processor_count , int processing_count )
 		else if( pid == 0 )
 		{
 			printf( "fork ok , pid[%d]\n" , getpid() );
-			exit(-requester(processing_count));
+			exit(-requester(ip,port,processing_count));
 		}
 	}
 	
@@ -118,13 +118,13 @@ static int test_client( int processor_count , int processing_count )
 
 static void usage()
 {
-	printf( "USAGE : test_client processor_count processing_count\n" );
+	printf( "USAGE : test_client ip port processor_count processing_count\n" );
 	return;
 }
 
 int main( int argc , char *argv[] )
 {
-	if( argc != 1 + 2 )
+	if( argc != 1 + 4 )
 	{
 		usage();
 		exit(7);
@@ -132,6 +132,6 @@ int main( int argc , char *argv[] )
 	
 	setbuf( stdout , NULL );
 	
-	return -test_client( atoi(argv[1]) , atoi(argv[2]) );
+	return -test_client( argv[1] , atoi(argv[2]) , atoi(argv[3]) , atoi(argv[4]) );
 }
 
