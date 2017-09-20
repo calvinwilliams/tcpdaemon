@@ -11,7 +11,7 @@ int main()
 	ep.daemon_level = 1 ;
 	
 	snprintf( ep.log_pathfilename , sizeof(ep.log_pathfilename) , "%s/log/test_main_LF.log" , getenv("HOME") );
-	ep.log_level = LOGLEVEL_DEBUG ;
+	ep.log_level = LOGLEVEL_ERROR ;
 	
 	strcpy( ep.server_model , "LF" );
 	strcpy( ep.ip , "0" );

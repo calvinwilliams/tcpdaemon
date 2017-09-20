@@ -9,7 +9,7 @@ int main()
 	memset( & ep , 0x00 , sizeof(struct TcpdaemonEntryParameter) );
 	
 	snprintf( ep.log_pathfilename , sizeof(ep.log_pathfilename) , "%s/log/test_main_IOMP.log" , getenv("HOME") );
-	ep.log_level = LOGLEVEL_DEBUG ;
+	ep.log_level = LOGLEVEL_ERROR ;
 	
 	strcpy( ep.server_model , "IOMP" );
 	ep.timeout_seconds = 60 ;

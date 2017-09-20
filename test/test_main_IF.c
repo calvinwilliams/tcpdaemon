@@ -9,7 +9,7 @@ int main()
 	memset( & ep , 0x00 , sizeof(struct TcpdaemonEntryParameter) );
 	
 	snprintf( ep.log_pathfilename , sizeof(ep.log_pathfilename) , "%s/log/test_main_IF.log" , getenv("HOME") );
-	ep.log_level = LOGLEVEL_DEBUG ;
+	ep.log_level = LOGLEVEL_ERROR ;
 	
 	strcpy( ep.server_model , "IF" );
 	strcpy( ep.ip , "0" );
