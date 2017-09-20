@@ -2223,3 +2223,249 @@ void TDSetIoMultiplexDataPtr( struct TcpdaemonServerEnvironment *p_env , void *i
 	return;
 }
 
+#if ( defined __linux__ ) || ( defined __unix )
+
+/* 固定通讯头+通讯体协议 发送数据 */
+int TDHBSendData( int sock , int head_len , char *body_buffer , int *p_body_len , struct timeval *timeout )
+{
+	char		head_buffer[ 20 + 1 ] ;
+	struct iovec	iovs[ 2 ] ;
+	int		head_remain_len ;
+	int		body_remain_len ;
+	int		body_len ;
+	fd_set		write_fds ;
+	struct timeval	begin_timestamp ;
+	struct timeval	end_timestamp ;
+	int		len ;
+	
+	int		nret = 0 ;
+	
+	if( head_len > sizeof(head_buffer)-1 )
+		return TDHB_ERROR_HEAD_TOO_LONG;
+	
+	body_len = (*p_body_len) ;
+	sprintf( head_buffer , "%0*d" , head_len , body_len );
+	
+	head_remain_len = head_len ;
+	body_remain_len = body_len ;
+	while( head_remain_len || body_remain_len )
+	{
+		gettimeofday( & begin_timestamp , NULL );
+		
+		FD_ZERO( & write_fds );
+		FD_SET( sock , & write_fds );
+		nret = select( sock+1 , NULL , & write_fds , NULL , timeout ) ;
+		if( nret == 0 )
+		{
+			(*p_body_len) = head_len + body_len - head_remain_len - body_remain_len ;
+			return TDHB_ERROR_SEND_TIMEOUT;
+		}
+		else if( nret == -1 )
+		{
+			(*p_body_len) = head_len + body_len - head_remain_len - body_remain_len ;
+			return TDHB_ERROR_SELECT_SEND_FAILED;
+		}
+		
+		if( head_remain_len )
+		{
+			iovs[0].iov_base = head_buffer+(head_len-head_remain_len) ;
+			iovs[0].iov_len = head_remain_len ;
+			iovs[1].iov_base = body_buffer ;
+			iovs[1].iov_len = body_len ;
+			len = writev( sock , iovs , 2 ) ;
+			if( len == -1 )
+			{
+				(*p_body_len) = head_len + body_len - head_remain_len - body_remain_len ;
+				return TDHB_ERROR_SEND_FAILED;
+			}
+			if( len >= head_remain_len )
+			{
+				head_remain_len = 0 ;
+				body_remain_len -= ( len - head_len ) ;
+			}
+			else
+			{
+				head_remain_len -= len ;
+			}
+		}
+		else
+		{
+			len = write( sock , body_buffer+(body_len-body_remain_len) , body_remain_len ) ;
+			if( len == -1 )
+			{
+				(*p_body_len) = head_len + body_len - head_remain_len - body_remain_len ;
+				return TDHB_ERROR_SEND_FAILED;
+			}
+			body_remain_len -= len ;
+		}
+		
+		gettimeofday( & end_timestamp , NULL );
+		timeout->tv_sec -= ( end_timestamp.tv_sec - begin_timestamp.tv_sec ) ;
+		timeout->tv_usec -= ( end_timestamp.tv_usec - begin_timestamp.tv_usec ) ;
+		while( timeout->tv_usec < 0 )
+		{
+			timeout->tv_usec += 1000000 ;
+			timeout->tv_sec--;
+		}
+	}
+	
+	return 0;
+}
+
+/* 固定通讯头+通讯体协议 接收数据 */
+int TDHBReceiveData( int sock , int head_len , char *body_buffer , int *p_body_bufsize , struct timeval *timeout )
+{
+	char		head_buffer[ 20 + 1 ] ;
+	struct iovec	iovs[ 2 ] ;
+	int		head_remain_len ;
+	int		body_remain_len ;
+	fd_set		read_fds ;
+	struct timeval	begin_timestamp ;
+	struct timeval	end_timestamp ;
+	int		len ;
+	int		body_len = 0 ;
+	
+	int		nret = 0 ;
+	
+	head_remain_len = head_len ;
+	body_remain_len = 0 ;
+	while( head_remain_len || body_remain_len )
+	{
+		gettimeofday( & begin_timestamp , NULL );
+		
+		FD_ZERO( & read_fds );
+		FD_SET( sock , & read_fds );
+		nret = select( sock+1 , & read_fds , NULL , NULL , timeout ) ;
+		if( nret == 0 )
+		{
+			if( head_remain_len )
+				(*p_body_bufsize) = 0 ;
+			else
+				(*p_body_bufsize) = body_len - body_remain_len ;
+			return TDHB_ERROR_RECV_TIMEOUT;
+		}
+		else if( nret == -1 )
+		{
+			if( head_remain_len )
+				(*p_body_bufsize) = 0 ;
+			else
+				(*p_body_bufsize) = body_len - body_remain_len ;
+			return TDHB_ERROR_SELECT_RECV_FAILED;
+		}
+		
+		if( head_remain_len )
+		{
+			iovs[0].iov_base = head_buffer+(head_len-head_remain_len) ;
+			iovs[0].iov_len = head_remain_len ;
+			iovs[1].iov_base = body_buffer ;
+			iovs[1].iov_len = (*p_body_bufsize)-1 ;
+			len = readv( sock , iovs , 2 ) ;
+			if( len == -1 )
+			{
+				(*p_body_bufsize) = 0 ;
+				return TDHB_ERROR_RECV_FAILED;
+			}
+			if( len >= head_remain_len )
+			{
+				head_remain_len = 0 ;
+				head_buffer[head_len] = '\0' ;
+				body_len = atoi(head_buffer) ;
+				if( body_len > (*p_body_bufsize) )
+					return TDHB_ERROR_RECV_BUFFER_OVERFLOW;
+				body_remain_len = body_len - ( len-head_len ) ;
+			}
+			else
+			{
+				head_remain_len -= len ;
+			}
+		}
+		else
+		{
+			len = read( sock , body_buffer+(body_len-body_remain_len) , body_remain_len ) ;
+			if( len == -1 )
+			{
+				(*p_body_bufsize) = body_len - body_remain_len ;
+				return TDHB_ERROR_RECV_FAILED;
+			}
+			body_remain_len -= len ;
+		}
+		
+		gettimeofday( & end_timestamp , NULL );
+		timeout->tv_sec -= ( end_timestamp.tv_sec - begin_timestamp.tv_sec ) ;
+		timeout->tv_usec -= ( end_timestamp.tv_usec - begin_timestamp.tv_usec ) ;
+		while( timeout->tv_usec < 0 )
+		{
+			timeout->tv_usec += 1000000 ;
+			timeout->tv_sec--;
+		}
+	}
+	
+	return 0;
+}
+
+/* 固定通讯头+通讯体协议 发送接收数据 */
+int TDHBSendAndReceiveData( int sock , int head_len , char *body_buffer , int *p_body_len , int *p_body_bufsize , struct timeval *timeout )
+{
+	int		nret = 0 ;
+	
+	nret = TDHBSendData( sock , head_len , body_buffer , p_body_len , timeout ) ;
+	if( nret )
+		return nret;
+	
+	nret = TDHBReceiveData( sock , head_len , body_buffer , p_body_bufsize , timeout ) ;
+	if( nret )
+		return nret;
+	
+	return 0;
+}
+
+/* 固定通讯头+通讯体协议 连接服务器、发送接收数据，断开服务器 */
+int TDHBCall( char *ip , int port , int head_len , char *body_buffer , int *p_body_len , int *p_body_bufsize , struct timeval *timeout )
+{
+	int			sock ;
+	struct sockaddr_in	addr ;
+	
+	int			nret = 0 ;
+	
+	/* 连接服务端 */
+	sock = socket( AF_INET , SOCK_STREAM , IPPROTO_TCP ) ;
+	if( sock == -1 )
+	{
+		return TDHB_ERROR_SOCKET_FAILED;
+	}
+	
+	{
+		int	onoff = 1 ;
+		setsockopt( sock , IPPROTO_TCP , TCP_NODELAY , (void*) & onoff , sizeof(int) );
+	}
+	
+	memset( & addr , 0x00 , sizeof(struct sockaddr_in) );
+	addr.sin_family = AF_INET ;
+	if( ip[0] == '\0' )
+		addr.sin_addr.s_addr = INADDR_ANY ;
+	else
+		addr.sin_addr.s_addr = inet_addr(ip) ;
+	addr.sin_port = htons( (unsigned short)(port) );
+	nret = connect( sock , (struct sockaddr *) & addr , sizeof(struct sockaddr) ) ;
+	if( nret == -1 )
+	{
+		close( sock );
+		return TDHB_ERROR_CONNECT_FAILED;
+	}
+	
+	/* 发送接收数据 */
+	nret = TDHBSendAndReceiveData( sock , head_len , body_buffer , p_body_len , p_body_bufsize , timeout ) ;
+	if( nret )
+	{
+		close( sock );
+		return nret;
+	}
+	
+	/* 断开服务端 */
+	close( sock );
+	
+	return 0;
+}
+
+#endif
+

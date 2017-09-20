@@ -25,32 +25,38 @@ int DSCHOSTORDER_hello_world( hello_world *pst )
 	return 0;
 }
 
-int DSCSERIALIZE_COMPACT_hello_world( hello_world *pst , char *buf , int *p_len )
+int DSCSERIALIZE_COMPRESS_hello_world( hello_world *pst , char *buf , int *p_len )
 {
 	char	*ptr = buf ;
 	int	len = 0 ;
 	int	index[10] = { 0 } ;
 	index[0]++; index[0] = 0 ;
-	
 	/* message */
-	memcpy( ptr , pst->message , 256 );
-	len+=256; ptr+=256;
+	{
+	unsigned int size=strlen(pst->message);
+	COMPRESS_UINT4( size , ptr , len )
+	memcpy( ptr , pst->message , size );
+	len+=size; ptr+=size;
+	}
 	
 	if( p_len ) (*p_len) = len ;
 	
 	return 0;
 }
 
-int DSCDESERIALIZE_COMPACT_hello_world( char *buf , int *p_len , hello_world *pst )
+int DSCDESERIALIZE_COMPRESS_hello_world( char *buf , int *p_len , hello_world *pst )
 {
 	char	*ptr = buf ;
 	int	len = 0 ;
 	int	index[10] = { 0 } ;
 	index[0]++; index[0] = 0 ;
-	
 	/* message */
-	memcpy( pst->message , ptr , 256 );
-	len+=256; ptr+=256;
+	{
+	unsigned int size ;
+	UNCOMPRESS_UINT4( ptr , len , size )
+	memcpy( pst->message , ptr , size );
+	len+=size; ptr+=size;
+	}
 	
 	if( p_len ) (*p_len) = len ;
 	

@@ -9,6 +9,7 @@
 DIROBJS		= \
 			src \
 			test \
+			test2 \
 
 ###### ╪стьmktplдё╟Е©Б
 #@ FILESYSTEM

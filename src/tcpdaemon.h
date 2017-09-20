@@ -226,6 +226,29 @@ int TDGetThisEpoll( struct TcpdaemonServerEnvironment *p_env );
 int TDGetIoMultiplexEvent( struct TcpdaemonServerEnvironment *p_env );
 void TDSetIoMultiplexDataPtr( struct TcpdaemonServerEnvironment *p_env , void *io_multiplex_data_ptr );
 
+#if ( defined __linux__ ) || ( defined __unix )
+
+#define TDHB_ERROR_HEAD_TOO_LONG	-1
+#define TDHB_ERROR_SOCKET_FAILED	-11
+#define TDHB_ERROR_CONNECT_FAILED	-12
+#define TDHB_ERROR_SELECT_SEND_FAILED	-21
+#define TDHB_ERROR_SEND_FAILED		-22
+#define TDHB_ERROR_SEND_TIMEOUT		-24
+#define TDHB_ERROR_SELECT_RECV_FAILED	-31
+#define TDHB_ERROR_RECV_FAILED		-32
+#define TDHB_ERROR_RECV_TIMEOUT		-34
+#define TDHB_ERROR_RECV_BUFFER_OVERFLOW	-36
+
+/* 固定通讯头+通讯体协议 收发函数 */
+int TDHBSendData( int sock , int head_len , char *body_buffer , int *p_body_len , struct timeval *timeout );
+int TDHBReceiveData( int sock , int head_len , char *body_buffer , int *p_body_bufsize , struct timeval *timeout );
+
+int TDHBSendAndReceiveData( int sock , int head_len , char *body_buffer , int *p_body_len , int *p_body_bufsize , struct timeval *timeout );
+
+int TDHBCall( char *ip , int port , int head_len , char *body_buffer , int *p_body_len , int *p_body_bufsize , struct timeval *timeout );
+
+#endif
+
 #ifdef __cplusplus
 }
 #endif
