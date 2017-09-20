@@ -19,7 +19,7 @@
 
 #define COMM_HEAD_LEN		4
 
-static int test_client_latency()
+static int test_client_latency( char *ip , int port )
 {
 	hello_world		st ;
 	int			send_len ;
@@ -57,8 +57,7 @@ static int test_client_latency()
 		recv_len = sizeof(comm_buffer) ;
 		timeout.tv_sec = 60 ;
 		timeout.tv_usec = 0 ;
-printf( "send_len[%d] recv_len[%d]\n" , send_len , recv_len );
-		nret = TDHBCall( "" , 9527 , COMM_HEAD_LEN , comm_buffer , & send_len , & recv_len , & timeout ) ;
+		nret = TDHBCall( ip , port , COMM_HEAD_LEN , comm_buffer , & send_len , & recv_len , & timeout ) ;
 		if( nret )
 		{
 			printf( "TDHBCall failed[%d]\n" , nret );
@@ -91,10 +90,22 @@ printf( "send_len[%d] recv_len[%d]\n" , send_len , recv_len );
 	return 0;
 }
 
+static void usage()
+{
+	printf( "USAGE : test_client_latency ip port\n" );
+	return;
+}
+
 int main( int argc , char *argv[] )
 {
 	setbuf( stdout , NULL );
 	
-	return -test_client_latency() ;
+	if( argc != 1 + 2 )
+	{
+		usage();
+		exit(7);
+	}
+	
+	return -test_client_latency( argv[1] , atoi(argv[2]) ) ;
 }
 
