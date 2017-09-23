@@ -31,7 +31,7 @@ c_FILE_CLEAN	=	$(c_FILE_o) $(c_FILE2_o) $(c_FILE3_o) $(c_FILE4_o) $(c_FILE5_o)
 
 c_FILE		=	\
 			IDL_hello_world.dsc.c \
-			test_callback_rpc_prelen.c \
+			test_callback_tdhb_hello_nonblock.c \
 			test_server.c \
 			test_client.c \
 			test_client_latency.c \
@@ -80,8 +80,8 @@ clean		:
 
 
 ###### 目标文件依赖关系
-test_server	:	test_server.o test_callback_rpc_prelen.o IDL_hello_world.dsc.o
-	$(CC) $(ESOFLAGS) -o $@ test_server.o test_callback_rpc_prelen.o IDL_hello_world.dsc.o $(LFLAGS)
+test_server	:	test_server.o test_callback_tdhb_hello_nonblock.o IDL_hello_world.dsc.o
+	$(CC) $(ESOFLAGS) -o $@ test_server.o test_callback_tdhb_hello_nonblock.o IDL_hello_world.dsc.o $(LFLAGS)
 
 test_client	:	test_client.o IDL_hello_world.dsc.o
 	$(CC) $(ESOFLAGS) -o $@ test_client.o IDL_hello_world.dsc.o $(LFLAGS)

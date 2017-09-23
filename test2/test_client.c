@@ -20,6 +20,7 @@
 
 static int requester( char *ip , int port , int processing_count )
 {
+	int			sock ;
 	int			i ;
 	
 	hello_world		st ;
@@ -30,6 +31,14 @@ static int requester( char *ip , int port , int processing_count )
 	struct timeval		timeout ;
 	
 	int			nret = 0 ;
+	
+	/* 连接服务端 */
+	sock = TDHBConnect( ip , port ) ;
+	if( sock < 0 )
+	{
+		printf( "TDHBConnect failed[%d]\n" , sock );
+		return -1;
+	}
 	
 	for( i = 0 ; i < processing_count ; i++ )
 	{
@@ -50,11 +59,11 @@ static int requester( char *ip , int port , int processing_count )
 			return -1;
 		}
 		
-		/* 连接服务端、发送接收数据、断开服务端 */
+		/* 发送接收数据 */
 		recv_len = sizeof(comm_buffer) ;
 		timeout.tv_sec = 60 ;
 		timeout.tv_usec = 0 ;
-		nret = TDHBCall( ip , port , COMM_HEAD_LEN , comm_buffer , & send_len , & recv_len , & timeout ) ;
+		nret = TDHBSendAndReceiveData( sock , COMM_HEAD_LEN , comm_buffer , & send_len , & recv_len , & timeout ) ;
 		if( nret )
 		{
 			printf( "TDHBCall failed[%d]\n" , nret );
@@ -75,6 +84,9 @@ static int requester( char *ip , int port , int processing_count )
 		if( i == 0 )
 			printf( "RESPONSE : [%s]\n" , st.message );
 	}
+	
+	/* 断开服务端 */
+	TDHBDisconnect( sock );
 	
 	return 0;
 }

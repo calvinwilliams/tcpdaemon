@@ -9,7 +9,7 @@
 #@ c_FILE
 c_FILE		=	\
 			IDL_hello_world.dsc.c \
-			test_callback_rpc_prelen.c \
+			test_callback_tdhb_hello_nonblock.c \
 			test_server.c \
 			test_client.c \
 			test_client_latency.c \
@@ -40,8 +40,8 @@ CLEAN_ADDITION	=
 include $(MKTPLDIR)/makeobj_$(MKTPLOS).inc
 
 ###### 目标文件依赖关系
-test_server	:	test_server.o test_callback_rpc_prelen.o IDL_hello_world.dsc.o
-	$(CC) $(ESOFLAGS) -o $@ test_server.o test_callback_rpc_prelen.o IDL_hello_world.dsc.o $(LFLAGS)
+test_server	:	test_server.o test_callback_tdhb_hello_nonblock.o IDL_hello_world.dsc.o
+	$(CC) $(ESOFLAGS) -o $@ test_server.o test_callback_tdhb_hello_nonblock.o IDL_hello_world.dsc.o $(LFLAGS)
 
 test_client	:	test_client.o IDL_hello_world.dsc.o
 	$(CC) $(ESOFLAGS) -o $@ test_client.o IDL_hello_world.dsc.o $(LFLAGS)

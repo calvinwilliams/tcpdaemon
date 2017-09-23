@@ -3,8 +3,8 @@
 _WINDLL_FUNC int tcpmain( struct TcpdaemonServerEnvironment *p_env , int sock , void *p_addr )
 {
 	char	http_buffer[ 4096 + 1 ] ;
-	long	http_len ;
-	long	len ;
+	int	http_len ;
+	int	len ;
 	
 	/* Ω” ’HTTP«Î«Û */
 	memset( http_buffer , 0x00 , sizeof(http_buffer) );

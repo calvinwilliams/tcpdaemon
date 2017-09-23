@@ -238,14 +238,29 @@ void TDSetIoMultiplexDataPtr( struct TcpdaemonServerEnvironment *p_env , void *i
 #define TDHB_ERROR_RECV_FAILED		-32
 #define TDHB_ERROR_RECV_TIMEOUT		-34
 #define TDHB_ERROR_RECV_BUFFER_OVERFLOW	-36
+#define TDHB_ERROR_SOCKET_CLOSED	37
 
 /* 固定通讯头+通讯体协议 收发函数 */
 int TDHBSendData( int sock , int head_len , char *body_buffer , int *p_body_len , struct timeval *timeout );
 int TDHBReceiveData( int sock , int head_len , char *body_buffer , int *p_body_bufsize , struct timeval *timeout );
 
+int TDHBConnect( char *ip , int port );
 int TDHBSendAndReceiveData( int sock , int head_len , char *body_buffer , int *p_body_len , int *p_body_bufsize , struct timeval *timeout );
+void TDHBDisconnect( int sock );
 
 int TDHBCall( char *ip , int port , int head_len , char *body_buffer , int *p_body_len , int *p_body_bufsize , struct timeval *timeout );
+
+/* 固定通讯头+通讯体 收发上下文 */
+struct TDHBContext
+{
+	char		head_buffer[ 20 + 1 ] ;
+	int		head_remain_len ;
+	int		body_len ;
+	int		body_remain_len ;
+} ;
+
+int TDHBSendDataWithNonblock( int sock , int head_len , char *body_buffer , int *p_body_len , struct TDHBContext *p_context );
+int TDHBReceiveDataWithNonblock( int sock , int head_len , char *body_buffer , int *p_body_bufsize , struct TDHBContext *p_context );
 
 #endif
 

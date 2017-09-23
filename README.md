@@ -194,6 +194,7 @@ tcpdaemon提供了三种与使用者代码对接方式：(注意：.exe只是为了说明自己是可执行文件
     							LF:领导者-追随者预派生进程池模型 for UNIX,Linux
     							IF:即时派生进程模型 for UNIX,Linux
     							WIN-TLF:领导者-追随者预派生线程池模型 for win32
+							IOMP:进程池+多路复用模型 for UNIX,Linux 回调函数内应分支事件处理
     							*/
     	int		process_count ;	/* 当为领导者-追随者预派生进程池模型时为工作进程池进程数量，当为即时派生进程模型时为最大子进程数量，当为IO多路复用模型时为工作进程池进程数量 */
     	int		max_requests_per_process ;	/* 当为领导者-追随者预派生进程池模型时为单个工作进程最大处理应用次数 */

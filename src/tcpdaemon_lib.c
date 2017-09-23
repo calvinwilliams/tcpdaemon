@@ -14,8 +14,8 @@
  */
 
 /* 版本字符串 */
-char		__TCPDAEMON_VERSION_1_3_0[] = "1.3.0" ;
-char		*__TCPDAEMON_VERSION = __TCPDAEMON_VERSION_1_3_0 ;
+char		__TCPDAEMON_VERSION_1_5_0[] = "1.5.0" ;
+char		*__TCPDAEMON_VERSION = __TCPDAEMON_VERSION_1_5_0 ;
 
 static struct TcpdaemonServerEnvironment	*g_p_env = NULL ;
 static int				g_EXIT_flag = 0 ;
@@ -615,7 +615,11 @@ static unsigned int tcpdaemon_IOMP_worker( void *pv )
 					InfoLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | call tcpmain on OnReceivingSocket[%d] ..." , p_env->index , p_session->sock );
 					p_env->io_multiplex_event = IOMP_ON_RECEIVING_SOCKET ;
 					nret = p_env->pfunc_tcpmain( p_env , 0 , p_session->io_multiplex_data_ptr ) ;
-					if( nret == TCPMAIN_RETURN_WAITINGFOR_RECEIVING )
+					if( nret == TCPMAIN_RETURN_WAITINGFOR_NEXT )
+					{
+						InfoLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | call tcpmain on OnReceivingSocket[%d] return[%d]" , p_env->index , p_session->sock , nret );
+					}
+					else if( nret == TCPMAIN_RETURN_WAITINGFOR_RECEIVING )
 					{
 						InfoLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | call tcpmain on OnReceivingSocket[%d] return[%d]" , p_env->index , p_session->sock , nret );
 						
@@ -673,7 +677,11 @@ static unsigned int tcpdaemon_IOMP_worker( void *pv )
 					InfoLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | call tcpmain on OnSendingSocket[%d] ..." , p_env->index , p_session->sock );
 					p_env->io_multiplex_event = IOMP_ON_SENDING_SOCKET ;
 					nret = p_env->pfunc_tcpmain( p_env , 0 , p_session->io_multiplex_data_ptr ) ;
-					if( nret == TCPMAIN_RETURN_WAITINGFOR_RECEIVING )
+					if( nret == TCPMAIN_RETURN_WAITINGFOR_NEXT )
+					{
+						InfoLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | call tcpmain on OnSendingSocket[%d] return[%d]" , p_env->index , p_session->sock , nret );
+					}
+					else if( nret == TCPMAIN_RETURN_WAITINGFOR_RECEIVING )
 					{
 						InfoLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | call tcpmain on OnSendingSocket[%d] return[%d]" , p_env->index , p_session->sock , nret );
 						
@@ -2225,30 +2233,29 @@ void TDSetIoMultiplexDataPtr( struct TcpdaemonServerEnvironment *p_env , void *i
 
 #if ( defined __linux__ ) || ( defined __unix )
 
-/* 固定通讯头+通讯体协议 发送数据 */
+/* 固定通讯头+通讯体协议 同步堵塞方式发送数据 */
 int TDHBSendData( int sock , int head_len , char *body_buffer , int *p_body_len , struct timeval *timeout )
 {
-	char		head_buffer[ 20 + 1 ] ;
-	struct iovec	iovs[ 2 ] ;
-	int		head_remain_len ;
-	int		body_remain_len ;
-	int		body_len ;
-	fd_set		write_fds ;
-	struct timeval	begin_timestamp ;
-	struct timeval	end_timestamp ;
-	int		len ;
+	struct TDHBContext	context ;
+	struct iovec		iovs[ 2 ] ;
+	fd_set			write_fds ;
+	struct timeval		begin_timestamp ;
+	struct timeval		end_timestamp ;
+	int			len ;
 	
-	int		nret = 0 ;
+	int			nret = 0 ;
 	
-	if( head_len > sizeof(head_buffer)-1 )
+	memset( & context , 0x00 , sizeof(struct TDHBContext) );
+	
+	if( head_len > sizeof(context.head_buffer)-1 )
 		return TDHB_ERROR_HEAD_TOO_LONG;
 	
-	body_len = (*p_body_len) ;
-	sprintf( head_buffer , "%0*d" , head_len , body_len );
+	context.body_len = (*p_body_len) ;
+	sprintf( context.head_buffer , "%0*d" , head_len , context.body_len );
 	
-	head_remain_len = head_len ;
-	body_remain_len = body_len ;
-	while( head_remain_len || body_remain_len )
+	context.head_remain_len = head_len ;
+	context.body_remain_len = context.body_len ;
+	while( context.head_remain_len || context.body_remain_len )
 	{
 		gettimeofday( & begin_timestamp , NULL );
 		
@@ -2257,46 +2264,46 @@ int TDHBSendData( int sock , int head_len , char *body_buffer , int *p_body_len 
 		nret = select( sock+1 , NULL , & write_fds , NULL , timeout ) ;
 		if( nret == 0 )
 		{
-			(*p_body_len) = head_len + body_len - head_remain_len - body_remain_len ;
+			(*p_body_len) = head_len + context.body_len - context.head_remain_len - context.body_remain_len ;
 			return TDHB_ERROR_SEND_TIMEOUT;
 		}
 		else if( nret == -1 )
 		{
-			(*p_body_len) = head_len + body_len - head_remain_len - body_remain_len ;
+			(*p_body_len) = head_len + context.body_len - context.head_remain_len - context.body_remain_len ;
 			return TDHB_ERROR_SELECT_SEND_FAILED;
 		}
 		
-		if( head_remain_len )
+		if( context.head_remain_len )
 		{
-			iovs[0].iov_base = head_buffer+(head_len-head_remain_len) ;
-			iovs[0].iov_len = head_remain_len ;
+			iovs[0].iov_base = context.head_buffer+(head_len-context.head_remain_len) ;
+			iovs[0].iov_len = context.head_remain_len ;
 			iovs[1].iov_base = body_buffer ;
-			iovs[1].iov_len = body_len ;
+			iovs[1].iov_len = context.body_len ;
 			len = writev( sock , iovs , 2 ) ;
 			if( len == -1 )
 			{
-				(*p_body_len) = head_len + body_len - head_remain_len - body_remain_len ;
+				(*p_body_len) = head_len + context.body_len - context.head_remain_len - context.body_remain_len ;
 				return TDHB_ERROR_SEND_FAILED;
 			}
-			if( len >= head_remain_len )
+			if( len >= context.head_remain_len )
 			{
-				head_remain_len = 0 ;
-				body_remain_len -= ( len - head_len ) ;
+				context.head_remain_len = 0 ;
+				context.body_remain_len -= ( len - head_len ) ;
 			}
 			else
 			{
-				head_remain_len -= len ;
+				context.head_remain_len -= len ;
 			}
 		}
 		else
 		{
-			len = write( sock , body_buffer+(body_len-body_remain_len) , body_remain_len ) ;
+			len = write( sock , body_buffer+(context.body_len-context.body_remain_len) , context.body_remain_len ) ;
 			if( len == -1 )
 			{
-				(*p_body_len) = head_len + body_len - head_remain_len - body_remain_len ;
+				(*p_body_len) = head_len + context.body_len - context.head_remain_len - context.body_remain_len ;
 				return TDHB_ERROR_SEND_FAILED;
 			}
-			body_remain_len -= len ;
+			context.body_remain_len -= len ;
 		}
 		
 		gettimeofday( & end_timestamp , NULL );
@@ -2312,24 +2319,22 @@ int TDHBSendData( int sock , int head_len , char *body_buffer , int *p_body_len 
 	return 0;
 }
 
-/* 固定通讯头+通讯体协议 接收数据 */
+/* 固定通讯头+通讯体协议 同步堵塞方式接收数据 */
 int TDHBReceiveData( int sock , int head_len , char *body_buffer , int *p_body_bufsize , struct timeval *timeout )
 {
-	char		head_buffer[ 20 + 1 ] ;
-	struct iovec	iovs[ 2 ] ;
-	int		head_remain_len ;
-	int		body_remain_len ;
-	fd_set		read_fds ;
-	struct timeval	begin_timestamp ;
-	struct timeval	end_timestamp ;
-	int		len ;
-	int		body_len = 0 ;
+	struct TDHBContext	context ;
+	fd_set			read_fds ;
+	struct timeval		begin_timestamp ;
+	struct timeval		end_timestamp ;
+	int			len ;
 	
-	int		nret = 0 ;
+	int			nret = 0 ;
 	
-	head_remain_len = head_len ;
-	body_remain_len = 0 ;
-	while( head_remain_len || body_remain_len )
+	memset( & context , 0x00 , sizeof(struct TDHBContext) );
+	
+	context.head_remain_len = head_len ;
+	context.body_remain_len = 0 ;
+	while( context.head_remain_len || context.body_remain_len )
 	{
 		gettimeofday( & begin_timestamp , NULL );
 		
@@ -2338,56 +2343,58 @@ int TDHBReceiveData( int sock , int head_len , char *body_buffer , int *p_body_b
 		nret = select( sock+1 , & read_fds , NULL , NULL , timeout ) ;
 		if( nret == 0 )
 		{
-			if( head_remain_len )
+			if( context.head_remain_len )
 				(*p_body_bufsize) = 0 ;
 			else
-				(*p_body_bufsize) = body_len - body_remain_len ;
+				(*p_body_bufsize) = context.body_len - context.body_remain_len ;
 			return TDHB_ERROR_RECV_TIMEOUT;
 		}
 		else if( nret == -1 )
 		{
-			if( head_remain_len )
+			if( context.head_remain_len )
 				(*p_body_bufsize) = 0 ;
 			else
-				(*p_body_bufsize) = body_len - body_remain_len ;
+				(*p_body_bufsize) = context.body_len - context.body_remain_len ;
 			return TDHB_ERROR_SELECT_RECV_FAILED;
 		}
 		
-		if( head_remain_len )
+		if( context.head_remain_len )
 		{
-			iovs[0].iov_base = head_buffer+(head_len-head_remain_len) ;
-			iovs[0].iov_len = head_remain_len ;
-			iovs[1].iov_base = body_buffer ;
-			iovs[1].iov_len = (*p_body_bufsize)-1 ;
-			len = readv( sock , iovs , 2 ) ;
+			len = read( sock , context.head_buffer+(head_len-context.head_remain_len) , context.head_remain_len ) ;
 			if( len == -1 )
 			{
 				(*p_body_bufsize) = 0 ;
 				return TDHB_ERROR_RECV_FAILED;
 			}
-			if( len >= head_remain_len )
+			else if( len == 0 )
 			{
-				head_remain_len = 0 ;
-				head_buffer[head_len] = '\0' ;
-				body_len = atoi(head_buffer) ;
-				if( body_len > (*p_body_bufsize) )
+				(*p_body_bufsize) = 0 ;
+				return TDHB_ERROR_SOCKET_CLOSED;
+			}
+			
+			if( len == context.head_remain_len )
+			{
+				context.head_remain_len = 0 ;
+				context.head_buffer[head_len] = '\0' ;
+				context.body_len = atoi(context.head_buffer) ;
+				if( context.body_len > (*p_body_bufsize) )
 					return TDHB_ERROR_RECV_BUFFER_OVERFLOW;
-				body_remain_len = body_len - ( len-head_len ) ;
+				context.body_remain_len = context.body_len - ( len-head_len ) ;
 			}
 			else
 			{
-				head_remain_len -= len ;
+				context.head_remain_len -= len ;
 			}
 		}
 		else
 		{
-			len = read( sock , body_buffer+(body_len-body_remain_len) , body_remain_len ) ;
+			len = read( sock , body_buffer+(context.body_len-context.body_remain_len) , context.body_remain_len ) ;
 			if( len == -1 )
 			{
-				(*p_body_bufsize) = body_len - body_remain_len ;
+				(*p_body_bufsize) = context.body_len - context.body_remain_len ;
 				return TDHB_ERROR_RECV_FAILED;
 			}
-			body_remain_len -= len ;
+			context.body_remain_len -= len ;
 		}
 		
 		gettimeofday( & end_timestamp , NULL );
@@ -2403,24 +2410,8 @@ int TDHBReceiveData( int sock , int head_len , char *body_buffer , int *p_body_b
 	return 0;
 }
 
-/* 固定通讯头+通讯体协议 发送接收数据 */
-int TDHBSendAndReceiveData( int sock , int head_len , char *body_buffer , int *p_body_len , int *p_body_bufsize , struct timeval *timeout )
-{
-	int		nret = 0 ;
-	
-	nret = TDHBSendData( sock , head_len , body_buffer , p_body_len , timeout ) ;
-	if( nret )
-		return nret;
-	
-	nret = TDHBReceiveData( sock , head_len , body_buffer , p_body_bufsize , timeout ) ;
-	if( nret )
-		return nret;
-	
-	return 0;
-}
-
-/* 固定通讯头+通讯体协议 连接服务器、发送接收数据，断开服务器 */
-int TDHBCall( char *ip , int port , int head_len , char *body_buffer , int *p_body_len , int *p_body_bufsize , struct timeval *timeout )
+/* 固定通讯头+通讯体协议 连接服务器 */
+int TDHBConnect( char *ip , int port )
 {
 	int			sock ;
 	struct sockaddr_in	addr ;
@@ -2453,6 +2444,46 @@ int TDHBCall( char *ip , int port , int head_len , char *body_buffer , int *p_bo
 		return TDHB_ERROR_CONNECT_FAILED;
 	}
 	
+	return sock;
+}
+
+/* 固定通讯头+通讯体协议 发送接收数据 */
+int TDHBSendAndReceiveData( int sock , int head_len , char *body_buffer , int *p_body_len , int *p_body_bufsize , struct timeval *timeout )
+{
+	int		nret = 0 ;
+	
+	nret = TDHBSendData( sock , head_len , body_buffer , p_body_len , timeout ) ;
+	if( nret )
+		return nret;
+	
+	nret = TDHBReceiveData( sock , head_len , body_buffer , p_body_bufsize , timeout ) ;
+	if( nret )
+		return nret;
+	
+	return 0;
+}
+
+/* 固定通讯头+通讯体协议 断开服务器 */
+void TDHBDisconnect( int sock )
+{
+	/* 断开服务端 */
+	close( sock );
+	
+	return;
+}
+
+/* 固定通讯头+通讯体协议 连接服务器、发送接收数据，断开服务器 */
+int TDHBCall( char *ip , int port , int head_len , char *body_buffer , int *p_body_len , int *p_body_bufsize , struct timeval *timeout )
+{
+	int		sock ;
+	
+	int		nret = 0 ;
+	
+	/* 连接服务器 */
+	sock = TDHBConnect( ip , port ) ;
+	if( sock < 0 )
+		return sock;
+	
 	/* 发送接收数据 */
 	nret = TDHBSendAndReceiveData( sock , head_len , body_buffer , p_body_len , p_body_bufsize , timeout ) ;
 	if( nret )
@@ -2461,10 +2492,135 @@ int TDHBCall( char *ip , int port , int head_len , char *body_buffer , int *p_bo
 		return nret;
 	}
 	
-	/* 断开服务端 */
-	close( sock );
+	/* 断开服务器 */
+	TDHBDisconnect( sock );
 	
 	return 0;
+}
+
+/* 固定通讯头+通讯体协议 非堵塞方式发送数据 */
+int TDHBSendDataWithNonblock( int sock , int head_len , char *body_buffer , int *p_body_len , struct TDHBContext *p_context )
+{
+	struct iovec		iovs[ 2 ] ;
+	int			len ;
+	
+	if( head_len > sizeof(p_context->head_buffer)-1 )
+		return TDHB_ERROR_HEAD_TOO_LONG;
+	
+	if( p_context->head_remain_len == 0 && p_context->body_remain_len == 0 )
+	{
+		p_context->body_len = (*p_body_len) ;
+		sprintf( p_context->head_buffer , "%0*d" , head_len , p_context->body_len );
+		
+		p_context->head_remain_len = head_len ;
+		p_context->body_remain_len = p_context->body_len ;
+	}
+	
+	if( p_context->head_remain_len )
+	{
+		iovs[0].iov_base = p_context->head_buffer+(head_len-p_context->head_remain_len) ;
+		iovs[0].iov_len = p_context->head_remain_len ;
+		iovs[1].iov_base = body_buffer ;
+		iovs[1].iov_len = p_context->body_len ;
+		len = writev( sock , iovs , 2 ) ;
+		if( len == -1 )
+		{
+			(*p_body_len) = head_len + p_context->body_len - p_context->head_remain_len - p_context->body_remain_len ;
+			return TDHB_ERROR_SEND_FAILED;
+		}
+		if( len >= p_context->head_remain_len )
+		{
+			p_context->head_remain_len = 0 ;
+			p_context->body_remain_len -= ( len - head_len ) ;
+			if( p_context->body_remain_len == 0 )
+				return TCPMAIN_RETURN_WAITINGFOR_RECEIVING;
+		}
+		else
+		{
+			p_context->head_remain_len -= len ;
+			if( p_context->body_remain_len == 0 )
+				return TCPMAIN_RETURN_WAITINGFOR_RECEIVING;
+		}
+	}
+	else
+	{
+		len = write( sock , body_buffer+(p_context->body_len-p_context->body_remain_len) , p_context->body_remain_len ) ;
+		if( len == -1 )
+		{
+			(*p_body_len) = head_len + p_context->body_len - p_context->head_remain_len - p_context->body_remain_len ;
+			return TDHB_ERROR_SEND_FAILED;
+		}
+		p_context->body_remain_len -= len ;
+		if( p_context->body_remain_len == 0 )
+			return TCPMAIN_RETURN_WAITINGFOR_RECEIVING;
+	}
+	
+	return TCPMAIN_RETURN_WAITINGFOR_NEXT;
+}
+
+/* 固定通讯头+通讯体协议 非堵塞方式接收数据 */
+int TDHBReceiveDataWithNonblock( int sock , int head_len , char *body_buffer , int *p_body_bufsize , struct TDHBContext *p_context )
+{
+	int			len ;
+	
+	if( p_context->head_remain_len == 0 && p_context->body_remain_len == 0 )
+	{
+		p_context->body_len = 0 ;
+		memset( p_context->head_buffer , 0x00 , sizeof(p_context->head_buffer) );
+		p_context->head_remain_len = head_len ;
+		p_context->body_remain_len = 0 ;
+	}
+	
+	if( p_context->head_remain_len )
+	{
+		len = read( sock , p_context->head_buffer+(head_len-p_context->head_remain_len) , p_context->head_remain_len ) ;
+		if( len == -1 )
+		{
+			(*p_body_bufsize) = 0 ;
+			return TDHB_ERROR_RECV_FAILED;
+		}
+		else if( len == 0 )
+		{
+			(*p_body_bufsize) = head_len-p_context->head_remain_len ;
+			return TDHB_ERROR_SOCKET_CLOSED;
+		}
+		
+		if( len == p_context->head_remain_len )
+		{
+			p_context->head_remain_len = 0 ;
+			p_context->head_buffer[head_len] = '\0' ;
+			p_context->body_len = atoi(p_context->head_buffer) ;
+			if( p_context->body_len > (*p_body_bufsize) )
+				return TDHB_ERROR_RECV_BUFFER_OVERFLOW;
+			p_context->body_remain_len = p_context->body_len - ( len-head_len ) ;
+			if( p_context->body_remain_len == 0 )
+				return TCPMAIN_RETURN_WAITINGFOR_SENDING;
+		}
+		else
+		{
+			p_context->head_remain_len -= len ;
+		}
+	}
+	else
+	{
+		len = read( sock , body_buffer+(p_context->body_len-p_context->body_remain_len) , p_context->body_remain_len ) ;
+		if( len == -1 )
+		{
+			(*p_body_bufsize) = p_context->body_len - p_context->body_remain_len ;
+			return TDHB_ERROR_RECV_FAILED;
+		}
+		else if( len == 0 )
+		{
+			(*p_body_bufsize) = head_len+p_context->body_len-p_context->body_remain_len ;
+			return TDHB_ERROR_SOCKET_CLOSED;
+		}
+		
+		p_context->body_remain_len -= len ;
+		if( p_context->body_remain_len == 0 )
+			return TCPMAIN_RETURN_WAITINGFOR_SENDING;
+	}
+	
+	return TCPMAIN_RETURN_WAITINGFOR_NEXT;
 }
 
 #endif

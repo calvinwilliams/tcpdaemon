@@ -8,6 +8,8 @@
 ###### 源文件配置区
 #@ c_FILE
 c_FILE		=	\
+			test_callback_tdhb_echo.c \
+			test_callback_tdhb_echo_nonblock.c \
 			test_callback_http_echo.c \
 			test_callback_http_echo_nonblock.c \
 			test_main_IF.c \
@@ -15,7 +17,9 @@ c_FILE		=	\
 			test_main_IOMP.c \
 
 ###### 目标文件、安装目录配置区
-NOINST_OBJ	=	test_callback_http_echo.so \
+NOINST_OBJ	=	test_callback_tdhb_echo.so \
+			test_callback_tdhb_echo_nonblock.so \
+			test_callback_http_echo.so \
 			test_callback_http_echo_nonblock.so \
 			test_main_IF \
 			test_main_LF \
@@ -42,6 +46,12 @@ CLEAN_ADDITION	=
 include $(MKTPLDIR)/makeobj_$(MKTPLOS).inc
 
 ###### 目标文件依赖关系
+test_callback_tdhb_echo.so:	test_callback_tdhb_echo.o
+	$(CC) $(SOFLAGS) -o $@ test_callback_tdhb_echo.o $(LFLAGS)
+
+test_callback_tdhb_echo_nonblock.so:	test_callback_tdhb_echo_nonblock.o
+	$(CC) $(SOFLAGS) -o $@ test_callback_tdhb_echo_nonblock.o $(LFLAGS)
+
 test_callback_http_echo.so:	test_callback_http_echo.o
 	$(CC) $(SOFLAGS) -o $@ test_callback_http_echo.o $(LFLAGS)
 
