@@ -147,17 +147,16 @@ typedef int func_tcpmain( struct TcpdaemonServerEnvironment *p_env , int sock , 
 /* 参数说明 */
 	/*
 	IF
-					p_env , int accepted_sock , struct sockaddr *accepted_addr
+						p_env , int accepted_sock , struct sockaddr *accepted_addr
 	LF
-					p_env , int accepted_sock , struct sockaddr *accepted_addr
-	IOMP
-		OnAcceptingSocket	p_env , int accepted_sock , struct sockaddr *accepted_addr
-		OnClosingSocket		p_env , 0 , void *custem_data_ptr
-		OnSendingSocket		p_env , 0 , void *custem_data_ptr
-		OnReceivingSocket	p_env , 0 , void *custem_data_ptr
-		OnClosingSocket		p_env , 0 , void *custem_data_ptr
+						p_env , int accepted_sock , struct sockaddr *accepted_addr
 	WIN-TLF
-					p_env , int accepted_sock , struct sockaddr *accepted_addr
+						p_env , int accepted_sock , struct sockaddr *accepted_addr
+	IOMP
+		IOMP_ON_ACCEPTING_SOCKET	p_env , int accepted_sock , struct sockaddr *accepted_addr
+		IOMP_ON_CLOSING_SOCKET		p_env , 0 , void *custem_data_ptr
+		IOMP_ON_RECEIVING_SOCKET	p_env , 0 , void *custem_data_ptr
+		IOMP_ON_SENDING_SOCKET		p_env , 0 , void *custem_data_ptr
 	*/
 /* 返回值说明 */
 #define TCPMAIN_RETURN_CLOSE			0
@@ -177,7 +176,8 @@ struct TcpdaemonEntryParameter
 	char		server_model[ 10 + 1 ] ;	/* TCP连接管理模型
 							LF:领导者-追随者预派生进程池模型 for UNIX,Linux
 							IF:即时派生进程模型 for UNIX,Linux
-							WIN-TLF:领导者-追随者预派生线程池模型 for win32
+							WIN-TLF:领导者-追随者预派生线程池模型 for WIN32
+							IOMP:进程池+多路复用模型 for UNIX,Linux 回调函数内应分支事件处理
 							*/
 	int		process_count ;	/* 当为领导者-追随者预派生进程池模型时为工作进程池进程数量，当为即时派生进程模型时为最大子进程数量，当为IO多路复用模型时为工作进程池进程数量 */
 	int		max_requests_per_process ;	/* 当为领导者-追随者预派生进程池模型时为单个工作进程最大处理应用次数 */
