@@ -47,7 +47,7 @@ static int requester( char *ip , int port , int processing_count )
 		strcpy( st.message , "hello world" );
 		
 		if( i == 0 )
-			printf( " REQUEST : [%s]\n" , st.message );
+			printf( "[%d] REQUEST : [%s]\n" , i , st.message );
 		
 		/* 序列化报文 */
 		memset( comm_buffer , 0x00 , sizeof(comm_buffer) );
@@ -82,7 +82,7 @@ static int requester( char *ip , int port , int processing_count )
 		}
 		
 		if( i == 0 )
-			printf( "RESPONSE : [%s]\n" , st.message );
+			printf( "[%d]RESPONSE : [%s]\n" , i , st.message );
 	}
 	
 	/* 断开服务端 */

@@ -17,7 +17,7 @@ int main()
 	strcpy( ep.ip , "0" );
 	ep.port = 9527 ;
 	
-	ep.process_count = 1 ;
+	ep.process_count = 2 ;
 	
 	ep.pfunc_tcpmain = & tcpmain ;
 	ep.param_tcpmain = NULL ;

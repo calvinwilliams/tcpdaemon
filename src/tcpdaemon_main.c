@@ -72,12 +72,12 @@ static int ParseCommandParameter( int argc , char *argv[] , struct TcpdaemonEntr
 			p = strchr( argv[c+1] , ':' ) ;
 			if( p == NULL )
 			{
-				InfoLog( __FILE__ , __LINE__ , "parameter --listen[%s]无效" , argv[c+1] );
+				INFOLOG( "parameter --listen[%s]无效" , argv[c+1] );
 				return 1;
 			}
 			if( p - argv[c+1] > sizeof(p_para->ip) - 1 )
 			{
-				InfoLog( __FILE__ , __LINE__ , "parameter -l[%s]中的ip过长" , argv[c+1] );
+				INFOLOG( "parameter -l[%s]中的ip过长" , argv[c+1] );
 				return 1;
 			}
 			strncpy( p_para->ip , argv[c+1] , p - argv[c+1] );
@@ -161,7 +161,7 @@ static int ParseCommandParameter( int argc , char *argv[] , struct TcpdaemonEntr
 		}
 		else
 		{
-			InfoLog( __FILE__ , __LINE__ , "parameter[%s] invalid" , argv[c] );
+			INFOLOG( "parameter[%s] invalid" , argv[c] );
 			usage();
 			exit(1);
 		}

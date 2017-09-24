@@ -36,7 +36,7 @@ static int BindCpuAffinity( int processor_no )
 	CPU_ZERO( & cpu_mask );
 	CPU_SET( processor_no , & cpu_mask );
 	nret = sched_setaffinity( 0 , sizeof(cpu_mask) , & cpu_mask ) ;
-	DebugLog( __FILE__ , __LINE__ , "sched_setaffinity[%d] return[%d]" , processor_no , nret );
+	DEBUGLOG( "sched_setaffinity[%d] return[%d]" , processor_no , nret );
 	return nret;
 }
 
@@ -52,7 +52,7 @@ int CheckCommandParameter( struct TcpdaemonEntryParameter *p_para )
 	{
 		if( p_para->process_count <= 0 )
 		{
-			ErrorLog( __FILE__ , __LINE__ , "tcpdaemon_LF_worker poll size[%ld] invalid" , p_para->process_count );
+			ERRORLOG( "tcpdaemon_LF_worker poll size[%ld] invalid" , p_para->process_count );
 			return -1;
 		}
 		
@@ -62,7 +62,7 @@ int CheckCommandParameter( struct TcpdaemonEntryParameter *p_para )
 	{
 		if( p_para->process_count <= 0 )
 		{
-			ErrorLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker poll size[%ld] invalid" , p_para->process_count );
+			ERRORLOG( "tcpdaemon_IOMP_worker poll size[%ld] invalid" , p_para->process_count );
 			return -1;
 		}
 		
@@ -73,7 +73,7 @@ int CheckCommandParameter( struct TcpdaemonEntryParameter *p_para )
 	{
 		if( p_para->process_count <= 0 )
 		{
-			ErrorLog( __FILE__ , __LINE__ , "tcpdaemon_WIN-TLF_worker poll size[%ld] invalid" , p_para->process_count );
+			ERRORLOG( "tcpdaemon_WIN-TLF_worker poll size[%ld] invalid" , p_para->process_count );
 			return -1;
 		}
 		
@@ -81,7 +81,7 @@ int CheckCommandParameter( struct TcpdaemonEntryParameter *p_para )
 	}
 #endif
 	
-	ErrorLog( __FILE__ , __LINE__ , "server mode[%s] invalid" , p_para->server_model );
+	ERRORLOG( "server mode[%s] invalid" , p_para->server_model );
 	return -2;
 }
 
@@ -112,11 +112,11 @@ static unsigned int WINAPI tcpdaemon_LF_worker( void *pv )
 	SetLogFile( p_env->p_para->log_pathfilename );
 	SetLogLevel( p_env->p_para->log_level );
 	
-	DebugLog( __FILE__ , __LINE__ , "tcpdaemon_LF_worker(%d) | begin" , p_env->index );
+	DEBUGLOG( "tcpdaemon_LF_worker(%d) | begin" , p_env->index );
 	
 	while(1)
 	{
-		DebugLog( __FILE__ , __LINE__ , "tcpdaemon_LF_worker(%d) | waiting for entering accept mutex" , p_env->index );
+		DEBUGLOG( "tcpdaemon_LF_worker(%d) | waiting for entering accept mutex" , p_env->index );
 		
 #if ( defined __linux__ ) || ( defined __unix )
 		/* 进入临界区 */
@@ -127,13 +127,13 @@ static unsigned int WINAPI tcpdaemon_LF_worker( void *pv )
 		nret = semop( p_env->accept_mutex , & sb , 1 ) ;
 		if( nret == -1 )
 		{
-			ErrorLog( __FILE__ , __LINE__ , "tcpdaemon_LF_worker(%d) | enter accept mutex failed , errno[%d]" , p_env->index , ERRNO );
+			ERRORLOG( "tcpdaemon_LF_worker(%d) | enter accept mutex failed , errno[%d]" , p_env->index , ERRNO );
 			break;
 		}
 #elif ( defined _WIN32 )
 		EnterCriticalSection( & accept_critical_section );
 #endif
-		DebugLog( __FILE__ , __LINE__ , "tcpdaemon_LF_worker(%d) | enter accept mutex ok" , p_env->index );
+		DEBUGLOG( "tcpdaemon_LF_worker(%d) | enter accept mutex ok" , p_env->index );
 		
 		/* 监控侦听socket或存活管道事件 */
 		FD_ZERO( & readfds );
@@ -146,14 +146,14 @@ static unsigned int WINAPI tcpdaemon_LF_worker( void *pv )
 #endif
 		if( nret == -1 )
 		{	
-			ErrorLog( __FILE__ , __LINE__ , "tcpdaemon_LF_worker(%d) | select failed , errno[%d]" , p_env->index , ERRNO );
+			ERRORLOG( "tcpdaemon_LF_worker(%d) | select failed , errno[%d]" , p_env->index , ERRNO );
 			break;
 		}
 		
 #if ( defined __linux__ ) || ( defined __unix )
 		if( FD_ISSET( p_env->alive_pipes[p_env->index].fd[0] , & readfds ) )
 		{
-			DebugLog( __FILE__ , __LINE__ , "tcpdaemon_LF_worker(%d) | alive_pipe received quit command" , p_env->index );
+			DEBUGLOG( "tcpdaemon_LF_worker(%d) | alive_pipe received quit command" , p_env->index );
 			break;
 		}
 #endif
@@ -164,12 +164,12 @@ static unsigned int WINAPI tcpdaemon_LF_worker( void *pv )
 		accepted_sock = accept( p_env->listen_sock , & accepted_addr , & accepted_addrlen ) ;
 		if( accepted_sock == -1 )
 		{
-			ErrorLog( __FILE__ , __LINE__ , "tcpdaemon_LF_worker(%d) | accept failed , errno[%d]" , p_env->index , ERRNO );
+			ERRORLOG( "tcpdaemon_LF_worker(%d) | accept failed , errno[%d]" , p_env->index , ERRNO );
 			break;
 		}
 		else
 		{
-			DebugLog( __FILE__ , __LINE__ , "tcpdaemon_LF_worker(%d) | accept ok , [%d]accept[%d]" , p_env->index , p_env->listen_sock , accepted_sock );
+			DEBUGLOG( "tcpdaemon_LF_worker(%d) | accept ok , [%d]accept[%d]" , p_env->index , p_env->listen_sock , accepted_sock );
 		}
 		
 		/* 设置侦听端口关闭nagle算法 */
@@ -197,36 +197,36 @@ static unsigned int WINAPI tcpdaemon_LF_worker( void *pv )
 		nret = semop( p_env->accept_mutex , & sb , 1 ) ;
 		if( nret == -1 )
 		{
-			ErrorLog( __FILE__ , __LINE__ , "tcpdaemon_LF_worker(%d) | leave accept mutex failed , errno[%d]" , p_env->index , ERRNO );
+			ERRORLOG( "tcpdaemon_LF_worker(%d) | leave accept mutex failed , errno[%d]" , p_env->index , ERRNO );
 			break;
 		}
 #elif ( defined _WIN32 )
 		LeaveCriticalSection( & accept_critical_section );
 #endif
-		DebugLog( __FILE__ , __LINE__ , "tcpdaemon_LF_worker(%d) | leave accept mutex ok" , p_env->index );
+		DEBUGLOG( "tcpdaemon_LF_worker(%d) | leave accept mutex ok" , p_env->index );
 		
 		/* 调用通讯数据协议及应用处理回调函数 */
-		InfoLog( __FILE__ , __LINE__ , "tcpdaemon_LF_worker(%d) | call tcpmain sock[%d]" , p_env->index , accepted_sock );
+		INFOLOG( "tcpdaemon_LF_worker(%d) | call tcpmain sock[%d]" , p_env->index , accepted_sock );
 		nret = p_env->pfunc_tcpmain( p_env , accepted_sock , & accepted_addr ) ;
 		if( nret == TCPMAIN_RETURN_CLOSE )
 		{
-			InfoLog( __FILE__ , __LINE__ , "tcpdaemon_LF_worker(%d) | tcpmain return[%d]" , p_env->index , nret );
+			INFOLOG( "tcpdaemon_LF_worker(%d) | tcpmain return[%d]" , p_env->index , nret );
 		}
 		else
 		{
-			ErrorLog( __FILE__ , __LINE__ , "tcpdaemon_LF_worker(%d) | tcpmain return[%d]" , p_env->index , nret );
+			ERRORLOG( "tcpdaemon_LF_worker(%d) | tcpmain return[%d]" , p_env->index , nret );
 			break;
 		}
 		
 		/* 关闭客户端连接 */
 		CLOSESOCKET( accepted_sock );
-		DebugLog( __FILE__ , __LINE__ , "tcpdaemon_LF_worker(%d) | close[%d]" , p_env->index , accepted_sock );
+		DEBUGLOG( "tcpdaemon_LF_worker(%d) | close[%d]" , p_env->index , accepted_sock );
 		
 		/* 检查工作进程处理数量 */
 		p_env->requests_per_process++;
 		if( p_env->p_para->max_requests_per_process != 0 && p_env->requests_per_process >= p_env->p_para->max_requests_per_process )
 		{
-			InfoLog( __FILE__ , __LINE__ , "tcpdaemon_LF_worker(%d) | maximum number of processing[%ld][%ld] , ending" , p_env->index , p_env->requests_per_process , p_env->p_para->max_requests_per_process );
+			INFOLOG( "tcpdaemon_LF_worker(%d) | maximum number of processing[%ld][%ld] , ending" , p_env->index , p_env->requests_per_process , p_env->p_para->max_requests_per_process );
 			return 1;
 		}
 	}
@@ -240,15 +240,15 @@ static unsigned int WINAPI tcpdaemon_LF_worker( void *pv )
 	nret = semop( p_env->accept_mutex , & sb , 1 ) ;
 	if( nret == -1 )
 	{
-		InfoLog( __FILE__ , __LINE__ , "tcpdaemon_LF_worker(%d) | leave accept mutex finally failed , errno[%d]" , p_env->index , ERRNO );
+		INFOLOG( "tcpdaemon_LF_worker(%d) | leave accept mutex finally failed , errno[%d]" , p_env->index , ERRNO );
 		return 1;
 	}
 #elif ( defined _WIN32 )
 	LeaveCriticalSection( & accept_critical_section );
 #endif
-	DebugLog( __FILE__ , __LINE__ , "tcpdaemon_LF_worker(%d) | leave accept mutex finally ok" , p_env->index );
+	DEBUGLOG( "tcpdaemon_LF_worker(%d) | leave accept mutex finally ok" , p_env->index );
 	
-	DebugLog( __FILE__ , __LINE__ , "tcpdaemon_LF_worker(%d) | end" , p_env->index );
+	DEBUGLOG( "tcpdaemon_LF_worker(%d) | end" , p_env->index );
 	
 #if ( defined __linux__ ) || ( defined __unix )
 	return 0;
@@ -270,7 +270,7 @@ static int IncreaseTcpdaemonAcceptedSessions( struct TcpdaemonServerEnvironment 
 	p_accepted_session_array = (struct TcpdaemonAcceptedSessionArray *)malloc( sizeof(struct TcpdaemonAcceptedSessionArray) ) ;
 	if( p_accepted_session_array == NULL )
 	{
-		ErrorLog( __FILE__ , __LINE__ , "malloc failed , errno[%d]" , ERRNO );
+		ERRORLOG( "malloc failed , errno[%d]" , ERRNO );
 		return -1;
 	}
 	memset( p_accepted_session_array , 0x00 , sizeof(struct TcpdaemonAcceptedSessionArray) );
@@ -279,7 +279,7 @@ static int IncreaseTcpdaemonAcceptedSessions( struct TcpdaemonServerEnvironment 
 	for( i = 0 , p_accepted_session = p_accepted_session_array->accepted_session_array ; i < sizeof(p_accepted_session_array->accepted_session_array)/sizeof(p_accepted_session_array->accepted_session_array[0]) ; i++ , p_accepted_session++ )
 	{
 		list_add_tail( & (p_accepted_session->unused_node) , & (p_env->accepted_session_unused_list.unused_node) );
-		DebugLog( __FILE__ , __LINE__ , "init accepted session[%p]" , p_accepted_session );
+		DEBUGLOG( "init accepted session[%p]" , p_accepted_session );
 	}
 	
 	return 0;
@@ -304,7 +304,7 @@ static struct TcpdaemonAcceptedSession *FetchTcpdaemonAcceptedSessionUnused( str
 	p_accepted_session = list_first_entry( & (p_env->accepted_session_unused_list.unused_node) , struct TcpdaemonAcceptedSession , unused_node ) ;
 	list_del( & (p_accepted_session->unused_node) );
 	
-	DebugLog( __FILE__ , __LINE__ , "fetch accepted session[%p]" , p_accepted_session );
+	DEBUGLOG( "fetch accepted session[%p]" , p_accepted_session );
 	memset( p_accepted_session , 0x00 , sizeof(struct TcpdaemonAcceptedSession) );
 	return p_accepted_session;
 }
@@ -312,7 +312,7 @@ static struct TcpdaemonAcceptedSession *FetchTcpdaemonAcceptedSessionUnused( str
 /* 把当前客户端会话放回空闲链表中去 */
 static void SetTcpdaemonAcceptedSessionUnused( struct TcpdaemonServerEnvironment *p_env , struct TcpdaemonAcceptedSession *p_accepted_session )
 {
-	DebugLog( __FILE__ , __LINE__ , "putback accepted session[%p]" , p_accepted_session );
+	DEBUGLOG( "putback accepted session[%p]" , p_accepted_session );
 	
 	/* 把当前工作HTTP通讯会话移到空闲HTTP通讯会话链表中 */
 	list_add_tail( & (p_accepted_session->unused_node) , & (p_env->accepted_session_unused_list.unused_node) );
@@ -340,7 +340,7 @@ static void FreeAllTcpdaemonAcceptedSessionArray( struct TcpdaemonServerEnvironm
 /* 关闭连接 */
 static void CloseTcpdaemonAcceptedSession( struct TcpdaemonServerEnvironment *p_env , struct TcpdaemonAcceptedSession *p_session )
 {
-	InfoLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | close sock[%d] io multiplex data ptr[%p]" , p_env->index , p_session->sock , p_session->io_multiplex_data_ptr );
+	INFOLOG( "tcpdaemon_IOMP_worker(%d) | close sock[%d] io multiplex data ptr[%p]" , p_env->index , p_session->sock , p_session->io_multiplex_data_ptr );
 	p_env->io_multiplex_event = IOMP_ON_CLOSING_SOCKET ;
 	p_env->pfunc_tcpmain( p_env , 0 , p_session->io_multiplex_data_ptr );
 	epoll_ctl( p_env->this_epoll_fd , EPOLL_CTL_DEL , p_session->sock , NULL );
@@ -376,7 +376,7 @@ static unsigned int tcpdaemon_IOMP_worker( void *pv )
 	SetLogFile( p_env->p_para->log_pathfilename );
 	SetLogLevel( p_env->p_para->log_level );
 	
-	DebugLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | begin" , p_env->index );
+	DEBUGLOG( "tcpdaemon_IOMP_worker(%d) | begin" , p_env->index );
 	
 	/* 加入侦听可读事件到epoll */
 	memset( & event , 0x00 , sizeof(struct epoll_event) );
@@ -385,12 +385,12 @@ static unsigned int tcpdaemon_IOMP_worker( void *pv )
 	nret = epoll_ctl( p_env->this_epoll_fd , EPOLL_CTL_ADD , p_env->alive_pipes[p_env->index].fd[0] , & event ) ;
 	if( nret == -1 )
 	{
-		ErrorLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | epoll_ctl[%d] add pipe_session[%d] failed , errno[%d]" , p_env->index , p_env->this_epoll_fd , p_env->alive_pipes[p_env->index].fd[0] , errno );
+		ERRORLOG( "tcpdaemon_IOMP_worker(%d) | epoll_ctl[%d] add pipe_session[%d] failed , errno[%d]" , p_env->index , p_env->this_epoll_fd , p_env->alive_pipes[p_env->index].fd[0] , errno );
 		return 1;
 	}
 	else
 	{
-		InfoLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | epoll_ctl[%d] add pipe_session[%d] ok" , p_env->index , p_env->this_epoll_fd , p_env->alive_pipes[p_env->index].fd[0] );
+		INFOLOG( "tcpdaemon_IOMP_worker(%d) | epoll_ctl[%d] add pipe_session[%d] ok" , p_env->index , p_env->this_epoll_fd , p_env->alive_pipes[p_env->index].fd[0] );
 	}
 	
 	/* 事件主循环 */
@@ -398,26 +398,26 @@ static unsigned int tcpdaemon_IOMP_worker( void *pv )
 	while( ! quit_flag )
 	{
 		/* 等待epoll事件，或者1秒超时 */
-		DebugLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | epoll_wait[%d] ..." , p_env->index , p_env->this_epoll_fd );
+		DEBUGLOG( "tcpdaemon_IOMP_worker(%d) | epoll_wait[%d] ..." , p_env->index , p_env->this_epoll_fd );
 		memset( events , 0x00 , sizeof(events) );
 		epoll_nfds = epoll_wait( p_env->this_epoll_fd , events , MAX_IOMP_EVENTS , 1000 ) ;
 		if( epoll_nfds == -1 )
 		{
 			if( errno == EINTR )
 			{
-				InfoLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | epoll_wait[%d] interrupted" , p_env->index , p_env->this_epoll_fd );
+				INFOLOG( "tcpdaemon_IOMP_worker(%d) | epoll_wait[%d] interrupted" , p_env->index , p_env->this_epoll_fd );
 				continue;
 			}
 			else
 			{
-				ErrorLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | epoll_wait[%d] failed , errno[%d]" , p_env->index , p_env->this_epoll_fd , ERRNO );
+				ERRORLOG( "tcpdaemon_IOMP_worker(%d) | epoll_wait[%d] failed , errno[%d]" , p_env->index , p_env->this_epoll_fd , ERRNO );
 			}
 			
 			return 1;
 		}
 		else
 		{
-			DebugLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | epoll_wait[%d] return[%d]events" , p_env->index , p_env->this_epoll_fd , epoll_nfds );
+			DEBUGLOG( "tcpdaemon_IOMP_worker(%d) | epoll_wait[%d] return[%d]events" , p_env->index , p_env->this_epoll_fd , epoll_nfds );
 		}
 		
 		if( p_env->p_para->timeout_seconds > 0 )
@@ -429,7 +429,7 @@ static unsigned int tcpdaemon_IOMP_worker( void *pv )
 				if( p_session == NULL )
 					break;
 				
-				WarnLog( __FILE__ , __LINE__ , "SOCKET TIMEOUT ------ sock[%d] session[%p]" , p_session->sock , p_session );
+				WARNLOG( "SOCKET TIMEOUT ------ sock[%d] session[%p]" , p_session->sock , p_session );
 				/* 调用关闭连接回调函数 */
 				CloseTcpdaemonAcceptedSession( p_env , p_session );
 			}
@@ -458,7 +458,7 @@ static unsigned int tcpdaemon_IOMP_worker( void *pv )
 						{
 							if( errno == EAGAIN )
 								break;
-							ErrorLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | accept failed , errno[%d]" , p_env->index , errno );
+							ERRORLOG( "tcpdaemon_IOMP_worker(%d) | accept failed , errno[%d]" , p_env->index , errno );
 							return 1;
 						}
 						
@@ -484,13 +484,13 @@ static unsigned int tcpdaemon_IOMP_worker( void *pv )
 						}
 						
 						/* 调用接受通讯连接回调函数 */
-						InfoLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | call tcpmain on OnAcceptingSocket[%d]" , p_env->index , accepted_sock );
+						INFOLOG( "tcpdaemon_IOMP_worker(%d) | call tcpmain on OnAcceptingSocket[%d]" , p_env->index , accepted_sock );
 						p_env->io_multiplex_data_ptr = NULL ;
 						p_env->io_multiplex_event = IOMP_ON_ACCEPTING_SOCKET ;
 						nret = p_env->pfunc_tcpmain( p_env , accepted_sock , & accepted_addr ) ;
 						if( p_env->io_multiplex_data_ptr == NULL )
 						{
-							FatalLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | need call TDSetIoMultiplexDataPtr" , p_env->index );
+							FATALLOG( "tcpdaemon_IOMP_worker(%d) | need call TDSetIoMultiplexDataPtr" , p_env->index );
 							close( accepted_sock );
 							continue;
 						}
@@ -499,7 +499,7 @@ static unsigned int tcpdaemon_IOMP_worker( void *pv )
 						p_session = FetchTcpdaemonAcceptedSessionUnused( p_env ) ;
 						if( p_session == NULL )
 						{
-							FatalLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | FetchTcpdaemonAcceptedSessionUnused failed , errno[%d]" , p_env->index , errno );
+							FATALLOG( "tcpdaemon_IOMP_worker(%d) | FetchTcpdaemonAcceptedSessionUnused failed , errno[%d]" , p_env->index , errno );
 							close( accepted_sock );
 							continue;
 						}
@@ -513,7 +513,7 @@ static unsigned int tcpdaemon_IOMP_worker( void *pv )
 						/* 判断返回值 */
 						if( nret == TCPMAIN_RETURN_WAITINGFOR_RECEIVING )
 						{
-							InfoLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | call tcpmain on OnAcceptingSocket[%d] return[%d]" , p_env->index , accepted_sock , nret );
+							INFOLOG( "tcpdaemon_IOMP_worker(%d) | call tcpmain on OnAcceptingSocket[%d] return[%d]" , p_env->index , accepted_sock , nret );
 							
 							memset( & event , 0x00 , sizeof(struct epoll_event) );
 							event.events = EPOLLIN | EPOLLERR ;
@@ -521,17 +521,17 @@ static unsigned int tcpdaemon_IOMP_worker( void *pv )
 							nret = epoll_ctl( p_env->this_epoll_fd , EPOLL_CTL_ADD , accepted_sock , & event ) ;
 							if( nret == -1 )
 							{
-								ErrorLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | epoll_ctl[%d] add accepted sock[%d] waiting for reading failed , errno[%d]" , p_env->index , p_env->this_epoll_fd , accepted_sock , errno );
+								ERRORLOG( "tcpdaemon_IOMP_worker(%d) | epoll_ctl[%d] add accepted sock[%d] waiting for reading failed , errno[%d]" , p_env->index , p_env->this_epoll_fd , accepted_sock , errno );
 								return 1;
 							}
 							else
 							{
-								DebugLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | epoll_ctl[%d] add accepted sock[%d] waiting for reading ok" , p_env->index , p_env->this_epoll_fd , accepted_sock );
+								DEBUGLOG( "tcpdaemon_IOMP_worker(%d) | epoll_ctl[%d] add accepted sock[%d] waiting for reading ok" , p_env->index , p_env->this_epoll_fd , accepted_sock );
 							}
 						}
 						else if( nret == TCPMAIN_RETURN_WAITINGFOR_SENDING )
 						{
-							InfoLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | call tcpmain on OnAcceptingSocket[%d] return[%d]" , p_env->index , accepted_sock , nret );
+							INFOLOG( "tcpdaemon_IOMP_worker(%d) | call tcpmain on OnAcceptingSocket[%d] return[%d]" , p_env->index , accepted_sock , nret );
 							
 							memset( & event , 0x00 , sizeof(struct epoll_event) );
 							event.events = EPOLLOUT | EPOLLERR ;
@@ -539,23 +539,23 @@ static unsigned int tcpdaemon_IOMP_worker( void *pv )
 							nret = epoll_ctl( p_env->this_epoll_fd , EPOLL_CTL_ADD , accepted_sock , & event ) ;
 							if( nret == -1 )
 							{
-								ErrorLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | epoll_ctl[%d] add accepted sock[%d] waiting for writing failed , errno[%d]" , p_env->index , p_env->this_epoll_fd , accepted_sock , errno );
+								ERRORLOG( "tcpdaemon_IOMP_worker(%d) | epoll_ctl[%d] add accepted sock[%d] waiting for writing failed , errno[%d]" , p_env->index , p_env->this_epoll_fd , accepted_sock , errno );
 								return 1;
 							}
 							else
 							{
-								DebugLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | epoll_ctl[%d] add accepted sock[%d] waiting for writing ok" , p_env->index , p_env->this_epoll_fd , accepted_sock );
+								DEBUGLOG( "tcpdaemon_IOMP_worker(%d) | epoll_ctl[%d] add accepted sock[%d] waiting for writing ok" , p_env->index , p_env->this_epoll_fd , accepted_sock );
 							}
 						}
 						else if( nret == TCPMAIN_RETURN_CLOSE )
 						{
-							InfoLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | call tcpmain on OnAcceptingSocket[%d] return[%d]" , p_env->index , accepted_sock , nret );
+							INFOLOG( "tcpdaemon_IOMP_worker(%d) | call tcpmain on OnAcceptingSocket[%d] return[%d]" , p_env->index , accepted_sock , nret );
 							CloseTcpdaemonAcceptedSession( p_env , p_session );
 							continue;
 						}
 						else
 						{
-							ErrorLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | call tcpmain on OnAcceptingSocket[%d] return[%d]" , p_env->index , accepted_sock , nret );
+							ERRORLOG( "tcpdaemon_IOMP_worker(%d) | call tcpmain on OnAcceptingSocket[%d] return[%d]" , p_env->index , accepted_sock , nret );
 							CloseTcpdaemonAcceptedSession( p_env , p_session );
 							continue;
 						}
@@ -576,25 +576,25 @@ static unsigned int tcpdaemon_IOMP_worker( void *pv )
 						nret = epoll_ctl( p_env->epoll_array[j] , EPOLL_CTL_MOD , p_env->listen_sock , & event ) ;
 						if( nret == -1 )
 						{
-							ErrorLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | [%d]epoll_ctl[%d] modify listen sock failed , errno[%d]" , p_env->index , j , p_env->epoll_array[j] , errno );
+							ERRORLOG( "tcpdaemon_IOMP_worker(%d) | [%d]epoll_ctl[%d] modify listen sock failed , errno[%d]" , p_env->index , j , p_env->epoll_array[j] , errno );
 							return 1;
 						}
 						else
 						{
-							DebugLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | [%d]epoll_ctl[%d] modify listen sock[%d] ok" , p_env->index , j , p_env->epoll_array[j] , p_env->listen_sock );
+							DEBUGLOG( "tcpdaemon_IOMP_worker(%d) | [%d]epoll_ctl[%d] modify listen sock[%d] ok" , p_env->index , j , p_env->epoll_array[j] , p_env->listen_sock );
 						}
 					}
 				}
 				/* 出错事件 */
 				else if( ( p_event->events & EPOLLERR ) || ( p_event->events & EPOLLHUP ) )
 				{
-					FatalLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | listen session err or hup event[0x%X]" , p_env->index , p_event->events );
+					FATALLOG( "tcpdaemon_IOMP_worker(%d) | listen session err or hup event[0x%X]" , p_env->index , p_event->events );
 					return 1;
 				}
 				/* 其它事件 */
 				else
 				{
-					FatalLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | Unknow listen session event[0x%X]" , p_env->index , p_event->events );
+					FATALLOG( "tcpdaemon_IOMP_worker(%d) | Unknow listen session event[0x%X]" , p_env->index , p_event->events );
 					return 1;
 				}
 			}
@@ -612,16 +612,16 @@ static unsigned int tcpdaemon_IOMP_worker( void *pv )
 				if( p_event->events & EPOLLIN )
 				{
 					/* 调用接收通讯数据回调函数 */
-					InfoLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | call tcpmain on OnReceivingSocket[%d] ..." , p_env->index , p_session->sock );
+					INFOLOG( "tcpdaemon_IOMP_worker(%d) | call tcpmain on OnReceivingSocket[%d] ..." , p_env->index , p_session->sock );
 					p_env->io_multiplex_event = IOMP_ON_RECEIVING_SOCKET ;
 					nret = p_env->pfunc_tcpmain( p_env , 0 , p_session->io_multiplex_data_ptr ) ;
 					if( nret == TCPMAIN_RETURN_WAITINGFOR_NEXT )
 					{
-						InfoLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | call tcpmain on OnReceivingSocket[%d] return[%d]" , p_env->index , p_session->sock , nret );
+						INFOLOG( "tcpdaemon_IOMP_worker(%d) | call tcpmain on OnReceivingSocket[%d] return[%d]" , p_env->index , p_session->sock , nret );
 					}
 					else if( nret == TCPMAIN_RETURN_WAITINGFOR_RECEIVING )
 					{
-						InfoLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | call tcpmain on OnReceivingSocket[%d] return[%d]" , p_env->index , p_session->sock , nret );
+						INFOLOG( "tcpdaemon_IOMP_worker(%d) | call tcpmain on OnReceivingSocket[%d] return[%d]" , p_env->index , p_session->sock , nret );
 						
 						memset( & event , 0x00 , sizeof(struct epoll_event) );
 						event.events = EPOLLIN | EPOLLERR ;
@@ -629,17 +629,17 @@ static unsigned int tcpdaemon_IOMP_worker( void *pv )
 						nret = epoll_ctl( p_env->this_epoll_fd , EPOLL_CTL_MOD , p_session->sock , & event ) ;
 						if( nret == -1 )
 						{
-							ErrorLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | epoll_ctl[%d] modify accepted sock[%d] waiting for reading failed , errno[%d]" , p_env->index , p_env->this_epoll_fd , p_session->sock , errno );
+							ERRORLOG( "tcpdaemon_IOMP_worker(%d) | epoll_ctl[%d] modify accepted sock[%d] waiting for reading failed , errno[%d]" , p_env->index , p_env->this_epoll_fd , p_session->sock , errno );
 							return 1;
 						}
 						else
 						{
-							DebugLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | epoll_ctl[%d] modify accepted sock[%d] waiting for reading ok" , p_env->index , p_env->this_epoll_fd , p_session->sock );
+							DEBUGLOG( "tcpdaemon_IOMP_worker(%d) | epoll_ctl[%d] modify accepted sock[%d] waiting for reading ok" , p_env->index , p_env->this_epoll_fd , p_session->sock );
 						}
 					}
 					else if( nret == TCPMAIN_RETURN_WAITINGFOR_SENDING )
 					{
-						InfoLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | call tcpmain on OnReceivingSocket[%d] return[%d]" , p_env->index , p_session->sock , nret );
+						INFOLOG( "tcpdaemon_IOMP_worker(%d) | call tcpmain on OnReceivingSocket[%d] return[%d]" , p_env->index , p_session->sock , nret );
 						
 						memset( & event , 0x00 , sizeof(struct epoll_event) );
 						event.events = EPOLLOUT | EPOLLERR ;
@@ -647,24 +647,24 @@ static unsigned int tcpdaemon_IOMP_worker( void *pv )
 						nret = epoll_ctl( p_env->this_epoll_fd , EPOLL_CTL_MOD , p_session->sock , & event ) ;
 						if( nret == -1 )
 						{
-							ErrorLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | epoll_ctl[%d] modify accepted sock[%d] waiting for writing failed , errno[%d]" , p_env->index , p_env->this_epoll_fd , p_session->sock , errno );
+							ERRORLOG( "tcpdaemon_IOMP_worker(%d) | epoll_ctl[%d] modify accepted sock[%d] waiting for writing failed , errno[%d]" , p_env->index , p_env->this_epoll_fd , p_session->sock , errno );
 							return 1;
 						}
 						else
 						{
-							DebugLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | epoll_ctl[%d] modify accepted sock[%d] waiting for writing ok" , p_env->index , p_env->this_epoll_fd , p_session->sock );
+							DEBUGLOG( "tcpdaemon_IOMP_worker(%d) | epoll_ctl[%d] modify accepted sock[%d] waiting for writing ok" , p_env->index , p_env->this_epoll_fd , p_session->sock );
 						}
 					}
 					else if( nret == TCPMAIN_RETURN_CLOSE )
 					{
-						InfoLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | call tcpmain on OnReceivingSocket[%d] return[%d]" , p_env->index , p_session->sock , nret );
+						INFOLOG( "tcpdaemon_IOMP_worker(%d) | call tcpmain on OnReceivingSocket[%d] return[%d]" , p_env->index , p_session->sock , nret );
 						
 						/* 调用关闭连接回调函数 */
 						CloseTcpdaemonAcceptedSession( p_env , p_session );
 					}
 					else
 					{
-						ErrorLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | call tcpmain on OnReceivingSocket[%d] return[%d]" , p_env->index , p_session->sock , nret );
+						ERRORLOG( "tcpdaemon_IOMP_worker(%d) | call tcpmain on OnReceivingSocket[%d] return[%d]" , p_env->index , p_session->sock , nret );
 						
 						/* 调用关闭连接回调函数 */
 						CloseTcpdaemonAcceptedSession( p_env , p_session );
@@ -674,16 +674,16 @@ static unsigned int tcpdaemon_IOMP_worker( void *pv )
 				else if( p_event->events & EPOLLOUT )
 				{
 					/* 调用发送通讯数据回调函数 */
-					InfoLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | call tcpmain on OnSendingSocket[%d] ..." , p_env->index , p_session->sock );
+					INFOLOG( "tcpdaemon_IOMP_worker(%d) | call tcpmain on OnSendingSocket[%d] ..." , p_env->index , p_session->sock );
 					p_env->io_multiplex_event = IOMP_ON_SENDING_SOCKET ;
 					nret = p_env->pfunc_tcpmain( p_env , 0 , p_session->io_multiplex_data_ptr ) ;
 					if( nret == TCPMAIN_RETURN_WAITINGFOR_NEXT )
 					{
-						InfoLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | call tcpmain on OnSendingSocket[%d] return[%d]" , p_env->index , p_session->sock , nret );
+						INFOLOG( "tcpdaemon_IOMP_worker(%d) | call tcpmain on OnSendingSocket[%d] return[%d]" , p_env->index , p_session->sock , nret );
 					}
 					else if( nret == TCPMAIN_RETURN_WAITINGFOR_RECEIVING )
 					{
-						InfoLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | call tcpmain on OnSendingSocket[%d] return[%d]" , p_env->index , p_session->sock , nret );
+						INFOLOG( "tcpdaemon_IOMP_worker(%d) | call tcpmain on OnSendingSocket[%d] return[%d]" , p_env->index , p_session->sock , nret );
 						
 						memset( & event , 0x00 , sizeof(struct epoll_event) );
 						event.events = EPOLLIN | EPOLLERR ;
@@ -691,17 +691,17 @@ static unsigned int tcpdaemon_IOMP_worker( void *pv )
 						nret = epoll_ctl( p_env->this_epoll_fd , EPOLL_CTL_MOD , p_session->sock , & event ) ;
 						if( nret == -1 )
 						{
-							ErrorLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | epoll_ctl[%d] modify accepted sock[%d] waiting for reading failed , errno[%d]" , p_env->index , p_env->this_epoll_fd , p_session->sock , errno );
+							ERRORLOG( "tcpdaemon_IOMP_worker(%d) | epoll_ctl[%d] modify accepted sock[%d] waiting for reading failed , errno[%d]" , p_env->index , p_env->this_epoll_fd , p_session->sock , errno );
 							return 1;
 						}
 						else
 						{
-							DebugLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | epoll_ctl[%d] modify accepted sock[%d] waiting for reading ok" , p_env->index , p_env->this_epoll_fd , p_session->sock );
+							DEBUGLOG( "tcpdaemon_IOMP_worker(%d) | epoll_ctl[%d] modify accepted sock[%d] waiting for reading ok" , p_env->index , p_env->this_epoll_fd , p_session->sock );
 						}
 					}
 					else if( nret == TCPMAIN_RETURN_WAITINGFOR_SENDING )
 					{
-						InfoLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | call tcpmain on OnSendingSocket[%d] return[%d]" , p_env->index , p_session->sock , nret );
+						INFOLOG( "tcpdaemon_IOMP_worker(%d) | call tcpmain on OnSendingSocket[%d] return[%d]" , p_env->index , p_session->sock , nret );
 						
 						memset( & event , 0x00 , sizeof(struct epoll_event) );
 						event.events = EPOLLOUT | EPOLLERR ;
@@ -709,24 +709,24 @@ static unsigned int tcpdaemon_IOMP_worker( void *pv )
 						nret = epoll_ctl( p_env->this_epoll_fd , EPOLL_CTL_MOD , p_session->sock , & event ) ;
 						if( nret == -1 )
 						{
-							ErrorLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | epoll_ctl[%d] modify accepted sock[%d] waiting for writing failed , errno[%d]" , p_env->index , p_env->this_epoll_fd , p_session->sock , errno );
+							ERRORLOG( "tcpdaemon_IOMP_worker(%d) | epoll_ctl[%d] modify accepted sock[%d] waiting for writing failed , errno[%d]" , p_env->index , p_env->this_epoll_fd , p_session->sock , errno );
 							return 1;
 						}
 						else
 						{
-							DebugLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | epoll_ctl[%d] modify accepted sock[%d] waiting for writing ok" , p_env->index , p_env->this_epoll_fd , p_session->sock );
+							DEBUGLOG( "tcpdaemon_IOMP_worker(%d) | epoll_ctl[%d] modify accepted sock[%d] waiting for writing ok" , p_env->index , p_env->this_epoll_fd , p_session->sock );
 						}
 					}
 					else if( nret == TCPMAIN_RETURN_CLOSE )
 					{
-						InfoLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | call tcpmain on OnSendingSocket[%d] return[%d]" , p_env->index , p_session->sock , nret );
+						INFOLOG( "tcpdaemon_IOMP_worker(%d) | call tcpmain on OnSendingSocket[%d] return[%d]" , p_env->index , p_session->sock , nret );
 						
 						/* 调用关闭连接回调函数 */
 						CloseTcpdaemonAcceptedSession( p_env , p_session );
 					}
 					else
 					{
-						ErrorLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | call tcpmain on OnSendingSocket[%d] return[%d]" , p_env->index , p_session->sock , nret );
+						ERRORLOG( "tcpdaemon_IOMP_worker(%d) | call tcpmain on OnSendingSocket[%d] return[%d]" , p_env->index , p_session->sock , nret );
 						
 						/* 调用关闭连接回调函数 */
 						CloseTcpdaemonAcceptedSession( p_env , p_session );
@@ -735,21 +735,21 @@ static unsigned int tcpdaemon_IOMP_worker( void *pv )
 				/* 出错事件 */
 				else if( ( p_event->events & EPOLLERR ) || ( p_event->events & EPOLLHUP ) )
 				{
-					FatalLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | accepted session err or hup event[0x%X]" , p_env->index , p_event->events );
+					FATALLOG( "tcpdaemon_IOMP_worker(%d) | accepted session err or hup event[0x%X]" , p_env->index , p_event->events );
 					/* 调用关闭连接回调函数 */
 					CloseTcpdaemonAcceptedSession( p_env , p_event->data.ptr );
 				}
 				/* 其它事件 */
 				else
 				{
-					FatalLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | Unknow accepted session event[0x%X]" , p_env->index , p_event->events );
+					FATALLOG( "tcpdaemon_IOMP_worker(%d) | Unknow accepted session event[0x%X]" , p_env->index , p_event->events );
 					return 1;
 				}
 			}
 		}
 	}
 	
-	DebugLog( __FILE__ , __LINE__ , "tcpdaemon_IOMP_worker(%d) | end" , p_env->index );
+	DEBUGLOG( "tcpdaemon_IOMP_worker(%d) | end" , p_env->index );
 	
 	return 0;
 }
@@ -813,12 +813,12 @@ static int InitDaemonEnv( struct TcpdaemonServerEnvironment *p_env )
 #endif
 		if( p_env->so_handle == NULL )
 		{
-			ErrorLog( __FILE__ , __LINE__ , "dlopen[%s]failed[%s]" , p_env->p_para->so_pathfilename , DLERROR );
+			ERRORLOG( "dlopen[%s]failed[%s]" , p_env->p_para->so_pathfilename , DLERROR );
 			return -1;
 		}
 		else
 		{
-			InfoLog( __FILE__ , __LINE__ , "dlopen[%s]ok" , p_env->p_para->so_pathfilename );
+			INFOLOG( "dlopen[%s]ok" , p_env->p_para->so_pathfilename );
 		}
 		
 #if ( defined __linux__ ) || ( defined __unix )
@@ -828,12 +828,12 @@ static int InitDaemonEnv( struct TcpdaemonServerEnvironment *p_env )
 #endif
 		if( p_env->pfunc_tcpmain == NULL )
 		{
-			ErrorLog( __FILE__ , __LINE__ , "dlsym[%s]failed[%s]" , TCPMAIN , DLERROR );
+			ERRORLOG( "dlsym[%s]failed[%s]" , TCPMAIN , DLERROR );
 			return -1;
 		}
 		else
 		{
-			InfoLog( __FILE__ , __LINE__ , "dlsym[%s]ok" , TCPMAIN );
+			INFOLOG( "dlsym[%s]ok" , TCPMAIN );
 		}
 	}
 	else
@@ -847,7 +847,7 @@ static int InitDaemonEnv( struct TcpdaemonServerEnvironment *p_env )
 	p_env->listen_sock = socket( AF_INET , SOCK_STREAM , IPPROTO_TCP ) ;
 	if( p_env->listen_sock == -1 )
 	{
-		ErrorLog( __FILE__ , __LINE__ , "socket failed , ERRNO[%d]" , ERRNO );
+		ERRORLOG( "socket failed , ERRNO[%d]" , ERRNO );
 		return -1;
 	}
 	
@@ -866,7 +866,7 @@ static int InitDaemonEnv( struct TcpdaemonServerEnvironment *p_env )
 	nret = bind( p_env->listen_sock , (struct sockaddr *) & (p_env->listen_addr), sizeof(struct sockaddr) ) ;
 	if( nret == -1 )
 	{
-		ErrorLog( __FILE__ , __LINE__ , "bind[%s:%ld]failed , ERRNO[%d]" , p_env->p_para->ip , p_env->p_para->port , ERRNO );
+		ERRORLOG( "bind[%s:%ld]failed , ERRNO[%d]" , p_env->p_para->ip , p_env->p_para->port , ERRNO );
 		return -1;
 	}
 	}
@@ -875,7 +875,7 @@ static int InitDaemonEnv( struct TcpdaemonServerEnvironment *p_env )
 	nret = listen( p_env->listen_sock , p_env->p_para->process_count * 2 ) ;
 	if( nret == -1 )
 	{
-		ErrorLog( __FILE__ , __LINE__ , "listen failed , ERRNO[%d]" , ERRNO );
+		ERRORLOG( "listen failed , ERRNO[%d]" , ERRNO );
 		return -1;
 	}
 	
@@ -957,7 +957,7 @@ int tcpdaemon_IF( struct TcpdaemonServerEnvironment *p_env )
 	nret = InitDaemonEnv_IF( p_env ) ;
 	if( nret )
 	{
-		ErrorLog( __FILE__ , __LINE__ , "init IF failed[%d]" , nret );
+		ERRORLOG( "init IF failed[%d]" , nret );
 		CleanDaemonEnv_IF( p_env );
 		return nret;
 	}
@@ -977,7 +977,7 @@ int tcpdaemon_IF( struct TcpdaemonServerEnvironment *p_env )
 	act.sa_flags = SA_RESTART ;
 	nret = sigaction( SIGCHLD , & act , NULL );
 	
-	InfoLog( __FILE__ , __LINE__ , "parent listen starting" );
+	INFOLOG( "parent listen starting" );
 	
 	/* 父进程侦听开始 */
 	while(1)
@@ -1004,7 +1004,7 @@ _DO_SELECT :
 			}
 			else
 			{
-				ErrorLog( __FILE__ , __LINE__ , "select failed , ERRNO[%d]" , ERRNO );
+				ERRORLOG( "select failed , ERRNO[%d]" , ERRNO );
 				break;
 			}
 		}
@@ -1043,19 +1043,19 @@ _DO_ACCEPT :
 			}
 			else
 			{
-				ErrorLog( __FILE__ , __LINE__ , "accept failed , ERRNO[%d]" , ERRNO );
+				ERRORLOG( "accept failed , ERRNO[%d]" , ERRNO );
 				break;
 			}
 		}
 		else
 		{
 			
-			DebugLog( __FILE__ , __LINE__ , "accept ok , [%d]accept[%d]" , p_env->listen_sock , accepted_sock );
+			DEBUGLOG( "accept ok , [%d]accept[%d]" , p_env->listen_sock , accepted_sock );
 		}
 		
 		if( p_env->p_para->process_count != 0 && p_env->process_count + 1 > p_env->p_para->process_count )
 		{
-			ErrorLog( __FILE__ , __LINE__ , "too many sockets" );
+			ERRORLOG( "too many sockets" );
 			CLOSE( accepted_sock );
 			continue;
 		}
@@ -1094,7 +1094,7 @@ _DO_FORK :
 			}
 			else
 			{
-				ErrorLog( __FILE__ , __LINE__ , "fork failed , ERRNO[%d]" , ERRNO );
+				ERRORLOG( "fork failed , ERRNO[%d]" , ERRNO );
 				CLOSE( accepted_sock );
 				continue;
 			}
@@ -1107,27 +1107,27 @@ _DO_FORK :
 			CLOSESOCKET( p_env->listen_sock );
 			
 			/* 调用通讯数据协议及应用处理回调函数 */
-			InfoLog( __FILE__ , __LINE__ , "call tcpmain sock[%d]" , accepted_sock );
+			INFOLOG( "call tcpmain sock[%d]" , accepted_sock );
 			nret = p_env->pfunc_tcpmain( p_env , accepted_sock , & accepted_addr ) ;
 			if( nret < 0 )
 			{
-				ErrorLog( __FILE__ , __LINE__ , "tcpmain return[%d]" , nret );
+				ERRORLOG( "tcpmain return[%d]" , nret );
 			}
 			else if( nret > 0 )
 			{
-				WarnLog( __FILE__ , __LINE__ , "tcpmain return[%d]" , nret );
+				WARNLOG( "tcpmain return[%d]" , nret );
 			}
 			else
 			{
-				InfoLog( __FILE__ , __LINE__ , "tcpmain return[%d]" , nret );
+				INFOLOG( "tcpmain return[%d]" , nret );
 			}
 			
 			/* 关闭客户端连接 */
 			CLOSESOCKET( accepted_sock );
-			DebugLog( __FILE__ , __LINE__ , "close[%d]" , accepted_sock );
+			DEBUGLOG( "close[%d]" , accepted_sock );
 			
 			/* 子进程退出 */
-			DebugLog( __FILE__ , __LINE__ , "child exit" );
+			DEBUGLOG( "child exit" );
 			exit(0);
 		}
 		else
@@ -1139,16 +1139,16 @@ _DO_FORK :
 	
 	sigaction( SIGTERM , & oldact , NULL );
 	
-	InfoLog( __FILE__ , __LINE__ , "parent listen ended" );
+	INFOLOG( "parent listen ended" );
 	
-	InfoLog( __FILE__ , __LINE__ , "waiting for all children exit starting" );
+	INFOLOG( "waiting for all children exit starting" );
 	
 	while( p_env->process_count > 0 )
 	{
 		waitpid( -1 , & status , 0 );
 	}
 	
-	InfoLog( __FILE__ , __LINE__ , "waiting for all chdilren exit ended" );
+	INFOLOG( "waiting for all chdilren exit ended" );
 	
 	/* 清理守护环境 */
 	CleanDaemonEnv_IF( p_env );
@@ -1170,7 +1170,7 @@ static int InitDaemonEnv_LF( struct TcpdaemonServerEnvironment *p_env )
 	p_env->pids = (pid_t*)malloc( sizeof(pid_t) * (p_env->p_para->process_count) ) ;
 	if( p_env->pids == NULL )
 	{
-		ErrorLog( __FILE__ , __LINE__ , "alloc failed , ERRNO[%d]" , ERRNO );
+		ERRORLOG( "alloc failed , ERRNO[%d]" , ERRNO );
 		return -1;
 	}
 	memset( p_env->pids , 0x00 , sizeof(pid_t) * (p_env->p_para->process_count) );
@@ -1179,7 +1179,7 @@ static int InitDaemonEnv_LF( struct TcpdaemonServerEnvironment *p_env )
 	p_env->alive_pipes = (PIPE_T*)malloc( sizeof(PIPE_T) * (p_env->p_para->process_count) ) ;
 	if( p_env->alive_pipes == NULL )
 	{
-		ErrorLog( __FILE__ , __LINE__ , "alloc failed , ERRNO[%d]" , ERRNO );
+		ERRORLOG( "alloc failed , ERRNO[%d]" , ERRNO );
 		return -1;
 	}
 	memset( p_env->alive_pipes , 0x00 , sizeof(PIPE_T) * (p_env->p_para->process_count) );
@@ -1188,7 +1188,7 @@ static int InitDaemonEnv_LF( struct TcpdaemonServerEnvironment *p_env )
 	p_env->accept_mutex = semget( IPC_PRIVATE , 1 , IPC_CREAT | 00777 ) ;
 	if( p_env->accept_mutex == -1 )
 	{
-		ErrorLog( __FILE__ , __LINE__ , "create mutex failed" );
+		ERRORLOG( "create mutex failed" );
 		return -1;
 	}
 	
@@ -1198,7 +1198,7 @@ static int InitDaemonEnv_LF( struct TcpdaemonServerEnvironment *p_env )
 	nret = semctl( p_env->accept_mutex , 0 , SETVAL , semopts ) ;
 	if( nret == -1 )
 	{
-		ErrorLog( __FILE__ , __LINE__ , "set mutex failed" );
+		ERRORLOG( "set mutex failed" );
 		return -1;
 	}
 	}
@@ -1242,7 +1242,7 @@ int tcpdaemon_LF( struct TcpdaemonServerEnvironment *p_env )
 	nret = InitDaemonEnv_LF( p_env ) ;
 	if( nret )
 	{
-		ErrorLog( __FILE__ , __LINE__ , "init LF failed[%d]" , nret );
+		ERRORLOG( "init LF failed[%d]" , nret );
 		CleanDaemonEnv_LF( p_env );
 		return nret;
 	}
@@ -1258,14 +1258,14 @@ int tcpdaemon_LF( struct TcpdaemonServerEnvironment *p_env )
 	signal( SIGCHLD , SIG_DFL );
 	
 	/* 创建工作进程池 */
-	InfoLog( __FILE__ , __LINE__ , "create tcpdaemon_LF_worker pool starting" );
+	INFOLOG( "create tcpdaemon_LF_worker pool starting" );
 	
 	for( p_env->index = 0 ; p_env->index < p_env->p_para->process_count ; p_env->index++ )
 	{
 		nret = pipe( p_env->alive_pipes[p_env->index].fd ) ;
 		if( nret == -1 )
 		{
-			ErrorLog( __FILE__ , __LINE__ , "pipe failed , ERRNO[%d]" , ERRNO );
+			ERRORLOG( "pipe failed , ERRNO[%d]" , ERRNO );
 			CleanDaemonEnv_LF( p_env );
 			return -11;
 		}
@@ -1273,7 +1273,7 @@ int tcpdaemon_LF( struct TcpdaemonServerEnvironment *p_env )
 		p_env->pids[p_env->index] = fork() ;
 		if( p_env->pids[p_env->index] == -1 )
 		{
-			ErrorLog( __FILE__ , __LINE__ , "fork failed , ERRNO[%d]" , ERRNO );
+			ERRORLOG( "fork failed , ERRNO[%d]" , ERRNO );
 			CleanDaemonEnv_LF( p_env );
 			return -11;
 		}
@@ -1295,10 +1295,10 @@ int tcpdaemon_LF( struct TcpdaemonServerEnvironment *p_env )
 		SLEEP(1);
 	}
 	
-	InfoLog( __FILE__ , __LINE__ , "create tcpdaemon_LF_worker pool ok" );
+	INFOLOG( "create tcpdaemon_LF_worker pool ok" );
 	
 	/* 监控工作进程池 */
-	InfoLog( __FILE__ , __LINE__ , "monitoring all children starting" );
+	INFOLOG( "monitoring all children starting" );
 	
 	while(1)
 	{
@@ -1316,7 +1316,7 @@ int tcpdaemon_LF( struct TcpdaemonServerEnvironment *p_env )
 				/* 重启工作进程 */
 				CLOSE( p_env->alive_pipes[p_env->index].fd[1] );
 				
-				InfoLog( __FILE__ , __LINE__ , "detecting child[%ld]pid[%ld] exit , rebooting" , p_env->index , (long)pid );
+				INFOLOG( "detecting child[%ld]pid[%ld] exit , rebooting" , p_env->index , (long)pid );
 				
 				SLEEP(1);
 				
@@ -1325,7 +1325,7 @@ int tcpdaemon_LF( struct TcpdaemonServerEnvironment *p_env )
 				nret = pipe( p_env->alive_pipes[p_env->index].fd ) ;
 				if( nret )
 				{
-					ErrorLog( __FILE__ , __LINE__ , "pipe failed , ERRNO[%d]" , ERRNO );
+					ERRORLOG( "pipe failed , ERRNO[%d]" , ERRNO );
 					CleanDaemonEnv_LF( p_env );
 					return -11;
 				}
@@ -1333,7 +1333,7 @@ int tcpdaemon_LF( struct TcpdaemonServerEnvironment *p_env )
 				p_env->pids[p_env->index] = fork() ;
 				if( p_env->pids[p_env->index] == -1 )
 				{
-					ErrorLog( __FILE__ , __LINE__ , "fork failed , ERRNO[%d]" , ERRNO );
+					ERRORLOG( "fork failed , ERRNO[%d]" , ERRNO );
 					CleanDaemonEnv_LF( p_env );
 					return -11;
 				}
@@ -1357,17 +1357,17 @@ int tcpdaemon_LF( struct TcpdaemonServerEnvironment *p_env )
 		}
 		if( p_env->index > p_env->p_para->process_count )
 		{
-			InfoLog( __FILE__ , __LINE__ , "detecting unknow child pid[%ld] exit" , (long)pid );
+			INFOLOG( "detecting unknow child pid[%ld] exit" , (long)pid );
 			continue;
 		}
 	}
 	
-	InfoLog( __FILE__ , __LINE__ , "monitoring all children ok" );
+	INFOLOG( "monitoring all children ok" );
 	
 	sigaction( SIGTERM , & oldact , NULL );
 	
 	/* 销毁进程池 */
-	InfoLog( __FILE__ , __LINE__ , "destroy tcpdaemon_LF_worker poll starting" );
+	INFOLOG( "destroy tcpdaemon_LF_worker poll starting" );
 	
 	for( p_env->index = 0 ; p_env->index < p_env->p_para->process_count ; p_env->index++ )
 	{
@@ -1380,7 +1380,7 @@ int tcpdaemon_LF( struct TcpdaemonServerEnvironment *p_env )
 		CLOSE( p_env->alive_pipes[p_env->index].fd[1] );
 	}
 	
-	InfoLog( __FILE__ , __LINE__ , "destroy tcpdaemon_LF_worker poll ended" );
+	INFOLOG( "destroy tcpdaemon_LF_worker poll ended" );
 	
 	/* 清理守护环境 */
 	CleanDaemonEnv_LF( p_env );
@@ -1425,7 +1425,7 @@ static int InitDaemonEnv_IOMP( struct TcpdaemonServerEnvironment *p_env )
 	p_env->pids = (pid_t*)malloc( sizeof(pid_t) * (p_env->p_para->process_count) ) ;
 	if( p_env->pids == NULL )
 	{
-		ErrorLog( __FILE__ , __LINE__ , "alloc failed , ERRNO[%d]" , ERRNO );
+		ERRORLOG( "alloc failed , ERRNO[%d]" , ERRNO );
 		return -1;
 	}
 	memset( p_env->pids , 0x00 , sizeof(pid_t) * (p_env->p_para->process_count) );
@@ -1434,7 +1434,7 @@ static int InitDaemonEnv_IOMP( struct TcpdaemonServerEnvironment *p_env )
 	p_env->alive_pipes = (PIPE_T*)malloc( sizeof(PIPE_T) * (p_env->p_para->process_count) ) ;
 	if( p_env->alive_pipes == NULL )
 	{
-		ErrorLog( __FILE__ , __LINE__ , "alloc failed , ERRNO[%d]" , ERRNO );
+		ERRORLOG( "alloc failed , ERRNO[%d]" , ERRNO );
 		return -1;
 	}
 	memset( p_env->alive_pipes , 0x00 , sizeof(PIPE_T) * (p_env->p_para->process_count) );
@@ -1443,7 +1443,7 @@ static int InitDaemonEnv_IOMP( struct TcpdaemonServerEnvironment *p_env )
 	p_env->epoll_array = (int*)malloc( sizeof(int) * (p_env->p_para->process_count) ) ;
 	if( p_env->epoll_array == NULL )
 	{
-		ErrorLog( __FILE__ , __LINE__ , "alloc failed , ERRNO[%d]" , ERRNO );
+		ERRORLOG( "alloc failed , ERRNO[%d]" , ERRNO );
 		return -1;
 	}
 	memset( p_env->epoll_array , 0x00 , sizeof(int) * (p_env->p_para->process_count) );
@@ -1453,12 +1453,12 @@ static int InitDaemonEnv_IOMP( struct TcpdaemonServerEnvironment *p_env )
 		p_env->epoll_array[i] = epoll_create( 1024 ) ;
 		if( p_env->epoll_array[i] == -1 )
 		{
-			ErrorLog( __FILE__ , __LINE__ , "epoll_create failed , errno[%d]" , errno );
+			ERRORLOG( "epoll_create failed , errno[%d]" , errno );
 			return -1;
 		}
 		else
 		{
-			InfoLog( __FILE__ , __LINE__ , "epoll_create ok" );
+			INFOLOG( "epoll_create ok" );
 		}
 	}
 	
@@ -1476,12 +1476,12 @@ static int InitDaemonEnv_IOMP( struct TcpdaemonServerEnvironment *p_env )
 			nret = epoll_ctl( p_env->epoll_array[i] , EPOLL_CTL_ADD , p_env->listen_sock , & event ) ;
 			if( nret == -1 )
 			{
-				ErrorLog( __FILE__ , __LINE__ , "[%d]epoll_ctl[%d] add listen_session failed , errno[%d]" , i , p_env->epoll_array[i] , errno );
+				ERRORLOG( "[%d]epoll_ctl[%d] add listen_session failed , errno[%d]" , i , p_env->epoll_array[i] , errno );
 				return -1;
 			}
 			else
 			{
-				InfoLog( __FILE__ , __LINE__ , "[%d]epoll_ctl[%d] add listen_session[%d] ok" , i , p_env->epoll_array[i] , p_env->listen_sock );
+				INFOLOG( "[%d]epoll_ctl[%d] add listen_session[%d] ok" , i , p_env->epoll_array[i] , p_env->listen_sock );
 			}
 		}
 	}
@@ -1493,12 +1493,12 @@ static int InitDaemonEnv_IOMP( struct TcpdaemonServerEnvironment *p_env )
 		nret = epoll_ctl( p_env->epoll_array[0] , EPOLL_CTL_ADD , p_env->listen_sock , & event ) ;
 		if( nret == -1 )
 		{
-			ErrorLog( __FILE__ , __LINE__ , "epoll_ctl[%d] add listen_session failed , errno[%d]" , p_env->epoll_array[0] , errno );
+			ERRORLOG( "epoll_ctl[%d] add listen_session failed , errno[%d]" , p_env->epoll_array[0] , errno );
 			return -1;
 		}
 		else
 		{
-			InfoLog( __FILE__ , __LINE__ , "epoll_ctl[%d] add listen_session[%d] ok" , p_env->epoll_array[0] , p_env->listen_sock );
+			INFOLOG( "epoll_ctl[%d] add listen_session[%d] ok" , p_env->epoll_array[0] , p_env->listen_sock );
 		}
 	}
 	
@@ -1506,7 +1506,7 @@ static int InitDaemonEnv_IOMP( struct TcpdaemonServerEnvironment *p_env )
 	nret = IncreaseTcpdaemonAcceptedSessions( p_env ) ;
 	if( nret )
 	{
-		ErrorLog( __FILE__ , __LINE__ , "IncreaseTcpdaemonAcceptedSessions failed[%d]" , nret );
+		ERRORLOG( "IncreaseTcpdaemonAcceptedSessions failed[%d]" , nret );
 		return -1;
 	}
 	
@@ -1558,7 +1558,7 @@ int tcpdaemon_IOMP( struct TcpdaemonServerEnvironment *p_env )
 	nret = InitDaemonEnv_IOMP( p_env ) ;
 	if( nret )
 	{
-		ErrorLog( __FILE__ , __LINE__ , "init IOMP failed[%d]" , nret );
+		ERRORLOG( "init IOMP failed[%d]" , nret );
 		CleanDaemonEnv_IOMP( p_env );
 		return nret;
 	}
@@ -1574,14 +1574,14 @@ int tcpdaemon_IOMP( struct TcpdaemonServerEnvironment *p_env )
 	signal( SIGCHLD , SIG_DFL );
 	
 	/* 创建工作进程池 */
-	InfoLog( __FILE__ , __LINE__ , "create tcpdaemon_IOMP_worker pool starting" );
+	INFOLOG( "create tcpdaemon_IOMP_worker pool starting" );
 	
 	for( p_env->index = 0 ; p_env->index < p_env->p_para->process_count ; p_env->index++ )
 	{
 		nret = pipe( p_env->alive_pipes[p_env->index].fd ) ;
 		if( nret == -1 )
 		{
-			ErrorLog( __FILE__ , __LINE__ , "pipe failed , ERRNO[%d]" , ERRNO );
+			ERRORLOG( "pipe failed , ERRNO[%d]" , ERRNO );
 			CleanDaemonEnv_IOMP( p_env );
 			return -11;
 		}
@@ -1589,7 +1589,7 @@ int tcpdaemon_IOMP( struct TcpdaemonServerEnvironment *p_env )
 		p_env->pids[p_env->index] = fork() ;
 		if( p_env->pids[p_env->index] == -1 )
 		{
-			ErrorLog( __FILE__ , __LINE__ , "fork failed , ERRNO[%d]" , ERRNO );
+			ERRORLOG( "fork failed , ERRNO[%d]" , ERRNO );
 			CleanDaemonEnv_IOMP( p_env );
 			return -11;
 		}
@@ -1611,10 +1611,10 @@ int tcpdaemon_IOMP( struct TcpdaemonServerEnvironment *p_env )
 		SLEEP(1);
 	}
 	
-	InfoLog( __FILE__ , __LINE__ , "create tcpdaemon_IOMP_worker pool ok" );
+	INFOLOG( "create tcpdaemon_IOMP_worker pool ok" );
 	
 	/* 监控工作进程池 */
-	InfoLog( __FILE__ , __LINE__ , "monitoring all children starting" );
+	INFOLOG( "monitoring all children starting" );
 	
 	while(1)
 	{
@@ -1632,7 +1632,7 @@ int tcpdaemon_IOMP( struct TcpdaemonServerEnvironment *p_env )
 				/* 重启工作进程 */
 				CLOSE( p_env->alive_pipes[p_env->index].fd[1] );
 				
-				InfoLog( __FILE__ , __LINE__ , "detecting child[%ld]pid[%ld] exit , rebooting" , p_env->index , (long)pid );
+				INFOLOG( "detecting child[%ld]pid[%ld] exit , rebooting" , p_env->index , (long)pid );
 				
 				SLEEP(1);
 				
@@ -1641,7 +1641,7 @@ int tcpdaemon_IOMP( struct TcpdaemonServerEnvironment *p_env )
 				nret = pipe( p_env->alive_pipes[p_env->index].fd ) ;
 				if( nret )
 				{
-					ErrorLog( __FILE__ , __LINE__ , "pipe failed , ERRNO[%d]" , ERRNO );
+					ERRORLOG( "pipe failed , ERRNO[%d]" , ERRNO );
 					CleanDaemonEnv_IOMP( p_env );
 					return -11;
 				}
@@ -1649,7 +1649,7 @@ int tcpdaemon_IOMP( struct TcpdaemonServerEnvironment *p_env )
 				p_env->pids[p_env->index] = fork() ;
 				if( p_env->pids[p_env->index] == -1 )
 				{
-					ErrorLog( __FILE__ , __LINE__ , "fork failed , ERRNO[%d]" , ERRNO );
+					ERRORLOG( "fork failed , ERRNO[%d]" , ERRNO );
 					CleanDaemonEnv_IOMP( p_env );
 					return -11;
 				}
@@ -1673,17 +1673,17 @@ int tcpdaemon_IOMP( struct TcpdaemonServerEnvironment *p_env )
 		}
 		if( p_env->index > p_env->p_para->process_count )
 		{
-			InfoLog( __FILE__ , __LINE__ , "detecting unknow child pid[%ld] exit" , (long)pid );
+			INFOLOG( "detecting unknow child pid[%ld] exit" , (long)pid );
 			continue;
 		}
 	}
 	
-	InfoLog( __FILE__ , __LINE__ , "monitoring all children ok" );
+	INFOLOG( "monitoring all children ok" );
 	
 	sigaction( SIGTERM , & oldact , NULL );
 	
 	/* 销毁进程池 */
-	InfoLog( __FILE__ , __LINE__ , "destroy tcpdaemon_IOMP_worker poll starting" );
+	INFOLOG( "destroy tcpdaemon_IOMP_worker poll starting" );
 	
 	for( p_env->index = 0 ; p_env->index < p_env->p_para->process_count ; p_env->index++ )
 	{
@@ -1696,7 +1696,7 @@ int tcpdaemon_IOMP( struct TcpdaemonServerEnvironment *p_env )
 		CLOSE( p_env->alive_pipes[p_env->index].fd[1] );
 	}
 	
-	InfoLog( __FILE__ , __LINE__ , "destroy tcpdaemon_IOMP_worker poll ok" );
+	INFOLOG( "destroy tcpdaemon_IOMP_worker poll ok" );
 	
 	/* 清理守护环境 */
 	CleanDaemonEnv_IOMP( p_env );
@@ -1725,7 +1725,7 @@ static int InitDaemonEnv_WIN_TLF( struct TcpdaemonServerEnvironment *p_env )
 	p_env->thandles = (THANDLE_T*)malloc( sizeof(THANDLE_T) * (p_env->p_para->process_count+1) ) ;
 	if( p_env->thandles == NULL )
 	{
-		ErrorLog( __FILE__ , __LINE__ , "alloc failed , ERRNO[%d]" , ERRNO );
+		ERRORLOG( "alloc failed , ERRNO[%d]" , ERRNO );
 		return -1;
 	}
 	memset( p_env->thandles , 0x00 , sizeof(THANDLE_T) * (p_env->p_para->process_count+1) );
@@ -1733,7 +1733,7 @@ static int InitDaemonEnv_WIN_TLF( struct TcpdaemonServerEnvironment *p_env )
 	p_env->tids = (TID_T*)malloc( sizeof(TID_T) * (p_env->p_para->process_count+1) ) ;
 	if( p_env->tids == NULL )
 	{
-		ErrorLog( __FILE__ , __LINE__ , "alloc failed , ERRNO[%d]" , ERRNO );
+		ERRORLOG( "alloc failed , ERRNO[%d]" , ERRNO );
 		return -1;
 	}
 	memset( p_env->tids , 0x00 , sizeof(TID_T) * (p_env->p_para->process_count+1) );
@@ -1774,20 +1774,20 @@ int tcpdaemon_WIN_TLF( struct TcpdaemonServerEnvironment *p_env )
 	nret = InitDaemonEnv_WIN_TLF( p_env ) ;
 	if( nret )
 	{
-		ErrorLog( __FILE__ , __LINE__ , "init WIN-TLF failed[%d]" , nret );
+		ERRORLOG( "init WIN-TLF failed[%d]" , nret );
 		CleanDaemonEnv_WIN_TLF( p_env );
 		return nret;
 	}
 	
 	/* 创建工作进程池 */
-	InfoLog( __FILE__ , __LINE__ , "create tcpdaemon_LF_worker pool starting" );
+	INFOLOG( "create tcpdaemon_LF_worker pool starting" );
 	
 	for( p_env->index = 1 ; p_env->index <= p_env->p_para->process_count ; p_env->index++ )
 	{
 		pse_new = DuplicateServerEnv( p_env ) ;
 		if( pse_new == NULL )
 		{
-			ErrorLog( __FILE__ , __LINE__ , "DuplicateServerEnv failed , ERRNO[%d]" , ERRNO );
+			ERRORLOG( "DuplicateServerEnv failed , ERRNO[%d]" , ERRNO );
 			CleanDaemonEnv_WIN_TLF( p_env );
 			return -11;
 		}
@@ -1795,7 +1795,7 @@ int tcpdaemon_WIN_TLF( struct TcpdaemonServerEnvironment *p_env )
 		p_env->thandles[p_env->index] = (THANDLE_T)_beginthreadex( NULL , 0 , tcpdaemon_LF_worker , pse_new , 0 , & (p_env->tids[p_env->index]) ) ;
 		if( p_env->thandles[p_env->index] == NULL )
 		{
-			ErrorLog( __FILE__ , __LINE__ , "_beginthreadex failed , ERRNO[%d]" , ERRNO );
+			ERRORLOG( "_beginthreadex failed , ERRNO[%d]" , ERRNO );
 			CleanDaemonEnv_WIN_TLF( p_env );
 			return -12;
 		}
@@ -1803,10 +1803,10 @@ int tcpdaemon_WIN_TLF( struct TcpdaemonServerEnvironment *p_env )
 		SLEEP(1);
 	}
 	
-	InfoLog( __FILE__ , __LINE__ , "create tcpdaemon_LF_worker pool ended" );
+	INFOLOG( "create tcpdaemon_LF_worker pool ended" );
 	
 	/* 监控工作线程池 */
-	InfoLog( __FILE__ , __LINE__ , "monitoring all children starting" );
+	INFOLOG( "monitoring all children starting" );
 	
 	while(1)
 	{
@@ -1814,14 +1814,14 @@ int tcpdaemon_WIN_TLF( struct TcpdaemonServerEnvironment *p_env )
 		index = WaitForMultipleObjects( p_env->p_para->process_count , p_env->thandles , FALSE , INFINITE ) ;
 		if( index == WAIT_FAILED )
 		{
-			ErrorLog( __FILE__ , __LINE__ , "WaitForMultipleObjects failed , errno[%d]" , ERRNO );
+			ERRORLOG( "WaitForMultipleObjects failed , errno[%d]" , ERRNO );
 			break;
 		}
 		index = index - WAIT_OBJECT_0 + 1 ;
 		CloseHandle( p_env->thandles[index-1] );
 		
 		/* 重启线程进程 */
-		InfoLog( __FILE__ , __LINE__ , "detecting child[%ld]tid[%ld] exit , rebooting" , index , p_env->tids[index-1] );
+		INFOLOG( "detecting child[%ld]tid[%ld] exit , rebooting" , index , p_env->tids[index-1] );
 		
 		Sleep(1000);
 		
@@ -1830,7 +1830,7 @@ int tcpdaemon_WIN_TLF( struct TcpdaemonServerEnvironment *p_env )
 		pse_new = DuplicateServerEnv( p_env ) ;
 		if( pse_new == NULL )
 		{
-			ErrorLog( __FILE__ , __LINE__ , "DuplicateServerEnv failed , ERRNO[%d]" , ERRNO );
+			ERRORLOG( "DuplicateServerEnv failed , ERRNO[%d]" , ERRNO );
 			CleanDaemonEnv_WIN_TLF( p_env );
 			return -11;
 		}
@@ -1838,16 +1838,16 @@ int tcpdaemon_WIN_TLF( struct TcpdaemonServerEnvironment *p_env )
 		p_env->thandles[index-1] = (THANDLE_T)_beginthreadex( NULL , 0 , tcpdaemon_LF_worker , pse_new , 0 , & (p_env->tids[index-1]) ) ;
 		if( p_env->thandles[index-1] == NULL )
 		{
-			ErrorLog( __FILE__ , __LINE__ , "_beginthreadex failed , ERRNO[%d]" , ERRNO );
+			ERRORLOG( "_beginthreadex failed , ERRNO[%d]" , ERRNO );
 			CleanDaemonEnv_WIN_TLF( p_env );
 			return -12;
 		}
 	}
 	
-	InfoLog( __FILE__ , __LINE__ , "monitoring all children ended" );
+	INFOLOG( "monitoring all children ended" );
 	
 	/* 销毁线程池 */
-	InfoLog( __FILE__ , __LINE__ , "destroy tcpdaemon_LF_worker poll starting" );
+	INFOLOG( "destroy tcpdaemon_LF_worker poll starting" );
 	
 	for( p_env->index = 1 ; p_env->index <= p_env->p_para->process_count ; p_env->index++ )
 	{
@@ -1858,7 +1858,7 @@ int tcpdaemon_WIN_TLF( struct TcpdaemonServerEnvironment *p_env )
 		}	
 	}
 	
-	InfoLog( __FILE__ , __LINE__ , "destroy tcpdaemon_LF_worker poll ended" );
+	INFOLOG( "destroy tcpdaemon_LF_worker poll ended" );
 	
 	/* 清理守护环境 */
 	CleanDaemonEnv_WIN_TLF( p_env );
@@ -2074,7 +2074,7 @@ static int _tcpdaemon( struct TcpdaemonEntryParameter *p_para )
 	/* 设置日志环境 */
 	SetLogFile( p_para->log_pathfilename );
 	SetLogLevel( p_para->log_level );
-	InfoLog( __FILE__ , __LINE__ , "tcpdaemon startup - v%s" , __TCPDAEMON_VERSION );
+	INFOLOG( "tcpdaemon startup - v%s" , __TCPDAEMON_VERSION );
 	
 	/* 检查入口参数 */
 	nret = CheckCommandParameter( p_para ) ;
@@ -2105,7 +2105,7 @@ static int _tcpdaemon( struct TcpdaemonEntryParameter *p_para )
 	}
 #endif
 	
-	InfoLog( __FILE__ , __LINE__ , "tcpdaemon ended - v%s" , __TCPDAEMON_VERSION );
+	INFOLOG( "tcpdaemon ended - v%s" , __TCPDAEMON_VERSION );
 	
 	return nret;
 }
@@ -2122,7 +2122,7 @@ int tcpdaemon( struct TcpdaemonEntryParameter *p_para )
 		nret = BindDaemonServer( & _tcpdaemon , p_para ) ;
 		if( nret )
 		{
-			ErrorLog( __FILE__ , __LINE__ , "convert to daemon failed[%d]" , nret );
+			ERRORLOG( "convert to daemon failed[%d]" , nret );
 			return nret;
 		}
 		else
@@ -2150,7 +2150,7 @@ int tcpdaemon( struct TcpdaemonEntryParameter *p_para )
 		nret = BindDaemonServer( "TcpDaemon" , monitor , command_line , & control ) ;
 		if( nret )
 		{
-			ErrorLog( __FILE__ , __LINE__ , "convert to daemon failed[%d]" , nret );
+			ERRORLOG( "convert to daemon failed[%d]" , nret );
 			return nret;
 		}
 		else
@@ -2278,7 +2278,7 @@ int TDHBSendData( int sock , int head_len , char *body_buffer , int *p_body_len 
 			iovs[0].iov_base = context.head_buffer+(head_len-context.head_remain_len) ;
 			iovs[0].iov_len = context.head_remain_len ;
 			iovs[1].iov_base = body_buffer ;
-			iovs[1].iov_len = context.body_len ;
+			iovs[1].iov_len = context.body_remain_len ;
 			len = writev( sock , iovs , 2 ) ;
 			if( len == -1 )
 			{
@@ -2378,7 +2378,10 @@ int TDHBReceiveData( int sock , int head_len , char *body_buffer , int *p_body_b
 				context.head_buffer[head_len] = '\0' ;
 				context.body_len = atoi(context.head_buffer) ;
 				if( context.body_len > (*p_body_bufsize) )
+				{
+					(*p_body_bufsize) = 0 ;
 					return TDHB_ERROR_RECV_BUFFER_OVERFLOW;
+				}
 				context.body_remain_len = context.body_len - ( len-head_len ) ;
 			}
 			else
@@ -2406,6 +2409,8 @@ int TDHBReceiveData( int sock , int head_len , char *body_buffer , int *p_body_b
 			timeout->tv_sec--;
 		}
 	}
+	
+	(*p_body_bufsize) = context.body_len ;
 	
 	return 0;
 }
@@ -2516,46 +2521,51 @@ int TDHBSendDataWithNonblock( int sock , int head_len , char *body_buffer , int 
 		p_context->body_remain_len = p_context->body_len ;
 	}
 	
-	if( p_context->head_remain_len )
+	while(1)
 	{
-		iovs[0].iov_base = p_context->head_buffer+(head_len-p_context->head_remain_len) ;
-		iovs[0].iov_len = p_context->head_remain_len ;
-		iovs[1].iov_base = body_buffer ;
-		iovs[1].iov_len = p_context->body_len ;
-		len = writev( sock , iovs , 2 ) ;
-		if( len == -1 )
+		if( p_context->head_remain_len )
 		{
-			(*p_body_len) = head_len + p_context->body_len - p_context->head_remain_len - p_context->body_remain_len ;
-			return TDHB_ERROR_SEND_FAILED;
-		}
-		if( len >= p_context->head_remain_len )
-		{
-			p_context->head_remain_len = 0 ;
-			p_context->body_remain_len -= ( len - head_len ) ;
-			if( p_context->body_remain_len == 0 )
-				return TCPMAIN_RETURN_WAITINGFOR_RECEIVING;
+			iovs[0].iov_base = p_context->head_buffer+(head_len-p_context->head_remain_len) ;
+			iovs[0].iov_len = p_context->head_remain_len ;
+			iovs[1].iov_base = body_buffer ;
+			iovs[1].iov_len = p_context->body_remain_len ;
+			len = writev( sock , iovs , 2 ) ;
+			if( len == -1 )
+			{
+				if( errno == EAGAIN )
+					return TCPMAIN_RETURN_WAITINGFOR_NEXT;
+				(*p_body_len) = head_len + p_context->body_len - p_context->head_remain_len - p_context->body_remain_len ;
+				return TDHB_ERROR_SEND_FAILED;
+			}
+			if( len >= p_context->head_remain_len )
+			{
+				p_context->head_remain_len = 0 ;
+				p_context->body_remain_len -= ( len - head_len ) ;
+				if( p_context->body_remain_len == 0 )
+					return TCPMAIN_RETURN_WAITINGFOR_RECEIVING;
+			}
+			else
+			{
+				p_context->head_remain_len -= len ;
+				if( p_context->body_remain_len == 0 )
+					return TCPMAIN_RETURN_WAITINGFOR_RECEIVING;
+			}
 		}
 		else
 		{
-			p_context->head_remain_len -= len ;
+			len = write( sock , body_buffer+(p_context->body_len-p_context->body_remain_len) , p_context->body_remain_len ) ;
+			if( len == -1 )
+			{
+				if( errno == EAGAIN )
+					return TCPMAIN_RETURN_WAITINGFOR_NEXT;
+				(*p_body_len) = head_len + p_context->body_len - p_context->head_remain_len - p_context->body_remain_len ;
+				return TDHB_ERROR_SEND_FAILED;
+			}
+			p_context->body_remain_len -= len ;
 			if( p_context->body_remain_len == 0 )
 				return TCPMAIN_RETURN_WAITINGFOR_RECEIVING;
 		}
 	}
-	else
-	{
-		len = write( sock , body_buffer+(p_context->body_len-p_context->body_remain_len) , p_context->body_remain_len ) ;
-		if( len == -1 )
-		{
-			(*p_body_len) = head_len + p_context->body_len - p_context->head_remain_len - p_context->body_remain_len ;
-			return TDHB_ERROR_SEND_FAILED;
-		}
-		p_context->body_remain_len -= len ;
-		if( p_context->body_remain_len == 0 )
-			return TCPMAIN_RETURN_WAITINGFOR_RECEIVING;
-	}
-	
-	return TCPMAIN_RETURN_WAITINGFOR_NEXT;
 }
 
 /* 固定通讯头+通讯体协议 非堵塞方式接收数据 */
@@ -2571,56 +2581,67 @@ int TDHBReceiveDataWithNonblock( int sock , int head_len , char *body_buffer , i
 		p_context->body_remain_len = 0 ;
 	}
 	
-	if( p_context->head_remain_len )
+	while(1)
 	{
-		len = read( sock , p_context->head_buffer+(head_len-p_context->head_remain_len) , p_context->head_remain_len ) ;
-		if( len == -1 )
+		if( p_context->head_remain_len )
 		{
-			(*p_body_bufsize) = 0 ;
-			return TDHB_ERROR_RECV_FAILED;
-		}
-		else if( len == 0 )
-		{
-			(*p_body_bufsize) = head_len-p_context->head_remain_len ;
-			return TDHB_ERROR_SOCKET_CLOSED;
-		}
-		
-		if( len == p_context->head_remain_len )
-		{
-			p_context->head_remain_len = 0 ;
-			p_context->head_buffer[head_len] = '\0' ;
-			p_context->body_len = atoi(p_context->head_buffer) ;
-			if( p_context->body_len > (*p_body_bufsize) )
-				return TDHB_ERROR_RECV_BUFFER_OVERFLOW;
-			p_context->body_remain_len = p_context->body_len - ( len-head_len ) ;
-			if( p_context->body_remain_len == 0 )
-				return TCPMAIN_RETURN_WAITINGFOR_SENDING;
+			len = read( sock , p_context->head_buffer+(head_len-p_context->head_remain_len) , p_context->head_remain_len ) ;
+			if( len == -1 )
+			{
+				if( errno == EAGAIN )
+					return TCPMAIN_RETURN_WAITINGFOR_NEXT;
+				(*p_body_bufsize) = 0 ;
+				return TDHB_ERROR_RECV_FAILED;
+			}
+			else if( len == 0 )
+			{
+				(*p_body_bufsize) = head_len-p_context->head_remain_len ;
+				return TDHB_ERROR_SOCKET_CLOSED;
+			}
+			
+			if( len == p_context->head_remain_len )
+			{
+				p_context->head_remain_len = 0 ;
+				p_context->head_buffer[head_len] = '\0' ;
+				p_context->body_len = atoi(p_context->head_buffer) ;
+				if( p_context->body_len > (*p_body_bufsize) )
+					return TDHB_ERROR_RECV_BUFFER_OVERFLOW;
+				p_context->body_remain_len = p_context->body_len - ( len-head_len ) ;
+				if( p_context->body_remain_len == 0 )
+				{
+					(*p_body_bufsize) = p_context->body_len ;
+					return TCPMAIN_RETURN_WAITINGFOR_SENDING;
+				}
+			}
+			else
+			{
+				p_context->head_remain_len -= len ;
+			}
 		}
 		else
 		{
-			p_context->head_remain_len -= len ;
+			len = read( sock , body_buffer+(p_context->body_len-p_context->body_remain_len) , p_context->body_remain_len ) ;
+			if( len == -1 )
+			{
+				if( errno == EAGAIN )
+					return TCPMAIN_RETURN_WAITINGFOR_NEXT;
+				(*p_body_bufsize) = p_context->body_len - p_context->body_remain_len ;
+				return TDHB_ERROR_RECV_FAILED;
+			}
+			else if( len == 0 )
+			{
+				(*p_body_bufsize) = head_len+p_context->body_len-p_context->body_remain_len ;
+				return TDHB_ERROR_SOCKET_CLOSED;
+			}
+			
+			p_context->body_remain_len -= len ;
+			if( p_context->body_remain_len == 0 )
+			{
+				(*p_body_bufsize) = p_context->body_len ;
+				return TCPMAIN_RETURN_WAITINGFOR_SENDING;
+			}
 		}
 	}
-	else
-	{
-		len = read( sock , body_buffer+(p_context->body_len-p_context->body_remain_len) , p_context->body_remain_len ) ;
-		if( len == -1 )
-		{
-			(*p_body_bufsize) = p_context->body_len - p_context->body_remain_len ;
-			return TDHB_ERROR_RECV_FAILED;
-		}
-		else if( len == 0 )
-		{
-			(*p_body_bufsize) = head_len+p_context->body_len-p_context->body_remain_len ;
-			return TDHB_ERROR_SOCKET_CLOSED;
-		}
-		
-		p_context->body_remain_len -= len ;
-		if( p_context->body_remain_len == 0 )
-			return TCPMAIN_RETURN_WAITINGFOR_SENDING;
-	}
-	
-	return TCPMAIN_RETURN_WAITINGFOR_NEXT;
 }
 
 #endif

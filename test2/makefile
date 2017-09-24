@@ -12,12 +12,10 @@ c_FILE		=	\
 			test_callback_tdhb_hello_nonblock.c \
 			test_server.c \
 			test_client.c \
-			test_client_latency.c \
 
 ###### 目标文件、安装目录配置区
 NOINST_OBJ	=	test_server \
 			test_client \
-			test_client_latency \
 
 ###### 编译选项
 CFLAGS		=	-I. \
@@ -45,7 +43,4 @@ test_server	:	test_server.o test_callback_tdhb_hello_nonblock.o IDL_hello_world.
 
 test_client	:	test_client.o IDL_hello_world.dsc.o
 	$(CC) $(ESOFLAGS) -o $@ test_client.o IDL_hello_world.dsc.o $(LFLAGS)
-
-test_client_latency	:	test_client_latency.o IDL_hello_world.dsc.o
-	$(CC) $(ESOFLAGS) -o $@ test_client_latency.o IDL_hello_world.dsc.o $(LFLAGS)
 
