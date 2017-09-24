@@ -2516,7 +2516,6 @@ int TDHBSendDataWithNonblock( int sock , int head_len , char *body_buffer , int 
 	{
 		p_context->body_len = (*p_body_len) ;
 		sprintf( p_context->head_buffer , "%0*d" , head_len , p_context->body_len );
-		
 		p_context->head_remain_len = head_len ;
 		p_context->body_remain_len = p_context->body_len ;
 	}
@@ -2539,10 +2538,15 @@ int TDHBSendDataWithNonblock( int sock , int head_len , char *body_buffer , int 
 			}
 			if( len >= p_context->head_remain_len )
 			{
+				DEBUGHEXLOG( p_context->head_buffer , head_len , "SEND HEAD [%d]BYTES" , head_len );
+				
 				p_context->head_remain_len = 0 ;
 				p_context->body_remain_len -= ( len - head_len ) ;
 				if( p_context->body_remain_len == 0 )
+				{
+					DEBUGHEXLOG( body_buffer , (*p_body_len) , "SEND BODY [%d]BYTES" , (*p_body_len) );
 					return TCPMAIN_RETURN_WAITINGFOR_RECEIVING;
+				}
 			}
 			else
 			{
@@ -2563,7 +2567,10 @@ int TDHBSendDataWithNonblock( int sock , int head_len , char *body_buffer , int 
 			}
 			p_context->body_remain_len -= len ;
 			if( p_context->body_remain_len == 0 )
+			{
+				DEBUGHEXLOG( body_buffer , (*p_body_len) , "SEND BODY [%d]BYTES" , (*p_body_len) );
 				return TCPMAIN_RETURN_WAITINGFOR_RECEIVING;
+			}
 		}
 	}
 }
@@ -2601,6 +2608,8 @@ int TDHBReceiveDataWithNonblock( int sock , int head_len , char *body_buffer , i
 			
 			if( len == p_context->head_remain_len )
 			{
+				DEBUGHEXLOG( p_context->head_buffer , head_len , "RECV HEAD [%d]BYTES" , head_len );
+				
 				p_context->head_remain_len = 0 ;
 				p_context->head_buffer[head_len] = '\0' ;
 				p_context->body_len = atoi(p_context->head_buffer) ;
@@ -2609,8 +2618,8 @@ int TDHBReceiveDataWithNonblock( int sock , int head_len , char *body_buffer , i
 				p_context->body_remain_len = p_context->body_len - ( len-head_len ) ;
 				if( p_context->body_remain_len == 0 )
 				{
-					(*p_body_bufsize) = p_context->body_len ;
-					return TCPMAIN_RETURN_WAITINGFOR_SENDING;
+					(*p_body_bufsize) = 0 ;
+					break;
 				}
 			}
 			else
@@ -2637,11 +2646,14 @@ int TDHBReceiveDataWithNonblock( int sock , int head_len , char *body_buffer , i
 			p_context->body_remain_len -= len ;
 			if( p_context->body_remain_len == 0 )
 			{
+				DEBUGHEXLOG( body_buffer , p_context->body_len , "RECV BODY [%d]BYTES" , p_context->body_len );
 				(*p_body_bufsize) = p_context->body_len ;
-				return TCPMAIN_RETURN_WAITINGFOR_SENDING;
+				break;
 			}
 		}
 	}
+	
+	return TCPMAIN_RETURN_WAITINGFOR_SENDING;
 }
 
 #endif

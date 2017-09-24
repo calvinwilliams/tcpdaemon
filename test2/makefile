@@ -19,6 +19,7 @@ NOINST_OBJ	=	test_server \
 
 ###### 编译选项
 CFLAGS		=	-I. \
+			-std=gnu99 \
 			-I$(HOME)/include/tcpdaemon \
 
 ###### 链接选项
