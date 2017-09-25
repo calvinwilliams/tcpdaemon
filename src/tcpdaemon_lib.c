@@ -526,7 +526,7 @@ static unsigned int tcpdaemon_IOMP_worker( void *pv )
 							}
 							else
 							{
-								DEBUGLOG( "tcpdaemon_IOMP_worker(%d) | epoll_ctl[%d] add accepted sock[%d] waiting for reading ok" , p_env->index , p_env->this_epoll_fd , accepted_sock );
+								DEBUGLOG( "tcpdaemon_IOMP_worker(%d) | epoll_ctl[%d] add accepted sock[%d] waiting for reading" , p_env->index , p_env->this_epoll_fd , accepted_sock );
 							}
 						}
 						else if( nret == TCPMAIN_RETURN_WAITINGFOR_SENDING )
@@ -544,7 +544,7 @@ static unsigned int tcpdaemon_IOMP_worker( void *pv )
 							}
 							else
 							{
-								DEBUGLOG( "tcpdaemon_IOMP_worker(%d) | epoll_ctl[%d] add accepted sock[%d] waiting for writing ok" , p_env->index , p_env->this_epoll_fd , accepted_sock );
+								DEBUGLOG( "tcpdaemon_IOMP_worker(%d) | epoll_ctl[%d] add accepted sock[%d] waiting for writing" , p_env->index , p_env->this_epoll_fd , accepted_sock );
 							}
 						}
 						else if( nret == TCPMAIN_RETURN_CLOSE )
@@ -634,7 +634,7 @@ static unsigned int tcpdaemon_IOMP_worker( void *pv )
 						}
 						else
 						{
-							DEBUGLOG( "tcpdaemon_IOMP_worker(%d) | epoll_ctl[%d] modify accepted sock[%d] waiting for reading ok" , p_env->index , p_env->this_epoll_fd , p_session->sock );
+							DEBUGLOG( "tcpdaemon_IOMP_worker(%d) | epoll_ctl[%d] modify accepted sock[%d] waiting for reading" , p_env->index , p_env->this_epoll_fd , p_session->sock );
 						}
 					}
 					else if( nret == TCPMAIN_RETURN_WAITINGFOR_SENDING )
@@ -652,7 +652,7 @@ static unsigned int tcpdaemon_IOMP_worker( void *pv )
 						}
 						else
 						{
-							DEBUGLOG( "tcpdaemon_IOMP_worker(%d) | epoll_ctl[%d] modify accepted sock[%d] waiting for writing ok" , p_env->index , p_env->this_epoll_fd , p_session->sock );
+							DEBUGLOG( "tcpdaemon_IOMP_worker(%d) | epoll_ctl[%d] modify accepted sock[%d] waiting for writing" , p_env->index , p_env->this_epoll_fd , p_session->sock );
 						}
 					}
 					else if( nret == TCPMAIN_RETURN_CLOSE )
@@ -696,7 +696,7 @@ static unsigned int tcpdaemon_IOMP_worker( void *pv )
 						}
 						else
 						{
-							DEBUGLOG( "tcpdaemon_IOMP_worker(%d) | epoll_ctl[%d] modify accepted sock[%d] waiting for reading ok" , p_env->index , p_env->this_epoll_fd , p_session->sock );
+							DEBUGLOG( "tcpdaemon_IOMP_worker(%d) | epoll_ctl[%d] modify accepted sock[%d] waiting for reading" , p_env->index , p_env->this_epoll_fd , p_session->sock );
 						}
 					}
 					else if( nret == TCPMAIN_RETURN_WAITINGFOR_SENDING )
@@ -714,7 +714,7 @@ static unsigned int tcpdaemon_IOMP_worker( void *pv )
 						}
 						else
 						{
-							DEBUGLOG( "tcpdaemon_IOMP_worker(%d) | epoll_ctl[%d] modify accepted sock[%d] waiting for writing ok" , p_env->index , p_env->this_epoll_fd , p_session->sock );
+							DEBUGLOG( "tcpdaemon_IOMP_worker(%d) | epoll_ctl[%d] modify accepted sock[%d] waiting for writing" , p_env->index , p_env->this_epoll_fd , p_session->sock );
 						}
 					}
 					else if( nret == TCPMAIN_RETURN_CLOSE )

@@ -11,7 +11,7 @@ int main()
 	ep.daemon_level = 0 ;
 	
 	snprintf( ep.log_pathfilename , sizeof(ep.log_pathfilename) , "%s/log/test_tdhb_hello.log" , getenv("HOME") );
-	ep.log_level = LOGLEVEL_DEBUG ;
+	ep.log_level = LOGLEVEL_ERROR ;
 	
 	strcpy( ep.server_model , "IOMP" );
 	strcpy( ep.ip , "0" );
