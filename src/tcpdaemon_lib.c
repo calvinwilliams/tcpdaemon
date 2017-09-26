@@ -2430,11 +2430,6 @@ int TDHBConnect( char *ip , int port )
 		return TDHB_ERROR_SOCKET_FAILED;
 	}
 	
-	{
-		int	onoff = 1 ;
-		setsockopt( sock , IPPROTO_TCP , TCP_NODELAY , (void*) & onoff , sizeof(int) );
-	}
-	
 	memset( & addr , 0x00 , sizeof(struct sockaddr_in) );
 	addr.sin_family = AF_INET ;
 	if( ip[0] == '\0' )

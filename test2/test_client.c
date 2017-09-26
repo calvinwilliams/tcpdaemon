@@ -72,6 +72,12 @@ static int test_client( char *ip , int port , int processor_count , int total_pr
 			return -1;
 		}
 		
+		/* 设置侦听端口关闭nagle算法 */
+		{
+			int	onoff = 1 ;
+			setsockopt( p_connected_session->sock , IPPROTO_TCP , TCP_NODELAY , (void*) & onoff , sizeof(int) );
+		}
+		
 		/* 组织报文 */
 		memset( & st , 0x00 , sizeof(hello_world) );
 		strcpy( st.message , "hello world" );
